@@ -1,2 +1,0 @@
-# Saweg
-saweg app 
