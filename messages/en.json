@@ -1,0 +1,86 @@
+{
+  "header": {
+    "mainPage": "Main Page",
+    "aboutUs": "About Us",
+    "bePartners": "Be Partners",
+    "contactUs": "Contact Us",
+    "language": "English"
+  },
+  "hero": {
+    "welcome": "Welcome to Saweg",
+    "slogan": "Smart and Secure Freight Transport",
+    "description": "An app that connects your business with the most suitable truck on every trip.",
+    "registerNow": "Register now for free",
+    "downloadGoogle": "Get it on Google Play",
+    "downloadApple": "Download on the App Store"
+  },
+  "features": {
+    "title": "Discover Saweg's Advantages",
+    "subtitle": "The easiest way to get your shipments to their destination",
+    "description": "Saweg is more than just an app; it is a platform that connects merchants with the best carriers on every trip. From a single app on your phone, you can post freight requests, receive multiple transparent offers, and choose the carrier that best fits your shipment. We are committed to making your freight movement faster, clearer, and more secure so your goods arrive where they should, with complete peace of mind.",
+    "promotionText": "Fast, reliable, and efficient delivery service at your fingertips. Join thousands of satisfied users today!"
+  },
+  "howToUse": {
+    "title": "How to Use the App",
+    "description": "Get started in just a few simple steps",
+    "step1": "Download the app from your preferred store",
+    "step2": "Create your account with basic information",
+    "step3": "Browse available services in your area",
+    "step4": "Place your order with a few taps",
+    "step5": "Track your delivery in real-time"
+  },
+  "whyUse": {
+    "merchantTitle": "For Merchants and Business Owners",
+    "merchantDesc": "A complete platform to manage all your freight needs. Through a single platform, you can access a network of qualified carriers, receive multiple transparent offers, and choose the most suitable for your requirements in terms of timing, location, and quality, with regular tracking for every trip.",
+    "title": "Why Partner with Saweg?",
+    "feature1Title": "Faster Access to Reliable Carriers",
+    "feature1Desc": "A network of freight carriers ready to serve your shipment requests.",
+    "feature2Title": "Save Time and Costs",
+    "feature2Desc": "No need for multiple calls. One request brings you several offers in a short time.",
+    "feature3Title": "Transparency in Offers and Pricing",
+    "feature3Desc": "See the price, delivery time, and carrier rating before confirming any trip.",
+    "feature4Title": "Better Organization of Transport Operations",
+    "feature4Desc": "All your requests and shipments are recorded in one place, with a clear history for each trip.",
+    "feature5Title": "Local Support in Arabic and English",
+    "feature5Desc": "Market support team, and assistance when you need it.",
+    "registerNow": "Register Now",
+    "stats": {
+      "users": "number of subscribed users",
+      "deliveries": "number of shipments",
+      "packages": "delivered packages"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "subject": "Subject",
+    "message": "Your Message",
+    "send": "Send Message",
+    "successToast": "Message sent! We will get back to you soon.",
+    "errorToast": "Something went wrong. Please try again later."
+  },
+  "footer": {
+    "followUs": "Follow Us On",
+    "usefulLinks": "Useful Links",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "support": "Support",
+    "faq": "FAQ"
+  },
+  "register": {
+    "title": "Register to Get the App as Soon as It Launches",
+    "description": "Be among the first to experience our revolutionary app. Register now and get exclusive early access!",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "city": "City",
+    "userType": "I want to use the app as",
+    "customer": "Customer",
+    "partner": "Partner/Driver",
+    "submit": "Complete Registration",
+    "success": "Thank you for registering! We'll notify you when the app launches."
+  }
+}
