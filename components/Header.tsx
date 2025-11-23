@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Globe, ChevronDown } from 'lucide-react';
+import { Globe, ChevronDown, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ export default function Header() {
   const pathname = usePathname();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isRTL = locale === 'ar';
 
@@ -36,10 +37,16 @@ export default function Header() {
     }
   };
 
+  const handleMobileNavClick = (sectionId: string) => {
+    handleNavClick(sectionId);
+    setIsMenuOpen(false);
+  };
+
   const switchLocale = (newLocale: string) => {
     const path = pathname.split('/').slice(2).join('/');
     router.push(`/${newLocale}/${path}`);
     setIsLangOpen(false);
+    setIsMenuOpen(false);
   };
 
   return (
@@ -60,8 +67,8 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Navigation - Middle */}
-          <nav className="flex items-center gap-8">
+          {/* Navigation - Middle (desktop) */}
+          <nav className="hidden md:flex items-center gap-8">
             <button
               onClick={() => handleNavClick('hero')}
               className={`pb-1 border-b-2 text-sm font-medium transition-colors ${
@@ -94,8 +101,8 @@ export default function Header() {
             </button>
           </nav>
 
-          {/* Language Switcher & Contact - Far left in LTR, Far right in RTL */}
-          <div className="flex items-center gap-4">
+          {/* Language Switcher & Contact - Desktop */}
+          <div className="hidden md:flex items-center gap-4">
             {/* Contact Button */}
             <button
               onClick={() => handleNavClick('contact')}
@@ -136,8 +143,67 @@ export default function Header() {
               )}
             </div>
           </div>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile menu dropdown */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 bg-white">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-3">
+            <button
+              onClick={() => handleMobileNavClick('hero')}
+              className="text-left text-sm font-medium text-gray-700 py-2 px-2 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            >
+              {t('mainPage')}
+            </button>
+            <button
+              onClick={() => handleMobileNavClick('about')}
+              className="text-left text-sm font-medium text-gray-700 py-2 px-2 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            >
+              {t('aboutUs')}
+            </button>
+            <button
+              onClick={() => handleMobileNavClick('partners')}
+              className="text-left text-sm font-medium text-gray-700 py-2 px-2 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            >
+              {t('bePartners')}
+            </button>
+            <button
+              onClick={() => handleMobileNavClick('contact')}
+              className="text-left text-sm font-medium text-gray-700 py-2 px-2 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            >
+              {t('contactUs')}
+            </button>
+
+            <div className="mt-3 flex items-center gap-3">
+              <span className="text-xs text-gray-500">{t('language')}</span>
+              <button
+                onClick={() => switchLocale('en')}
+                className="px-3 py-1 text-xs border rounded-full hover:bg-gray-100 transition-colors"
+              >
+                EN
+              </button>
+              <button
+                onClick={() => switchLocale('ar')}
+                className="px-3 py-1 text-xs border rounded-full hover:bg-gray-100 transition-colors"
+              >
+                AR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
