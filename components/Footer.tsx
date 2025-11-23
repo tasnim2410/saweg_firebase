@@ -105,7 +105,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-semibold mb-4">Contact</h3>
             <ul className="space-y-3 text-gray-400">
-              <li>Email: info@example.com</li>
+              <li>Email: saweg.dev@gmail.com</li>
               <li>Phone: +1 234 567 890</li>
               <li>Address: 123 Street, City, Country</li>
             </ul>
@@ -114,7 +114,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-[#3a2a14] pt-8 text-center text-gray-200">
-          <p>&copy; 2025 App Name. All rights reserved.</p>
+          <p>&copy; 2025 Saweg. All rights reserved.</p>
         </div>
       </div>
     </footer>
