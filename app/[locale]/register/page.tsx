@@ -93,9 +93,7 @@ export default function RegisterPage() {
             <h1 className="text-3xl lg:text-4xl font-bold mb-3">
               {t('title')}
             </h1>
-            <p className="text-lg opacity-90">
-              {t('description')}
-            </p>
+            <p className="text-lg opacity-90">Placeholder text.</p>
           </div>
 
           {/* Form */}

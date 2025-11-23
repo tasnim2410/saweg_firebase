@@ -16,10 +16,7 @@ export default function FaqPage() {
           This is a placeholder for Frequently Asked Questions. Add the most common questions your
           users have about Saweg and clear, concise answers.
         </p>
-        <p className="text-gray-700 leading-relaxed">
-          You can organize this page into sections later (for example: general questions, pricing,
-          safety, and technical issues).
-        </p>
+
       </section>
       <Footer />
     </main>
