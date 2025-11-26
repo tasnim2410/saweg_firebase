@@ -50,9 +50,13 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white z-50">
-      <div className="max-w-6xl mx-auto px-6 py-3">
-        <div className="flex items-center justify-between">
+    <header className="fixed top-0 inset-x-0 bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
+        <div
+          className={`flex items-center justify-between gap-3 ${
+            isRTL ? 'flex-row-reverse' : 'flex-row'
+          }`}
+        >
           {/* Logo - Far right in LTR, Far left in RTL */}
           <div className="flex items-center">
             <Link href={`/${locale}`} className="flex items-center">

@@ -18,8 +18,8 @@ export default function WhyUseSection() {
   ];
 
   return (
-    <section id="partners" className="py-20 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 md:px-8">
+    <section id="partners" className="py-16 md:py-20 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         {/* Top heading and description */}
         <div className={`text-center mb-12 ${isRTL ? 'text-right' : 'text-left'} md:text-center`}>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -32,12 +32,12 @@ export default function WhyUseSection() {
 
         <div
           className={`flex flex-col lg:flex-row gap-10 items-center mb-12 ${
-            isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row-reverse'
+            isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row'
           }`}
         >
           {/* Truck Image */}
-          <div className="flex-[1.25] flex justify-center">
-            <div className="relative w-full max-w-[620px] aspect-[16/9] md:aspect-[16/9] min-h-[260px] md:min-h-[360px] rounded-2xl overflow-hidden shadow-2xl">
+          <div className="flex-[1.25] flex justify-center w-full">
+            <div className="relative w-full max-w-[620px] aspect-[16/9] min-h-[220px] md:min-h-[360px] rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/why-this-app.png"
                 alt={isRTL ? 'شاحنة سواق' : 'Saweg truck'}

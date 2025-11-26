@@ -13,9 +13,6 @@ export default function HeroSection() {
   const locale = useLocale();
   const isRTL = locale === 'ar';
 
-  const textAlignClass = isRTL ? 'text-right' : 'text-left';
-  const buttonsJustifyClass = isRTL ? 'justify-end' : 'justify-start';
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
@@ -27,8 +24,8 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section id="hero" className="relative pt-24">
-      <div className="relative h-[83vh] min-h-[520px] overflow-hidden">
+    <section id="hero" className="relative pt-24 sm:pt-28">
+      <div className="relative h-[80vh] min-h-[480px] md:min-h-[520px] overflow-hidden">
         {HERO_IMAGES.map((src, index) => (
           <Image
             key={src}
@@ -43,12 +40,8 @@ export default function HeroSection() {
         ))}
         <div className="absolute inset-0 bg-black/40" />
 
-        <div className="relative z-10 h-full px-6 md:px-16 flex items-center">
-          <div
-            className={`max-w-3xl w-full text-white ${
-              isRTL ? 'ml-auto ' + textAlignClass : 'mr-auto ' + textAlignClass
-            }`}
-          >
+        <div className="relative z-10 h-full px-6 md:px-16 flex items-center justify-center">
+          <div className="max-w-3xl w-full text-white text-center">
             <p className="mb-3 text-lg md:text-xl font-medium text-gray-100/90">
               {t('welcome')}
             </p>
@@ -63,7 +56,7 @@ export default function HeroSection() {
             </p>
 
             {/* Download Buttons */}
-            <div className={`flex flex-col sm:flex-row gap-4 ${buttonsJustifyClass}`}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href={`/${locale}/register`}
                 className="flex items-center justify-center gap-3 px-6 py-4 bg-black/90 text-white rounded-xl hover:bg-black transition-colors"
