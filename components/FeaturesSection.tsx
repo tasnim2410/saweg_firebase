@@ -21,9 +21,10 @@ export default function FeaturesSection() {
           {t('subtitle')}
         </p>
         <div className={styles.divider} />
+      </div>
 
-        <div className={styles.mapWrapper}>
-          {/* Map background */}
+      <div className={styles.mapWrapper}>
+        {/* Map background */}
           <div className={styles.mapContainer}>
             <Image
               src="/images/map.png"
@@ -47,11 +48,11 @@ export default function FeaturesSection() {
             <motion.div
               initial={{ x: '30%' }}
               whileInView={{
-                x: ['30%', '-190%', '100%', '30%']
+                x: ['30%', '-250%', '100%', '30%']
               }}
               transition={{ 
                 duration: 6,
-                times: [0, 0.4, 0.1, 1],
+                times: [0, 0.4, 0.15, 1],
                 ease: 'easeInOut'
               }}
               viewport={{ once: true, amount: 0.1 }}
@@ -68,7 +69,6 @@ export default function FeaturesSection() {
             </motion.div>
           </div>
         </div>
-      </div>
     </section>
   );
 }
