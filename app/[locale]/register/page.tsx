@@ -118,14 +118,13 @@ export default function RegisterPage() {
 
             <div>
               <label className={styles.label}>
-                {t('email')}
+                {t('email')} <span style={{fontWeight: 'normal', fontSize: '0.85em', color: '#666'}}>({locale === 'ar' ? 'اختياري' : 'Optional'})</span>
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                required
                 className={styles.input}
                 placeholder={locale === 'ar' ? 'example@email.com' : 'example@email.com'}
               />

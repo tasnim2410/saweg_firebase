@@ -137,7 +137,7 @@ export default function ContactSection() {
                   ></textarea>
                 </div>
 
-                <div>
+                {/* <div>
                   <input
                     type="tel"
                     name="phone"
@@ -147,7 +147,7 @@ export default function ContactSection() {
                     required
                     className={styles.input}
                   />
-                </div>
+                </div> */}
 
                 <button
                   type="submit"
