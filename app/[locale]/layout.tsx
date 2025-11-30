@@ -31,7 +31,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
-      <body className="antialiased">
+      <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>

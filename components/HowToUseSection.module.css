@@ -1,0 +1,275 @@
+.section {
+  padding-top: 5rem; /* 20 */
+  padding-bottom: 5rem;
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.container {
+  max-width: 72rem; /* 6xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem; /* 10 */
+}
+
+.title {
+  font-size: 1.875rem; /* 3xl */
+  line-height: 2.25rem;
+  font-weight: 700;
+  color: #111827; /* gray-900 */
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 2.25rem; /* 4xl */
+    line-height: 2.5rem;
+  }
+}
+
+.description {
+  font-size: 0.875rem; /* sm */
+  color: #4b5563; /* gray-600 */
+  max-width: 48rem; /* 3xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 768px) {
+  .description {
+    font-size: 1rem; /* base */
+  }
+}
+
+.storeButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+  .storeButtons {
+    flex-direction: row;
+  }
+}
+
+.storeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background-color: black;
+  color: white;
+  border-radius: 0.75rem;
+  transition: background-color 0.3s;
+}
+
+.storeButton:hover {
+  background-color: #1f2937; /* gray-800 */
+}
+
+.buttonIcon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.buttonTextContainer {
+  text-align: start;
+}
+
+.buttonSmallText {
+  font-size: 0.75rem;
+}
+
+.buttonLargeText {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.contentFlex {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .contentFlex {
+    flex-direction: row;
+  }
+}
+
+.stepsContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stepsContainerRtl {
+  text-align: right;
+}
+
+.stepsContainerLtr {
+  text-align: left;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background-color: white;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6; /* gray-100 */
+  transition: all 0.3s;
+}
+
+.stepItem:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(to right, #FFB81C, #FFA000);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem; /* lg */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stepText {
+  color: #1f2937; /* gray-800 */
+  font-size: 1rem;
+  line-height: 1.625;
+  flex: 1;
+  padding-top: 0.25rem;
+}
+
+.phoneContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.phoneFrameWrapper {
+  position: relative;
+  width: 280px;
+  height: 560px;
+}
+
+.phoneFrame {
+  position: absolute;
+  inset: 0;
+  border-radius: 3rem;
+  background: linear-gradient(to bottom, #1f2937, black);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+  border: 8px solid #111827; /* gray-900 */
+  z-index: 10;
+}
+
+.screen {
+  position: absolute;
+  inset: 12px;
+  border-radius: 2.2rem;
+  background-color: white;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.screenContent {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); /* blue-50 to indigo-100 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.appPreviewImage {
+  object-fit: contain;
+  border-radius: 0.75rem;
+}
+
+.notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8rem;
+  height: 1.5rem;
+  background-color: black;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  z-index: 30;
+}
+
+.homeIndicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6rem;
+  height: 0.25rem;
+  background-color: #d1d5db; /* gray-300 */
+  border-radius: 9999px;
+  z-index: 30;
+}
+
+.volumeButton1 {
+  position: absolute;
+  left: -8px;
+  top: 6rem;
+  width: 0.25rem;
+  height: 4rem;
+  background-color: #1f2937; /* gray-800 */
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  z-index: 0;
+}
+
+.volumeButton2 {
+  position: absolute;
+  left: -8px;
+  top: 10rem;
+  width: 0.25rem;
+  height: 2rem;
+  background-color: #1f2937;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  z-index: 0;
+}
+
+.powerButton {
+  position: absolute;
+  right: -8px;
+  top: 7rem;
+  width: 0.25rem;
+  height: 3rem;
+  background-color: #1f2937;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  z-index: 0;
+}

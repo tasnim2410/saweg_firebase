@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
+import styles from './register.module.css';
 
 export default function RegisterPage() {
   const t = useTranslations('register');
@@ -45,17 +46,17 @@ export default function RegisterPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#f9fafb] flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-[#FFF3CC] rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-12 h-12 text-[#E0A800]" />
+      <div className={styles.container}>
+        <div className={styles.successCard}>
+          <div className={styles.successIconWrapper}>
+            <CheckCircle className={styles.successIcon} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className={styles.successTitle}>
             {t('success')}
           </h2>
           <Link
             href={`/${locale}`}
-            className="inline-block mt-6 px-8 py-3 bg-[#FFB81C] hover:bg-[#ffa000] text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+            className={styles.backButton}
           >
             {locale === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to Home'}
           </Link>
@@ -65,43 +66,43 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] py-12 px-4">
-      <div className="container mx-auto max-w-2xl">
+    <div className={styles.pageContainer}>
+      <div className={styles.contentWrapper}>
         {/* Back Button */}
         <Link
           href={`/${locale}`}
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+          className={styles.backLink}
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className={styles.backIcon} />
           <span>{locale === 'ar' ? 'العودة' : 'Back'}</span>
         </Link>
 
         {/* Registration Form */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className={styles.formCard}>
           {/* Header */}
-          <div className="bg-[#674E13] p-8 text-white text-center">
-            <div className="mb-4 flex justify-center">
+          <div className={styles.header}>
+            <div className={styles.logoWrapper}>
               <Image
                 src="/images/logo.png"
                 alt="Saweg logo"
                 width={200}
                 height={80}
-                className="h-18 md:h-25 w-auto"
+                className={styles.logoImage}
                 priority
               />
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold mb-3">
+            <h1 className={styles.title}>
               {t('title')}
             </h1>
-            <p className="text-lg opacity-90">
+            <p className={styles.description}>
               {t('description')}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className={styles.form}>
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className={styles.label}>
                 {t('fullName')}
               </label>
               <input
@@ -110,13 +111,13 @@ export default function RegisterPage() {
                 value={formData.fullName}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition"
+                className={styles.input}
                 placeholder={locale === 'ar' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className={styles.label}>
                 {t('email')}
               </label>
               <input
@@ -125,13 +126,13 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition"
+                className={styles.input}
                 placeholder={locale === 'ar' ? 'example@email.com' : 'example@email.com'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className={styles.label}>
                 {t('phone')}
               </label>
               <input
@@ -140,13 +141,13 @@ export default function RegisterPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition"
+                className={styles.input}
                 placeholder={locale === 'ar' ? '+218 XX XXX XXX' : '+218 XXX XXX XXX'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className={styles.label}>
                 {t('city')}
               </label>
               <input
@@ -155,13 +156,13 @@ export default function RegisterPage() {
                 value={formData.city}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition"
+                className={styles.input}
                 placeholder={locale === 'ar' ? 'أدخل مدينتك' : 'Enter your city'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className={styles.label}>
                 {t('userType')}
               </label>
               <select
@@ -169,7 +170,7 @@ export default function RegisterPage() {
                 value={formData.userType}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition"
+                className={styles.input}
               >
                 <option value="customer">{t('customer')}</option>
                 <option value="partner">{t('partner')}</option>
@@ -178,7 +179,7 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full px-8 py-4 bg-[#FFB81C] hover:bg-[#ffa000] text-black text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all"
+              className={styles.submitButton}
             >
               {t('submit')}
             </button>

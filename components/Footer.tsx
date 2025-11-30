@@ -4,72 +4,73 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import styles from './Footer.module.css';
 
 export default function Footer() {
   const t = useTranslations('footer');
   const locale = useLocale();
 
   return (
-    <footer className="bg-[#4b371d] text-white py-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+    <footer className={styles.footer}>
+      <div className={styles.container}>
+        <div className={styles.grid}>
           {/* Logo and Social Media */}
           <div>
-            <div className="mb-6">
+            <div className={styles.logoWrapper}>
               <Image
                 src="/images/logo.png"
                 alt="Saweg logo"
                 width={240}
                 height={140}
-                className="h-18 md:h-20 w-auto"
+                className={styles.logoImage}
                 priority
               />
             </div>
-            <h3 className="text-xl font-semibold mb-4">{t('followUs')}</h3>
-            <div className="flex gap-4">
+            <h3 className={styles.columnTitle}>{t('followUs')}</h3>
+            <div className={styles.socialLinks}>
               <a
                 href="https://www.facebook.com/profile.php?id=100089299780324"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                className={`${styles.socialIcon} ${styles.facebook}`}
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className={styles.iconSvg} />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors"
+                className={`${styles.socialIcon} ${styles.twitter}`}
               >
-                <Twitter className="w-5 h-5" />
+                <Twitter className={styles.iconSvg} />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
+                className={`${styles.socialIcon} ${styles.instagram}`}
               >
-                <Instagram className="w-5 h-5" />
+                <Instagram className={styles.iconSvg} />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                className={`${styles.socialIcon} ${styles.linkedin}`}
               >
-                <Linkedin className="w-5 h-5" />
+                <Linkedin className={styles.iconSvg} />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                className={`${styles.socialIcon} ${styles.youtube}`}
               >
-                <Youtube className="w-5 h-5" />
+                <Youtube className={styles.iconSvg} />
               </a>
             </div>
           </div>
 
           {/* Useful Links */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">{t('usefulLinks')}</h3>
-            <ul className="space-y-3">
+            <h3 className={styles.columnTitle}>{t('usefulLinks')}</h3>
+            <ul className={styles.linksList}>
               <li>
                 <Link
                   href={`/${locale}/privacy`}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className={styles.link}
                 >
                   {t('privacy')}
                 </Link>
@@ -77,7 +78,7 @@ export default function Footer() {
               <li>
                 <Link
                   href={`/${locale}/terms`}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className={styles.link}
                 >
                   {t('terms')}
                 </Link>
@@ -85,7 +86,7 @@ export default function Footer() {
               <li>
                 <Link
                   href={`/${locale}/support`}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className={styles.link}
                 >
                   {t('support')}
                 </Link>
@@ -93,7 +94,7 @@ export default function Footer() {
               <li>
                 <Link
                   href={`/${locale}/faq`}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className={styles.link}
                 >
                   {t('faq')}
                 </Link>
@@ -103,17 +104,17 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Contact</h3>
-            <ul className="space-y-3 text-gray-400">
+            <h3 className={styles.columnTitle}>Contact</h3>
+            <ul className={styles.contactList}>
               <li>Email: saweg.dev@gmail.com</li>
               <li>Phone: +1 234 567 890</li>
-              <li>Address: 123 Street, City, Country</li>
+              {/* <li>Address: 123 Street, City, Country</li> */}
             </ul>
           </div>
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-[#3a2a14] pt-8 text-center text-gray-200">
+        <div className={styles.copyright}>
           <p>&copy; 2025 Saweg. All rights reserved.</p>
         </div>
       </div>

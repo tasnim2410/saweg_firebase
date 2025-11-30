@@ -1,0 +1,149 @@
+.section {
+  padding-top: 5rem; /* 20 */
+  padding-bottom: 5rem;
+  background-color: white;
+}
+
+.container {
+  max-width: 72rem; /* 6xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.title {
+  font-size: 1.875rem; /* 3xl */
+  line-height: 2.25rem;
+  font-weight: 700;
+  text-align: center;
+  color: #111827; /* gray-900 */
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 2.25rem; /* 4xl */
+    line-height: 2.5rem;
+  }
+}
+
+.subtitle {
+  margin-top: 0.5rem;
+  font-size: 0.875rem; /* sm */
+  text-align: center;
+  color: #6b7280; /* gray-500 */
+}
+
+@media (min-width: 768px) {
+  .subtitle {
+    font-size: 1rem; /* base */
+  }
+}
+
+.divider {
+  margin-top: 1rem;
+  margin-bottom: 2.5rem; /* 10 */
+  height: 0.25rem; /* 1 */
+  width: 6rem; /* 24 */
+  background-color: #FFB81C;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 9999px;
+}
+
+.mapWrapper {
+  position: relative;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mapContainer {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .mapContainer {
+    height: 500px;
+  }
+}
+
+.mapImage {
+  object-fit: cover;
+}
+
+.textCardOverlay {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .textCardOverlay {
+    left: 6rem;
+    right: 6rem;
+    top: 2.5rem;
+  }
+}
+
+.textCard {
+  background-color: rgba(253, 247, 233, 0.95); /* #fdf7e9/95 */
+  border-radius: 1rem; /* 2xl */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: #1f2937; /* gray-800 */
+}
+
+@media (min-width: 768px) {
+  .textCard {
+    padding: 1.5rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+.textCardRtl {
+  text-align: right;
+}
+
+.textCardLtr {
+  text-align: left;
+}
+
+.truckContainer {
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+@media (min-width: 768px) {
+  .truckContainer {
+    bottom: 1rem;
+  }
+}
+
+.truckImage {
+  width: 300px;
+  height: auto;
+  filter: drop-shadow(0 25px 25px rgb(0 0 0 / 0.15)); /* drop-shadow-2xl approx */
+}
+
+@media (min-width: 768px) {
+  .truckImage {
+    width: 600px;
+  }
+}

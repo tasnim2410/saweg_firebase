@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { useState } from 'react';
 import Image from 'next/image';
+import styles from './ContactSection.module.css';
 
 export default function ContactSection() {
   const t = useTranslations('contact');
@@ -53,41 +54,41 @@ export default function ContactSection() {
   };
 
   return (
-    <section id="contact" className="bg-[#e9fbff] py-0">
+    <section id="contact" className={styles.section}>
       {/* Top brown band with title/description */}
-      <div className="bg-[#4b371d] text-white pt-12 pb-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('title')}</h2>
-          <p className="text-sm md:text-base leading-relaxed">
+      <div className={styles.header}>
+        <div className={styles.headerContent}>
+          <h2 className={styles.title}>{t('title')}</h2>
+          <p className={styles.description}>
             {t('description')}
           </p>
         </div>
       </div>
 
       {/* Overlapping white card with image + form */}
-      <div className="max-w-6xl mx-auto px-4 -mt-16 pb-20">
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className={styles.cardWrapper}>
+        <div className={styles.card}>
           <div
-            className={`flex flex-col lg:flex-row ${
-              isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row'
+            className={`${styles.cardContent} ${
+              isRTL ? styles.cardContentReverse : ''
             }`}
           >
             {/* Image side */}
-            <div className="w-full lg:w-1/2">
-              <div className="relative h-[260px] sm:h-[320px] lg:h-full min-h-[320px]">
+            <div className={styles.imageSide}>
+              <div className={styles.imageContainer}>
                 <Image
                   src="/images/contact.jpg"
                   alt={locale === 'ar' ? 'صورة شاحنات سواق' : 'Saweg contact trucks'}
                   fill
-                  className="object-cover"
+                  className={styles.image}
                   priority
                 />
               </div>
             </div>
 
             {/* Form side */}
-            <div className="w-full lg:w-1/2 p-6 md:p-8 lg:p-10">
-              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+            <div className={styles.formSide}>
+              <form onSubmit={handleSubmit} className={styles.form}>
                 <div>
                   <input
                     type="text"
@@ -96,7 +97,7 @@ export default function ContactSection() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition text-sm md:text-base"
+                    className={styles.input}
                   />
                 </div>
 
@@ -108,11 +109,11 @@ export default function ContactSection() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition text-sm md:text-base"
+                    className={styles.input}
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <input
                     type="text"
                     name="subject"
@@ -120,9 +121,9 @@ export default function ContactSection() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition text-sm md:text-base"
+                    className={styles.input}
                   />
-                </div>
+                </div> */}
 
                 <div>
                   <textarea
@@ -132,7 +133,7 @@ export default function ContactSection() {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition resize-none text-sm md:text-base"
+                    className={styles.textarea}
                   ></textarea>
                 </div>
 
@@ -144,13 +145,13 @@ export default function ContactSection() {
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FFB81C] focus:border-transparent outline-none transition text-sm md:text-base"
+                    className={styles.input}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full px-8 py-3 md:py-4 bg-[#FFB81C] hover:bg-[#ffa000] text-black text-sm md:text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className={styles.submitButton}
                 >
                   {t('send')}
                 </button>
@@ -161,16 +162,16 @@ export default function ContactSection() {
       </div>
 
       <div
-        className={`fixed bottom-6 right-6 z-50 max-w-sm px-6 py-4 rounded-xl shadow-xl text-base md:text-lg transition-all duration-300 transform ${
+        className={`${styles.toast} ${
           toast
-            ? 'translate-x-0 opacity-100'
-            : 'translate-x-full opacity-0 pointer-events-none'
+            ? styles.toastVisible
+            : ''
         } ${
           toast?.type === 'success'
-            ? 'bg-green-600 text-white'
+            ? styles.toastSuccess
             : toast?.type === 'error'
-            ? 'bg-red-600 text-white'
-            : 'bg-gray-800 text-white'
+            ? styles.toastError
+            : styles.toastDefault
         }`}
       >
         {toast?.message}

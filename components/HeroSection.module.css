@@ -1,0 +1,164 @@
+.section {
+  position: relative;
+  padding-top: 6rem; /* pt-24 */
+}
+
+@media (min-width: 640px) {
+  .section {
+    padding-top: 7rem; /* sm:pt-28 */
+  }
+}
+
+.heroContainer {
+  position: relative;
+  height: 80vh;
+  min-height: 480px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .heroContainer {
+    min-height: 520px;
+  }
+}
+
+.heroImage {
+  object-fit: cover;
+  transition: opacity 1000ms;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.contentWrapper {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .contentWrapper {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+.textContainer {
+  max-width: 48rem; /* 3xl */
+  width: 100%;
+  color: white;
+  text-align: center;
+}
+
+.welcomeText {
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem; /* lg */
+  font-weight: 500;
+  color: rgba(243, 244, 246, 0.9); /* gray-100/90 */
+}
+
+@media (min-width: 768px) {
+  .welcomeText {
+    font-size: 1.25rem; /* xl */
+  }
+}
+
+.heading {
+  font-size: 1.875rem; /* 3xl */
+  font-weight: 700;
+  line-height: 1.375;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .heading {
+    font-size: 3rem; /* 5xl */
+  }
+}
+
+.description {
+  font-size: 1rem;
+  color: rgba(243, 244, 246, 0.9);
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .description {
+    font-size: 1.125rem;
+  }
+}
+
+.registerText {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .registerText {
+    font-size: 1.25rem;
+  }
+}
+
+.buttonsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .buttonsContainer {
+    flex-direction: row;
+  }
+}
+
+.storeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 0.75rem;
+  transition: background-color 0.3s;
+}
+
+.storeButton:hover {
+  background-color: #000000;
+}
+
+.buttonIcon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.buttonTextContainer {
+  text-align: start;
+}
+
+.smallText {
+  font-size: 0.75rem;
+}
+
+.largeText {
+  font-size: 1.125rem;
+  font-weight: 600;
+}

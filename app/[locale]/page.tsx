@@ -5,10 +5,11 @@ import HowToUseSection from '@/components/HowToUseSection';
 import WhyUseSection from '@/components/WhyUseSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
+import styles from './home.module.css';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className={styles.main}>
       <Header />
       <HeroSection />
       <FeaturesSection />
