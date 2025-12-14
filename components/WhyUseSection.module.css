@@ -267,16 +267,19 @@
   }
 }
 
-/* Stats */
+/* Stats - Now only 2 boxes, centered */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+  max-width: 28rem; /* Limit width for better centering */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (min-width: 768px) {
   .statsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 32rem; /* Slightly wider on larger screens */
   }
 }
 
@@ -306,6 +309,7 @@
 }
 
 .statLabel {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: #4b5563;
+  font-weight: bold;
 }

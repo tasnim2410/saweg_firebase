@@ -41,7 +41,7 @@ export default function WhyUseSection() {
             <div className={styles.imageSide}>
               <div className={styles.imageContainer}>
                 <Image
-                  src="/images/why-this-app1.png"
+                  src="/images/why-this-app1.jpg"
                   alt={isRTL ? 'شاحنة سواق 1' : 'Saweg truck 1'}
                   fill
                   className={`${styles.truckAnimate} ${styles.truck1}`}
@@ -93,7 +93,7 @@ export default function WhyUseSection() {
           </div>
         </div>
 
-        {/* Stats Boxes */}
+        {/* Stats Boxes - Now only 2 boxes */}
         <div className={styles.statsGrid}>
           <div className={styles.statBox}>
             <div className={styles.statIconWrapper}>
@@ -117,16 +117,6 @@ export default function WhyUseSection() {
               </svg>
             </div>
             <div className={styles.statLabel}>{t('stats.deliveries')}</div>
-          </div>
-          
-          <div className={styles.statBox}>
-            <div className={styles.statIconWrapper}>
-              <svg className={styles.statIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-            </div>
-            <div className={styles.statLabel}>{t('stats.packages')}</div>
           </div>
         </div>
       </div>
