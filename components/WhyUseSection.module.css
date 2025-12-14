@@ -309,6 +309,7 @@
 }
 
 .statLabel {
-  font-size: 0.875rem;
-  color: #4b5563;
+  font-size: 1rem;
+  color: #000000f0;
+  font-weight: bold;
 }
