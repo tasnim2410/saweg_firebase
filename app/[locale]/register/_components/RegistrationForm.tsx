@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
 import styles from '../register.module.css';
 
 type RegistrationRole = 'shipper' | 'merchant';
@@ -18,6 +18,7 @@ export default function RegistrationForm({ role }: Props) {
 
   const [submitted, setSubmitted] = useState(false);
   const [truckImage, setTruckImage] = useState<File | null>(null);
+  const [truckImagePreview, setTruckImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -76,6 +77,16 @@ export default function RegistrationForm({ role }: Props) {
   const handleTruckImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     setTruckImage(file);
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTruckImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setTruckImagePreview(null);
+    }
   };
 
   if (submitted) {
@@ -113,127 +124,166 @@ export default function RegistrationForm({ role }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div>
-              <label className={styles.label}>{t('fullName')}</label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
-              />
-            </div>
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>{t('fullName')}</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className={styles.input}
+                  placeholder={locale === 'ar' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
+                />
+              </div>
 
-            <div>
-              <label className={styles.label}>
-                {t('email')}{' '}
-                <span style={{ fontWeight: 'normal', fontSize: '0.85em', color: '#666' }}>
-                  ({locale === 'ar' ? 'اختياري' : 'Optional'})
-                </span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'example@email.com' : 'example@email.com'}
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  {t('email')} <span className={styles.optionalText}>({locale === 'ar' ? 'اختياري' : 'Optional'})</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={styles.input}
+                  placeholder="example@email.com"
+                />
+              </div>
 
-            <div>
-              <label className={styles.label}>{t('phone')}</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? '+218 XX XXX XXX' : '+218 XXX XXX XXX'}
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>{t('phone')}</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className={styles.input}
+                  placeholder={locale === 'ar' ? '+218 XX XXX XXX' : '+218 XXX XXX XXX'}
+                />
+              </div>
 
-            <div>
-              <label className={styles.label}>{t('city')}</label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'أدخل مدينتك' : 'Enter your city'}
-              />
+              <div className={styles.formGroup}>
+                <label className={styles.label}>{t('city')}</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                  className={styles.input}
+                  placeholder={locale === 'ar' ? 'مثال: كامل ليبيا، طرابلس، تونس- ليبيا' : 'Enter your city'}
+                />
+              </div>
             </div>
 
             {role === 'shipper' && (
               <>
-                <div>
-                  <label className={styles.label}>{t('carKind')}</label>
-                  <input
-                    type="text"
-                    name="carKind"
-                    value={formData.carKind}
-                    onChange={handleChange}
-                    required
-                    className={styles.input}
-                    placeholder={
-                      locale === 'ar'
-                        ? 'مثال: شاحنة صغيرة / شاحنة كبيرة'
-                        : 'e.g. Small truck / Big truck'
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className={styles.label}>{t('maxCharge')}</label>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>{t('carKind')}</label>
                     <input
-                      type="number"
-                      name="maxCharge"
-                      value={formData.maxCharge}
+                      type="text"
+                      name="carKind"
+                      value={formData.carKind}
                       onChange={handleChange}
                       required
-                      min={0}
-                      step="any"
                       className={styles.input}
-                      placeholder={locale === 'ar' ? 'مثال: 1000' : 'e.g. 1000'}
-                      style={{ flex: 1 }}
-                    />
-                    <select
-                      name="maxChargeUnit"
-                      value={formData.maxChargeUnit}
-                      onChange={(e) =>
-                        setFormData({ ...formData, maxChargeUnit: e.target.value })
+                      placeholder={
+                        locale === 'ar'
+                          ? 'مثال: شاحنة صغيرة, شاحنة كبيرة, مع حافظة, مع جرار'
+                          : 'e.g. Small truck / Big truck with trailer'
                       }
-                      className={styles.input}
-                      style={{ width: '7rem' }}
-                    >
-                      <option value="kg">kg</option>
-                      <option value="ton">ton</option>
-                    </select>
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>{t('maxCharge')}</label>
+                    <div className={styles.inputGroup}>
+                      <input
+                        type="number"
+                        name="maxCharge"
+                        value={formData.maxCharge}
+                        onChange={handleChange}
+                        required
+                        min={0}
+                        step="any"
+                        className={styles.input}
+                        placeholder={locale === 'ar' ? 'مثال: 1000' : 'e.g. 1000'}
+                      />
+                      <select
+                        name="maxChargeUnit"
+                        value={formData.maxChargeUnit}
+                        onChange={(e) =>
+                          setFormData({ ...formData, maxChargeUnit: e.target.value })
+                        }
+                        className={styles.select}
+                      >
+                        <option value="kg">kg</option>
+                        <option value="ton">ton</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
-                <div>
+                <div className={styles.formGroupFull}>
                   <label className={styles.label}>{t('truckImage')}</label>
-                  <input
-                    type="file"
-                    name="truckImage"
-                    accept="image/*"
-                    onChange={handleTruckImageChange}
-                    className={styles.input}
-                  />
+                  <div className={styles.fileInputContainer}>
+                    <input
+                      type="file"
+                      id="truckImage"
+                      name="truckImage"
+                      accept="image/*"
+                      onChange={handleTruckImageChange}
+                      className={styles.fileInput}
+                    />
+                    <label 
+                      htmlFor="truckImage" 
+                      className={`${styles.fileInputLabel} ${truckImage ? styles.hasFile : ''}`}
+                    >
+                      {truckImage ? (
+                        <>
+                          <Camera className={styles.fileInputIcon} />
+                          <span className={styles.fileInputText}>
+                            {locale === 'ar' ? 'تم اختيار صورة' : 'Image selected'}
+                          </span>
+                          <span className={styles.fileInputSubtext}>
+                            {locale === 'ar' ? 'انقر لتغيير الصورة' : 'Click to change image'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className={styles.fileInputIcon} />
+                          <span className={styles.fileInputText}>
+                            {locale === 'ar' ? 'انقر لرفع صورة الشاحنة' : 'Click to upload truck image'}
+                          </span>
+                          <span className={styles.fileInputSubtext}>
+                            {locale === 'ar' ? 'JPG, PNG, أو GIF بحد أقصى 10MB' : 'JPG, PNG, or GIF up to 10MB'}
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  
+                  {truckImagePreview && (
+                    <div className={styles.filePreview}>
+                      <img 
+                        src={truckImagePreview} 
+                        alt="Truck preview" 
+                        className={styles.filePreviewImage}
+                      />
+                      <div className={styles.fileName}>{truckImage?.name}</div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
             {role === 'merchant' && (
-              <>
-                <div>
+              <div className={styles.formGrid}>
+                {/* <div className={styles.formGroup}>
                   <label className={styles.label}>{t('placeOfBusiness')}</label>
                   <input
                     type="text"
@@ -244,9 +294,9 @@ export default function RegistrationForm({ role }: Props) {
                     className={styles.input}
                     placeholder={locale === 'ar' ? 'مثال: سوق/محل/شركة - المدينة' : 'e.g. Shop/Company - City'}
                   />
-                </div>
+                </div> */}
 
-                <div>
+                <div className={styles.formGroup}>
                   <label className={styles.label}>{t('trucksNeeded')}</label>
                   <input
                     type="text"
@@ -262,7 +312,7 @@ export default function RegistrationForm({ role }: Props) {
                     }
                   />
                 </div>
-              </>
+              </div>
             )}
 
             <button type="submit" className={styles.submitButton}>

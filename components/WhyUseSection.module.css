@@ -178,17 +178,26 @@
   display: flex;
   flex-direction: column;
   gap: 2rem; /* space-y-8 */
+  width: 100%; /* Ensure full width */
 }
 
+/* Remove the auto margins that were causing issues */
 .featuresSideRtl {
   text-align: right;
-  margin-left: auto;
-  margin-right: auto;
+  direction: rtl;
 }
+
 .featuresSideLtr {
   text-align: left;
-  margin-left: auto;
-  margin-right: auto;
+  direction: ltr;
+}
+
+/* Add padding to ensure text doesn't touch screen edges on mobile */
+@media (max-width: 767px) {
+  .featuresSide {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 .featuresTitle {
@@ -196,6 +205,7 @@
   font-weight: 700;
   color: #111827;
   margin-bottom: 1.5rem;
+  width: 100%; /* Ensure title takes full width */
 }
 
 @media (min-width: 768px) {
@@ -208,20 +218,21 @@
   display: flex;
   flex-direction: column;
   gap: 1rem; /* space-y-5 */
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%; /* Ensure list takes full width */
 }
 
 .featureItem {
   display: flex;
   flex-direction: column;
   gap: 0.25rem; /* space-y-1 */
+  width: 100%; /* Ensure items take full width */
 }
 
 .featureItemTitle {
   font-size: 1rem;
   font-weight: 600;
   color: #111827;
+  width: 100%; /* Ensure title takes full width */
 }
 
 @media (min-width: 768px) {
@@ -234,6 +245,7 @@
   font-size: 0.875rem;
   color: #4b5563;
   line-height: 1.625;
+  width: 100%; /* Ensure description takes full width */
 }
 
 @media (min-width: 768px) {
@@ -247,7 +259,9 @@
   font-weight: 700;
   color: #111827; /* gray-900 */
   line-height: 1.75rem;
-  
+  width: 100%; /* Ensure tagline takes full width */
+  direction: rtl; /* Force RTL for Arabic text */
+  text-align: center; /* Center the Arabic text */
 }
 
 .registerButton {
@@ -260,17 +274,21 @@
   border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
-}
-
-.registerButton:hover {
-  background-color: #FFA000;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%; /* Make button full width on mobile */
+  text-align: center;
 }
 
 @media (min-width: 768px) {
   .registerButton {
     font-size: 1.125rem; /* lg */
+    width: auto; /* Auto width on desktop */
+    display: inline-block; /* Inline block on desktop */
   }
+}
+
+.registerButton:hover {
+  background-color: #FFA000;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Stats - Now only 2 boxes, centered */

@@ -150,7 +150,24 @@
   padding: 2.5rem; /* Increased padding for better spacing */
   display: flex;
   flex-direction: column;
-  gap: 2rem; /* Increased gap for better spacing */
+  gap: 1.5rem; /* Adjusted gap for better spacing */
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  
+  .formGridFull {
+    grid-column: 1 / -1;
+  }
 }
 
 .choiceButtonsContainer {
@@ -215,6 +232,11 @@
 .formGroup {
   display: flex;
   flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.formGroupFull {
+  grid-column: 1 / -1;
 }
 
 .label {
@@ -222,21 +244,141 @@
   color: #374151; /* gray-700 */
   font-weight: 500;
   margin-bottom: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   background-color: #f9fafb;
-  border: 1px solid #e5e7eb; /* gray-200 */
+  border: 1.5px solid #e5e7eb; /* gray-200 */
   border-radius: 0.5rem;
   outline: none;
   transition: all 0.2s;
+  font-size: 1rem;
 }
 
 .input:focus {
-  box-shadow: 0 0 0 2px #FFB81C;
-  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.2);
+  border-color: #FFB81C;
+  background-color: white;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.inputGroup .input {
+  flex: 1;
+}
+
+.select {
+  width: 7rem;
+  padding: 0.875rem 0.75rem;
+  background-color: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: all 0.2s;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.2);
+  border-color: #FFB81C;
+  background-color: white;
+}
+
+.fileInputContainer {
+  position: relative;
+  width: 100%;
+}
+
+.fileInput {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.fileInputLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2.5rem 1.5rem;
+  background-color: #f9fafb;
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+  cursor: pointer;
+  text-align: center;
+}
+
+.fileInputLabel:hover {
+  background-color: #f3f4f6;
+  border-color: #FFB81C;
+}
+
+.fileInputIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #9ca3af;
+  margin-bottom: 0.75rem;
+}
+
+.fileInputText {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.fileInputSubtext {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.fileInputLabel.hasFile {
+  background-color: #FFF3CC;
+  border-color: #FFB81C;
+}
+
+.fileInputLabel.hasFile .fileInputIcon {
+  color: #E0A800;
+}
+
+.fileInputLabel.hasFile .fileInputText {
+  color: #111827;
+  font-weight: 500;
+}
+
+.filePreview {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.filePreviewImage {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 0.5rem;
+  object-fit: contain;
+  border: 1px solid #e5e7eb;
+}
+
+.fileName {
+  margin-top: 0.5rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 .submitButton {
@@ -250,12 +392,19 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
   transform: scale(1);
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
 
 .submitButton:hover {
   background-color: #ffa000;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: scale(1.02);
+}
+
+.submitButton:active {
+  transform: scale(0.98);
 }
 
 /* Add icon styles for buttons */
@@ -271,4 +420,12 @@
     height: 2rem;
     margin-right: 1rem;
   }
+}
+
+/* Optional label styling */
+.optionalText {
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #666;
+  margin-left: 0.25rem;
 }

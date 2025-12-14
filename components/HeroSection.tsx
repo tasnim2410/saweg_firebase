@@ -52,9 +52,9 @@ export default function HeroSection() {
             <p className={styles.description}>
               {t('description')}
             </p>
-            <p className={styles.registerText}>
+            {/* <p className={styles.registerText}>
               {t('registerNow')}
-            </p>
+            </p> */}
 
             {/* Register Now Button */}
             <div className={styles.buttonsContainer}>
