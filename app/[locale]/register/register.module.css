@@ -77,7 +77,7 @@
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  max-width: 42rem; /* 2xl */
+  max-width: 48rem; /* Increased from 42rem for better layout */
 }
 
 .backLink {
@@ -147,10 +147,23 @@
 }
 
 .form {
-  padding: 2rem;
+  padding: 2.5rem; /* Increased padding for better spacing */
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem; /* Increased gap for better spacing */
+}
+
+.choiceButtonsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* Gap between buttons on mobile */
+}
+
+@media (min-width: 768px) {
+  .choiceButtonsContainer {
+    flex-direction: row; /* Side by side on desktop */
+    gap: 1.5rem; /* Gap between buttons on desktop */
+  }
 }
 
 .choiceButton {
@@ -158,8 +171,8 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1rem 2rem;
-  background-color: #FFB81C;
+  padding: 1.5rem 2rem; /* Increased padding for better touch targets */
+  background-color: #cba32f;
   color: black;
   font-size: 1.125rem;
   font-weight: 600;
@@ -167,12 +180,13 @@
   text-decoration: none;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
+  flex: 1; /* Make buttons equal width */
 }
 
 .choiceButton:hover {
-  background-color: #ffa000;
+  background-color: #ecb622;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .choiceButtonSecondary {
@@ -180,20 +194,22 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1rem 2rem;
-  background-color: transparent;
-  color: #111827;
+  padding: 1.5rem 2rem; /* Same padding as primary button */
+  background-color: #cba32f;
+  color: black;
   font-size: 1.125rem;
   font-weight: 600;
   border-radius: 0.75rem;
   text-decoration: none;
-  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
+  flex: 1; /* Make buttons equal width */
 }
 
 .choiceButtonSecondary:hover {
-  background-color: #f9fafb;
-  border-color: #FFB81C;
+  background-color: #ecb622;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .formGroup {
@@ -240,4 +256,19 @@
   background-color: #ffa000;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: scale(1.02);
+}
+
+/* Add icon styles for buttons */
+.buttonIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .buttonIcon {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 1rem;
+  }
 }

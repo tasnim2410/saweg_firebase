@@ -106,7 +106,7 @@
 }
 
 .link {
-  color: #9ca3af;
+  color: #001a46;
   transition: color 0.3s;
 }
 
@@ -118,12 +118,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  color: #9ca3af;
+  color: #001a46;
 }
 
 .copyright {
   border-top: 1px solid #3a2a14;
   padding-top: 2rem;
   text-align: center;
-  color: #e5e7eb;
+  color: #001a46;
 }

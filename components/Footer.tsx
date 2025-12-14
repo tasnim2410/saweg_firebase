@@ -36,12 +36,12 @@ export default function Footer() {
               >
                 <Facebook className={styles.iconSvg} />
               </a>
-              <a
+              {/* <a
                 href="#"
                 className={`${styles.socialIcon} ${styles.twitter}`}
               >
                 <Twitter className={styles.iconSvg} />
-              </a>
+              </a> */}
               <a
                 href="#"
                 className={`${styles.socialIcon} ${styles.instagram}`}
@@ -54,12 +54,12 @@ export default function Footer() {
               >
                 <Linkedin className={styles.iconSvg} />
               </a>
-              <a
+              {/* <a
                 href="#"
                 className={`${styles.socialIcon} ${styles.youtube}`}
               >
                 <Youtube className={styles.iconSvg} />
-              </a>
+              </a> */}
             </div>
           </div>
 
@@ -106,8 +106,8 @@ export default function Footer() {
           <div>
             <h3 className={styles.columnTitle}>Contact</h3>
             <ul className={styles.contactList}>
-              <li>Email: saweg.dev@gmail.com</li>
-              <li>Phone: +1 234 567 890</li>
+              <li>Email: Contact.saweg@gmail.com</li>
+              {/* <li>Phone: +1 234 567 890</li> */}
               {/* <li>Address: 123 Street, City, Country</li> */}
             </ul>
           </div>
