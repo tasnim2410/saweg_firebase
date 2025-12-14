@@ -85,6 +85,8 @@
     "email": "Email Address",
     "phone": "Phone Number",
     "city": "City",
+    "merchantCity": "City",
+    "shipperCity": "Place of work/City",
     "carKind": "Car kind",
     "maxCharge": "Max charge",
     "truckImage": "Truck picture",

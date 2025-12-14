@@ -23,7 +23,8 @@ export default function RegistrationForm({ role }: Props) {
     fullName: '',
     email: '',
     phone: '',
-    city: '',
+    merchantCity: '',
+    shipperCity: '',
     carKind: '',
     maxCharge: '',
     maxChargeUnit: 'kg',
@@ -38,19 +39,20 @@ export default function RegistrationForm({ role }: Props) {
     payload.append('fullName', formData.fullName);
     payload.append('email', formData.email);
     payload.append('phone', formData.phone);
-    payload.append('city', formData.city);
     payload.append('role', role);
 
     if (role === 'shipper') {
       payload.append('carKind', formData.carKind);
       payload.append('maxCharge', formData.maxCharge);
       payload.append('maxChargeUnit', formData.maxChargeUnit);
+      payload.append('shipperCity', formData.shipperCity);
       if (truckImage) payload.append('truckImage', truckImage);
     }
 
     if (role === 'merchant') {
       payload.append('placeOfBusiness', formData.placeOfBusiness);
       payload.append('trucksNeeded', formData.trucksNeeded);
+      payload.append('merchantCity', formData.merchantCity);
     }
 
     try {
@@ -166,15 +168,21 @@ export default function RegistrationForm({ role }: Props) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('city')}</label>
+                <label className={styles.label}>
+                  {role === 'shipper' ? t('shipperCity') : t('merchantCity')}
+                </label>
                 <input
                   type="text"
-                  name="city"
-                  value={formData.city}
+                  name={role === 'shipper' ? 'shipperCity' : 'merchantCity'}
+                  value={role === 'shipper' ? formData.shipperCity : formData.merchantCity}
                   onChange={handleChange}
                   required
                   className={styles.input}
-                  placeholder={locale === 'ar' ? 'مثال: كامل ليبيا، طرابلس، تونس- ليبيا' : 'Enter your city'}
+                  placeholder={
+                    role === 'shipper'
+                      ? (locale === 'ar' ? 'أدخل مكان عملك' : 'Enter your place of work')
+                      : (locale === 'ar' ? 'أدخل مدينتك' : 'Enter your city')
+                  }
                 />
               </div>
             </div>
@@ -226,6 +234,8 @@ export default function RegistrationForm({ role }: Props) {
                       </select>
                     </div>
                   </div>
+
+                  
                 </div>
 
                 <div className={styles.formGroupFull}>

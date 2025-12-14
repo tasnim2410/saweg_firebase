@@ -106,9 +106,9 @@
 }
 
 .header {
-  background-color: #674E13;
+  background-color: #f5d38a;
   padding: 2rem;
-  color: white;
+  color: rgba(24, 0, 0, 0.863);
   text-align: center;
 }
 

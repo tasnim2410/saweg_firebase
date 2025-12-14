@@ -16,6 +16,8 @@ export async function POST(req: Request) {
     let maxChargeUnit: string | undefined;
     let placeOfBusiness: string | undefined;
     let trucksNeeded: string | undefined;
+    let merchantCity: string | undefined;
+    let shipperCity: string | undefined;
     let truckImage: File | null = null;
 
     if (contentType.includes('multipart/form-data')) {
@@ -31,6 +33,8 @@ export async function POST(req: Request) {
       maxChargeUnit = (form.get('maxChargeUnit') as string | null) ?? undefined;
       placeOfBusiness = (form.get('placeOfBusiness') as string | null) ?? undefined;
       trucksNeeded = (form.get('trucksNeeded') as string | null) ?? undefined;
+      merchantCity = (form.get('merchantCity') as string | null) ?? undefined;
+      shipperCity = (form.get('shipperCity') as string | null) ?? undefined;
       const file = form.get('truckImage');
       truckImage = file instanceof File ? file : null;
     } else {
@@ -46,6 +50,8 @@ export async function POST(req: Request) {
       maxChargeUnit = body?.maxChargeUnit;
       placeOfBusiness = body?.placeOfBusiness;
       trucksNeeded = body?.trucksNeeded;
+      merchantCity = body?.merchantCity;
+      shipperCity = body?.shipperCity;
     }
 
     const effectiveRole = role ?? userType;
@@ -64,7 +70,7 @@ export async function POST(req: Request) {
       from: `"Saweg Website" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO_EMAIL,
       subject: `New registration: ${fullName}`,
-      text: `New pre-launch registration:\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nCity: ${city}\nRole: ${effectiveRole}${placeOfBusiness ? `\nPlace of business: ${placeOfBusiness}` : ''}${trucksNeeded ? `\nTrucks needed: ${trucksNeeded}` : ''}${carKind ? `\nCar kind: ${carKind}` : ''}${maxCharge ? `\nMax charge: ${maxCharge}${maxChargeUnit ? ` ${maxChargeUnit}` : ''}` : ''}`,
+      text: `New pre-launch registration:\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nCity: ${shipperCity || merchantCity || city}\nRole: ${effectiveRole}${placeOfBusiness ? `\nPlace of business: ${placeOfBusiness}` : ''}${trucksNeeded ? `\nTrucks needed: ${trucksNeeded}` : ''}${carKind ? `\nCar kind: ${carKind}` : ''}${maxCharge ? `\nMax charge: ${maxCharge}${maxChargeUnit ? ` ${maxChargeUnit}` : ''}` : ''}`,
       attachments: truckImage
         ? [
             {
