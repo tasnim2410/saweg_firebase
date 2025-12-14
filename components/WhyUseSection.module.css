@@ -182,9 +182,13 @@
 
 .featuresSideRtl {
   text-align: right;
+  margin-left: auto;
+  margin-right: auto;
 }
 .featuresSideLtr {
   text-align: left;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .featuresTitle {
