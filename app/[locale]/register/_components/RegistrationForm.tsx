@@ -283,7 +283,7 @@ export default function RegistrationForm({ role }: Props) {
 
             {role === 'merchant' && (
               <div className={styles.formGrid}>
-                {/* <div className={styles.formGroup}>
+                <div className={styles.formGroup}>
                   <label className={styles.label}>{t('placeOfBusiness')}</label>
                   <input
                     type="text"
@@ -292,9 +292,9 @@ export default function RegistrationForm({ role }: Props) {
                     onChange={handleChange}
                     required
                     className={styles.input}
-                    placeholder={locale === 'ar' ? 'مثال: سوق/محل/شركة - المدينة' : 'e.g. Shop/Company - City'}
+                    placeholder={locale === 'ar' ? 'وصف مجال العمل' : 'Job description'}
                   />
-                </div> */}
+                </div>
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>{t('trucksNeeded')}</label>
@@ -307,8 +307,8 @@ export default function RegistrationForm({ role }: Props) {
                     className={styles.input}
                     placeholder={
                       locale === 'ar'
-                        ? 'مثال: شاحنة صغيرة، براد، قلاب...'
-                        : 'e.g. small truck, refrigerated, dump truck...'
+                        ? 'مثال: شاحنة صغيرة...'
+                        : 'e.g. small truck...'
                     }
                   />
                 </div>

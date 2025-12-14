@@ -85,7 +85,7 @@
     "carKind": "نوع المركبة",
     "maxCharge": "الحمولة القصوى",
     "truckImage": "صورة الشاحنة",
-    "placeOfBusiness": "مكان العمل",
+    "placeOfBusiness": "إسم الشركة",
     "trucksNeeded": "الشاحنات التي تحتاجها عادةً",
     "submit": "إتمام التسجيل",
     "success": "شكراً لتسجيلك! سنخبرك عند إطلاق التطبيق."
