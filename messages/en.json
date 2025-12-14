@@ -86,6 +86,10 @@
     "phone": "Phone Number",
     "city": "City",
     "carKind": "Car kind",
+    "maxCharge": "Max charge",
+    "truckImage": "Truck picture",
+    "placeOfBusiness": "Place of business",
+    "trucksNeeded": "Trucks you usually need",
     "submit": "Complete Registration",
     "success": "Thank you for registering! We'll notify you when the app launches."
   }

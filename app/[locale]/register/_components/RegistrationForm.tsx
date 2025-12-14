@@ -17,34 +17,45 @@ export default function RegistrationForm({ role }: Props) {
   const locale = useLocale();
 
   const [submitted, setSubmitted] = useState(false);
+  const [truckImage, setTruckImage] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
     city: '',
     carKind: '',
+    maxCharge: '',
+    maxChargeUnit: 'kg',
+    placeOfBusiness: '',
+    trucksNeeded: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: Record<string, unknown> = {
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      city: formData.city,
-      role,
-    };
+    const payload = new FormData();
+    payload.append('fullName', formData.fullName);
+    payload.append('email', formData.email);
+    payload.append('phone', formData.phone);
+    payload.append('city', formData.city);
+    payload.append('role', role);
 
     if (role === 'shipper') {
-      payload.carKind = formData.carKind;
+      payload.append('carKind', formData.carKind);
+      payload.append('maxCharge', formData.maxCharge);
+      payload.append('maxChargeUnit', formData.maxChargeUnit);
+      if (truckImage) payload.append('truckImage', truckImage);
+    }
+
+    if (role === 'merchant') {
+      payload.append('placeOfBusiness', formData.placeOfBusiness);
+      payload.append('trucksNeeded', formData.trucksNeeded);
     }
 
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (!res.ok) {
@@ -60,6 +71,11 @@ export default function RegistrationForm({ role }: Props) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleTruckImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setTruckImage(file);
   };
 
   if (submitted) {
@@ -154,18 +170,99 @@ export default function RegistrationForm({ role }: Props) {
             </div>
 
             {role === 'shipper' && (
-              <div>
-                <label className={styles.label}>{t('carKind')}</label>
-                <input
-                  type="text"
-                  name="carKind"
-                  value={formData.carKind}
-                  onChange={handleChange}
-                  required
-                  className={styles.input}
-                  placeholder={locale === 'ar' ? 'مثال: شاحنة صغيرة / شاحنة كبيرة' : 'e.g. Small truck / Big truck'}
-                />
-              </div>
+              <>
+                <div>
+                  <label className={styles.label}>{t('carKind')}</label>
+                  <input
+                    type="text"
+                    name="carKind"
+                    value={formData.carKind}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    placeholder={
+                      locale === 'ar'
+                        ? 'مثال: شاحنة صغيرة / شاحنة كبيرة'
+                        : 'e.g. Small truck / Big truck'
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className={styles.label}>{t('maxCharge')}</label>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <input
+                      type="number"
+                      name="maxCharge"
+                      value={formData.maxCharge}
+                      onChange={handleChange}
+                      required
+                      min={0}
+                      step="any"
+                      className={styles.input}
+                      placeholder={locale === 'ar' ? 'مثال: 1000' : 'e.g. 1000'}
+                      style={{ flex: 1 }}
+                    />
+                    <select
+                      name="maxChargeUnit"
+                      value={formData.maxChargeUnit}
+                      onChange={(e) =>
+                        setFormData({ ...formData, maxChargeUnit: e.target.value })
+                      }
+                      className={styles.input}
+                      style={{ width: '7rem' }}
+                    >
+                      <option value="kg">kg</option>
+                      <option value="ton">ton</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={styles.label}>{t('truckImage')}</label>
+                  <input
+                    type="file"
+                    name="truckImage"
+                    accept="image/*"
+                    onChange={handleTruckImageChange}
+                    className={styles.input}
+                  />
+                </div>
+              </>
+            )}
+
+            {role === 'merchant' && (
+              <>
+                <div>
+                  <label className={styles.label}>{t('placeOfBusiness')}</label>
+                  <input
+                    type="text"
+                    name="placeOfBusiness"
+                    value={formData.placeOfBusiness}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    placeholder={locale === 'ar' ? 'مثال: سوق/محل/شركة - المدينة' : 'e.g. Shop/Company - City'}
+                  />
+                </div>
+
+                <div>
+                  <label className={styles.label}>{t('trucksNeeded')}</label>
+                  <input
+                    type="text"
+                    name="trucksNeeded"
+                    value={formData.trucksNeeded}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    placeholder={
+                      locale === 'ar'
+                        ? 'مثال: شاحنة صغيرة، براد، قلاب...'
+                        : 'e.g. small truck, refrigerated, dump truck...'
+                    }
+                  />
+                </div>
+              </>
             )}
 
             <button type="submit" className={styles.submitButton}>

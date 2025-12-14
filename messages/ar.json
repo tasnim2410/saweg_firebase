@@ -72,8 +72,8 @@
   "register": {
     "chooseTitle": "اختر نوع التسجيل",
     "chooseDescription": "اختر الخيار الأنسب لك للمتابعة.",
-    "registerAsShipper": "سجل كشاحن",
-    "registerAsMerchant": "سجل كتاجر",
+    "registerAsShipper": "سواق/ ناقل",
+    "registerAsMerchant": "شاحن/ تاجر",
     "shipperTitle": "تسجيل الشاحن",
     "shipperDescription": "املأ بياناتك وأخبرنا بنوع المركبة.",
     "merchantTitle": "تسجيل التاجر",
@@ -81,8 +81,12 @@
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
     "phone": "رقم الهاتف",
-    "city": "المدينة",
+    "city": "مكان العمل/المدينة",
     "carKind": "نوع المركبة",
+    "maxCharge": "الحمولة القصوى",
+    "truckImage": "صورة الشاحنة",
+    "placeOfBusiness": "مكان العمل",
+    "trucksNeeded": "الشاحنات التي تحتاجها عادةً",
     "submit": "إتمام التسجيل",
     "success": "شكراً لتسجيلك! سنخبرك عند إطلاق التطبيق."
   }

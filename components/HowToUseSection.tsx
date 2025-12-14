@@ -41,7 +41,7 @@ export default function WhyUseSection() {
             <div className={styles.imageSide}>
               <div className={styles.imageContainer}>
                 <Image
-                  src="/images/why-this-app1.png"
+                  src="/images/why-this-app1.jpg"
                   alt={isRTL ? 'شاحنة سواق 1' : 'Saweg truck 1'}
                   fill
                   className={`${styles.truckAnimate} ${styles.truck1}`}
