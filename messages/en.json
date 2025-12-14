@@ -3,7 +3,7 @@
     "mainPage": "Main Page",
     "aboutUs": "About Us",
     "bePartners": "Be Partners",
-    "contactUs": "Contact Us",
+    "registration": "Register Now",
     "language": "English"
   },
   "hero": {
@@ -73,15 +73,19 @@
     "faq": "FAQ"
   },
   "register": {
-    "title": "Register to Get the App as Soon as It Launches",
-    "description": "Be among the first to experience our revolutionary app. Register now and get exclusive early access!",
+    "chooseTitle": "Choose how you want to register",
+    "chooseDescription": "Select the option that best describes you to continue.",
+    "registerAsShipper": "Register as a Shipper",
+    "registerAsMerchant": "Register as a Merchant",
+    "shipperTitle": "Shipper Registration",
+    "shipperDescription": "Fill in your details and tell us what kind of vehicle you use.",
+    "merchantTitle": "Merchant Registration",
+    "merchantDescription": "Fill in your details to register as a merchant.",
     "fullName": "Full Name",
     "email": "Email Address",
     "phone": "Phone Number",
     "city": "City",
-    "userType": "I want to use the app as",
-    "customer": "Customer",
-    "partner": "Partner/Driver",
+    "carKind": "Car kind",
     "submit": "Complete Registration",
     "success": "Thank you for registering! We'll notify you when the app launches."
   }

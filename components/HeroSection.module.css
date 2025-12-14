@@ -118,47 +118,31 @@
 
 .buttonsContainer {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
   justify-content: center;
 }
 
-@media (min-width: 640px) {
-  .buttonsContainer {
-    flex-direction: row;
-  }
-}
-
-.storeButton {
-  display: flex;
+.registerButton {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0.9);
-  color: white;
+  padding: 1rem 3rem;
+  background-color: rgba(222, 179, 51);
+  color: black;
   border-radius: 0.75rem;
-  transition: background-color 0.3s;
-}
-
-.storeButton:hover {
-  background-color: #000000;
-}
-
-.buttonIcon {
-  width: 2rem;
-  height: 2rem;
-}
-
-.buttonTextContainer {
-  text-align: start;
-}
-
-.smallText {
-  font-size: 0.75rem;
-}
-
-.largeText {
+  transition: background-color 0.3s, transform 0.2s;
   font-size: 1.125rem;
   font-weight: 600;
+  text-decoration: none;
+}
+
+.registerButton:hover {
+  background-color: #b28f29;
+  transform: translateY(-2px);
+}
+
+@media (min-width: 768px) {
+  .registerButton {
+    font-size: 1.25rem;
+    padding: 1.25rem 4rem;
+  }
 }

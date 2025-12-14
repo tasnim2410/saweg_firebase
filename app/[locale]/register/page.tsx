@@ -1,69 +1,14 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import styles from './register.module.css';
 
 export default function RegisterPage() {
   const t = useTranslations('register');
   const locale = useLocale();
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    city: '',
-    userType: 'customer',
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        console.error('Registration request failed');
-        return;
-      }
-
-      setSubmitted(true);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  if (submitted) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.successCard}>
-          <div className={styles.successIconWrapper}>
-            <CheckCircle className={styles.successIcon} />
-          </div>
-          <h2 className={styles.successTitle}>
-            {t('success')}
-          </h2>
-          <Link
-            href={`/${locale}`}
-            className={styles.backButton}
-          >
-            {locale === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to Home'}
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.pageContainer}>
@@ -77,7 +22,7 @@ export default function RegisterPage() {
           <span>{locale === 'ar' ? 'العودة' : 'Back'}</span>
         </Link>
 
-        {/* Registration Form */}
+        {/* Registration Type Selection */}
         <div className={styles.formCard}>
           {/* Header */}
           <div className={styles.header}>
@@ -92,97 +37,27 @@ export default function RegisterPage() {
               />
             </div>
             <h1 className={styles.title}>
-              {t('title')}
+              {t('chooseTitle')}
             </h1>
             <p className={styles.description}>
-              {t('description')}
+              {t('chooseDescription')}
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div>
-              <label className={styles.label}>
-                {t('fullName')}
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
-              />
-            </div>
-
-            <div>
-              <label className={styles.label}>
-                {t('email')} <span style={{fontWeight: 'normal', fontSize: '0.85em', color: '#666'}}>({locale === 'ar' ? 'اختياري' : 'Optional'})</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'example@email.com' : 'example@email.com'}
-              />
-            </div>
-
-            <div>
-              <label className={styles.label}>
-                {t('phone')}
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? '+218 XX XXX XXX' : '+218 XXX XXX XXX'}
-              />
-            </div>
-
-            <div>
-              <label className={styles.label}>
-                {t('city')}
-              </label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                required
-                className={styles.input}
-                placeholder={locale === 'ar' ? 'أدخل مدينتك' : 'Enter your city'}
-              />
-            </div>
-
-            <div>
-              <label className={styles.label}>
-                {t('userType')}
-              </label>
-              <select
-                name="userType"
-                value={formData.userType}
-                onChange={handleChange}
-                required
-                className={styles.input}
-              >
-                <option value="customer">{t('customer')}</option>
-                <option value="partner">{t('partner')}</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className={styles.submitButton}
+          <div className={styles.form}>
+            <Link
+              href={`/${locale}/register/shipper`}
+              className={styles.choiceButton}
             >
-              {t('submit')}
-            </button>
-          </form>
+              {t('registerAsShipper')}
+            </Link>
+            <Link
+              href={`/${locale}/register/merchant`}
+              className={styles.choiceButtonSecondary}
+            >
+              {t('registerAsMerchant')}
+            </Link>
+          </div>
         </div>
 
         {/* Download Buttons */}

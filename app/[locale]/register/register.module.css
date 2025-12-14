@@ -153,6 +153,49 @@
   gap: 1.5rem;
 }
 
+.choiceButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: #FFB81C;
+  color: black;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.choiceButton:hover {
+  background-color: #ffa000;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.choiceButtonSecondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: transparent;
+  color: #111827;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s;
+}
+
+.choiceButtonSecondary:hover {
+  background-color: #f9fafb;
+  border-color: #FFB81C;
+}
+
 .formGroup {
   display: flex;
   flex-direction: column;

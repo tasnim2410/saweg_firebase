@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { Globe, ChevronDown, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,16 +13,26 @@ export default function Header() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement | null>(null);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isRTL = locale === 'ar';
 
+  // Adjust the extraOffset to make the scroll more aggressive
+  const extraOffset = -55; // Adjust this value to make the scroll less aggressive
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const headerHeight = headerRef.current?.offsetHeight ?? 0;
+      const elementTop = element.getBoundingClientRect().top + window.scrollY;
+      const scrollTop = Math.max(elementTop - headerHeight - extraOffset, 0);
+      window.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth'
+      });
     }
     setActiveSection(sectionId);
   };
@@ -51,7 +61,7 @@ export default function Header() {
   };
 
   return (
-    <header className={styles.header}>
+    <header ref={headerRef} className={styles.header}>
       <div className={styles.container}>
         <div
           className={`${styles.flexContainer} ${
@@ -85,9 +95,9 @@ export default function Header() {
               {t('mainPage')}
             </button>
             <button
-              onClick={() => handleNavClick('about')}
+              onClick={() => handleNavClick('features')}
               className={`${styles.navButton} ${
-                activeSection === 'about'
+                activeSection === 'features'
                   ? styles.navButtonActive
                   : styles.navButtonInactive
               }`}
@@ -106,15 +116,15 @@ export default function Header() {
             </button>
           </nav>
 
-          {/* Language Switcher & Contact - Desktop */}
+          {/* Registration & Language Switcher - Desktop */}
           <div className={styles.desktopActions}>
-            {/* Contact Button */}
-            <button
-              onClick={() => handleNavClick('contact')}
-              className={styles.contactButton}
+            {/* Registration Button */}
+            <Link
+              href={`/${locale}/register`}
+              className={styles.registrationButton}
             >
-              {t('contactUs')}
-            </button>
+              {t('registration')}
+            </Link>
 
             {/* Language Dropdown */}
             <div className={styles.langWrapper}>
@@ -173,7 +183,7 @@ export default function Header() {
               {t('mainPage')}
             </button>
             <button
-              onClick={() => handleMobileNavClick('about')}
+              onClick={() => handleMobileNavClick('features')}
               className={styles.mobileNavLink}
             >
               {t('aboutUs')}
@@ -184,12 +194,12 @@ export default function Header() {
             >
               {t('bePartners')}
             </button>
-            <button
-              onClick={() => handleMobileNavClick('contact')}
+            <Link
+              href={`/${locale}/register`}
               className={styles.mobileNavLink}
             >
-              {t('contactUs')}
-            </button>
+              {t('registration')}
+            </Link>
 
             <div className={styles.mobileLangWrapper}>
               <span className="text-xs text-gray-500">{t('language')}</span>
