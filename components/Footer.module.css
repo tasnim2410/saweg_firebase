@@ -1,6 +1,6 @@
 .footer {
-  background-color: #fffee9;
-  color: white;
+  background-color: #eeedcc;
+  color: rgba(0, 0, 0, 0.855);
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
@@ -76,7 +76,7 @@
 .socialIcon {
   width: 2.5rem;
   height: 2.5rem;
-  background-color: #1f2937;
+  background-color: #eeb620;
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -85,7 +85,7 @@
 }
 
 .socialIcon:hover {
-  background-color: #3b82f6;
+  background-color: #eeb620;
 }
 
 .iconSvg {

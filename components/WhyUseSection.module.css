@@ -203,7 +203,9 @@
 .featuresList {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem; /* space-y-5 */
+  gap: 1rem; /* space-y-5 */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .featureItem {
