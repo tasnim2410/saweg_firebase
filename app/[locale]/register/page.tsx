@@ -49,9 +49,9 @@ export default function RegisterPage() {
             <h1 className={styles.title}>
               {t('chooseTitle')}
             </h1>
-            <p className={styles.description}>
+            {/* <p className={styles.description}>
               {t('chooseDescription')}
-            </p>
+            </p> */}
           </div>
 
           <div className={styles.form}>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
                 style={{ marginLeft: '0.75rem' }}
               >
                 <Package className={styles.buttonIcon} />
-                <span>{t('registerAsMerchant')}</span>
+                <span> {t('registerAsMerchant')} </span>
               </Link>
             </div>
             

@@ -106,7 +106,7 @@
 }
 
 .header {
-  background-color: #f5d38a;
+  background-color: #eeedcc;
   padding: 2rem;
   color: rgba(24, 0, 0, 0.863);
   text-align: center;
@@ -189,7 +189,7 @@
   justify-content: center;
   width: 100%;
   padding: 1.5rem 2rem; /* Increased padding for better touch targets */
-  background-color: #cba32f;
+  background-color: #ebd38cd3;
   color: black;
   font-size: 1.125rem;
   font-weight: 600;
@@ -197,7 +197,8 @@
   text-decoration: none;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
-  flex: 1; /* Make buttons equal width */
+  flex: 1; 
+  gap: 0.75rem;/* Make buttons equal width */
 }
 
 .choiceButton:hover {
@@ -220,7 +221,8 @@
   text-decoration: none;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
-  flex: 1; /* Make buttons equal width */
+  flex: 1; 
+  gap: 0.75rem;/* Make buttons equal width */
 }
 
 .choiceButtonSecondary:hover {
@@ -411,14 +413,15 @@
 .buttonIcon {
   width: 1.5rem;
   height: 1.5rem;
-  margin-right: 0.75rem;
+  
 }
+
 
 @media (min-width: 768px) {
   .buttonIcon {
     width: 2rem;
     height: 2rem;
-    margin-right: 1rem;
+    
   }
 }
 

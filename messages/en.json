@@ -6,6 +6,14 @@
     "registration": "Register Now",
     "language": "English"
   },
+  "carousel": {
+    "title": "Featured Products",
+    "addToCart": "Add to cart",
+    "bookNow": "Book Now",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "reviews": "{count, plural, one {# Review} other {# Reviews}}"
+  },
   "hero": {
     "welcome": "Welcome to Saweg",
     "slogan": "Smart and Secure Freight Transport",
@@ -35,6 +43,7 @@
     "merchantTitle": "For Merchants and Business Owners",
     "merchantDesc": "A complete platform to manage all your freight needs. Through a single platform, you can access a network of qualified carriers, receive multiple transparent offers, and choose the most suitable for your requirements in terms of timing, location, and quality, with regular tracking for every trip.",
     "title": "Why Partner with Saweg?",
+    "tagline": "Because your goods always deserve the best",
     "feature1Title": "Faster Access to Reliable Carriers",
     "feature1Desc": "A network of freight carriers ready to serve your shipment requests.",
     "feature2Title": "Save Time and Costs",

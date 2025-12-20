@@ -6,16 +6,19 @@ import WhyUseSection from '@/components/WhyUseSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import styles from './home.module.css';
+import CarouselSection from '@/components/CarouselSection';
 
 export default function HomePage() {
   return (
     <main className={styles.main}>
       <Header />
       <HeroSection />
+      <CarouselSection />
       <FeaturesSection />
       <section id="about">
         <HowToUseSection />
       </section>
+      
       <WhyUseSection />
       <ContactSection />
       <Footer />

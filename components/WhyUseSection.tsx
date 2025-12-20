@@ -76,9 +76,7 @@ export default function WhyUseSection() {
                   ))}
                 </div>
               </div>
-              <div className={styles.tagline}>
-                لأن بضاعتك تستحق الأفضل دائمًا 
-              </div>
+              <div className={styles.tagline}>{t('tagline')}</div>
 
               {/* Register Button */}
               <div>
