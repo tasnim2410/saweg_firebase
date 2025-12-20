@@ -79,7 +79,7 @@ export default function HowToUseSection() {
               <div className={styles.screen}>
                 <div className={styles.screenContent}>
                   <Image
-                    src="/images/app-preview.jpg"
+                    src="/images/app-preview.png"
                     alt={locale === 'ar' ? 'معاينة تطبيق سواق' : 'Saweg app preview'}
                     width={240}
                     height={480}
