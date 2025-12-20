@@ -40,13 +40,13 @@ export default function WhyUseSection() {
             {/* Truck Image */}
             <div className={styles.imageSide}>
               <div className={styles.imageContainer}>
-                <Image
+                {/* <Image
                   src="/images/why-this-app1.jpg"
                   alt={isRTL ? 'شاحنة سواق 1' : 'Saweg truck 1'}
                   fill
                   className={`${styles.truckAnimate} ${styles.truck1}`}
                   priority
-                />
+                /> */}
                 <Image
                   src="/images/why-this-app2.jpg"
                   alt={isRTL ? 'شاحنة سواق 2' : 'Saweg truck 2'}

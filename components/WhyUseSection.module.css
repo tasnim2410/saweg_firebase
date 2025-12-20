@@ -85,7 +85,7 @@
 }
 
 /* ... truck animation ... */
-@keyframes slide-cycle {
+/* @keyframes slide-cycle {
   0% { transform: translateX(100%); z-index: 10; opacity: 1; }
   10% { transform: translateX(0); z-index: 10; opacity: 1; }
   50% { transform: translateX(0); z-index: 10; opacity: 1; }
@@ -94,7 +94,7 @@
   60.05% { transform: translateX(100%); z-index: 0; opacity: 0; }
   99% { transform: translateX(100%); z-index: 0; opacity: 0; }
   100% { transform: translateX(100%); z-index: 10; opacity: 1; }
-}
+} */
 
 .truckAnimate {
   animation: slide-cycle 16s linear infinite;
