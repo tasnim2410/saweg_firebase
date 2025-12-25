@@ -16,6 +16,8 @@
     "bookNow": "Book Now",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
+    "copyied" : "Copied!",
+    "clickToCopy" : "Click to copy",
     "reviews": "{count, plural, one {# Review} other {# Reviews}}"
   },
   "hero": {

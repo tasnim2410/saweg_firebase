@@ -16,7 +16,9 @@
     "bookNow": "احجز الآن",
     "scrollLeft": "تمرير لليسار",
     "scrollRight": "تمرير لليمين",
-    "reviews": "{count, plural, zero {لا مراجعات} one {مراجعة واحدة} two {مراجعتان} few {# مراجعات} many {# مراجعة} other {# مراجعة}}"
+    "copyied" : "تم النسخ!",
+    "clickToCopy" : "انقر لنسخ",
+    "reviews": "{count, plural, zero {لا مراجعات} one {مراجعة واحدة} two {مراجعةتان} few {# مراجعات} many {# مراجعة} other {# مراجعة}}"
   },
   "hero": {
     "welcome": "أهلاً بك في سواق",

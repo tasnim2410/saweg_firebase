@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react'; // Add useState
 import { useTranslations } from 'next-intl';
 import styles from './CarouselSection.module.css';
 
@@ -20,8 +20,9 @@ interface Product {
 const CarouselSection: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
+  const [copiedPhoneId, setCopiedPhoneId] = useState<number | null>(null); // Track which phone was copied
 
-  const products: Product[] = [
+   const products: Product[] = [
     {
       id: 1,
       title: "الناقل الموثوق",
@@ -166,69 +167,111 @@ const CarouselSection: React.FC = () => {
     }
   };
 
+  // Function to copy phone number to clipboard
+  const copyToClipboard = (phoneNumber: string, productId: number) => {
+    navigator.clipboard.writeText(phoneNumber)
+      .then(() => {
+        setCopiedPhoneId(productId);
+        // Reset the copied state after 2 seconds
+        setTimeout(() => {
+          setCopiedPhoneId(null);
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phoneNumber;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setCopiedPhoneId(productId);
+          setTimeout(() => {
+            setCopiedPhoneId(null);
+          }, 2000);
+        } catch (err) {
+          console.error('Fallback copy failed: ', err);
+        }
+        document.body.removeChild(textArea);
+      });
+  };
+
   return (
     <section className={styles.carouselContainer}>
-      {/* <h2 className={styles.carouselTitle}>{t('title')}</h2>
-       */}
       <div className={styles.carousel} ref={carouselRef}>
         {products.map((product) => (
           <div 
-  key={product.id} 
-  className={styles.carouselItem}
->
+            key={product.id} 
+            className={styles.carouselItem}
+          >
+            <div 
+              className={styles.imageContainer}
+              style={{
+                backgroundImage: `url(${product.image})`,
+              }}
+            >
+              <img 
+                src={product.image} 
+                alt={product.title}
+                className={styles.productImage}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck";
+                }}
+              />
+            </div>
 
-  <div 
-    className={styles.imageContainer}
-    style={{
-      backgroundImage: `url(${product.image})`,
-    }}
-  >
-    <img 
-      src={product.image} 
-      alt={product.title}
-      className={styles.productImage}
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = "https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck";
-      }}
-    />
-  </div>
+            <div className={styles.contentWrapper}>
+              <h3 className={styles.productTitle}>{product.title}</h3>
+              
+              <div className={styles.placeOfBusinessContainer}>
+                <p className={styles.placeOfBusiness}>
+                  {product.placeOfBusiness}
+                </p>
+              </div>
 
+              <div className={styles.descriptionContainer}>
+                <p className={styles.description}>
+                  {product.description.split('\n').map((line, index) => (
+                    <span key={index} className={styles.descriptionLine}>{line}</span>
+                  ))}
+                </p>
+              </div>
 
-  <div className={styles.contentWrapper}>
-    <h3 className={styles.productTitle}>{product.title}</h3>
-    
-    <div className={styles.placeOfBusinessContainer}>
-      <p className={styles.placeOfBusiness}>
-        {product.placeOfBusiness}
-      </p>
-    </div>
-
-    <div className={styles.descriptionContainer}>
-      <p className={styles.description}>
-        {product.description.split('\n').map((line, index) => (
-          <span key={index} className={styles.descriptionLine}>{line}</span>
-        ))}
-      </p>
-    </div>
-
-    <div className={styles.currentLocationContainer}>
-      <span 
-        className={styles.currentLocationIcon}
-        style={{ color: product.active ? 'green' : 'red' }}
-      >
-        ●
-      </span>
-      <p className={styles.currentLocation}>
-        {product.currentLocatin || '-'}
-      </p>
-    </div>
-    
-    <p className={styles.phoneNumber}>
-      <span className={styles.phoneNumberIcon}>📞</span>
-      {product.phoneNumber}
-    </p>
-  </div>
-</div>
+              <div className={styles.currentLocationContainer}>
+                <span 
+                  className={styles.currentLocationIcon}
+                  style={{ color: product.active ? 'green' : 'red' }}
+                >
+                  ●
+                </span>
+                <p className={styles.currentLocation}>
+                  {product.currentLocatin || '-'}
+                </p>
+              </div>
+              
+              {/* Updated phone number section */}
+              <div className={styles.phoneContainer}>
+                <button 
+                  className={`${styles.phoneButton} ${copiedPhoneId === product.id ? styles.copied : ''}`}
+                  onClick={() => copyToClipboard(product.phoneNumber, product.id)}
+                  aria-label={`Copy phone number: ${product.phoneNumber}`}
+                  title="Click to copy phone number"
+                >
+                  <span className={styles.phoneNumberIcon}>📞</span>
+                  <span className={styles.phoneNumberText}>
+                    {copiedPhoneId === product.id ? t('copyied') : product.phoneNumber}
+                  </span>
+                  {copiedPhoneId === product.id && (
+                    <span className={styles.checkmark}>✓</span>
+                  )}
+                </button>
+                <p className={styles.phoneHint}>
+                  {copiedPhoneId === product.id ? t('copyied') : t('clickToCopy')}
+                </p>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
       
