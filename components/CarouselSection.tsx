@@ -168,8 +168,8 @@ const CarouselSection: React.FC = () => {
 
   return (
     <section className={styles.carouselContainer}>
-      <h2 className={styles.carouselTitle}>{t('title')}</h2>
-      
+      {/* <h2 className={styles.carouselTitle}>{t('title')}</h2>
+       */}
       <div className={styles.carousel} ref={carouselRef}>
         {products.map((product) => (
           <div 
