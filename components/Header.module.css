@@ -109,6 +109,36 @@
   background-color: #e6a517;
 }
 
+.authLink {
+  font-weight: 700;
+  color: #374151;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.authLink:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.authButton {
+  font-weight: 700;
+  color: #374151;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.authButton:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
 .langWrapper {
   position: relative;
   display: flex;

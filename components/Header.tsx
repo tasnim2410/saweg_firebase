@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { Globe, ChevronDown, Menu, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,10 +13,12 @@ export default function Header() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+
   const headerRef = useRef<HTMLElement | null>(null);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<null | { isAdmin?: boolean }>(null);
 
   const isRTL = locale === 'ar';
 
@@ -58,6 +60,37 @@ export default function Header() {
     router.push(`/${newLocale}/${path}`);
     setIsLangOpen(false);
     setIsMenuOpen(false);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await res.json();
+        if (cancelled) return;
+        setAuthUser(data?.user ?? null);
+      } catch {
+        if (cancelled) return;
+        setAuthUser(null);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      setAuthUser(null);
+      router.push(`/${locale}`);
+      router.refresh();
+    }
   };
 
   return (
@@ -118,6 +151,27 @@ export default function Header() {
 
           {/* Registration & Language Switcher - Desktop */}
           <div className={styles.desktopActions}>
+            {authUser ? (
+              <>
+                {authUser.isAdmin ? (
+                  <Link href={`/${locale}/admin`} className={styles.authLink}>
+                    {t('admin')}
+                  </Link>
+                ) : null}
+                <button type="button" onClick={logout} className={styles.authButton}>
+                  {t('logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href={`/${locale}/login`} className={styles.authLink}>
+                  {t('login')}
+                </Link>
+                <Link href={`/${locale}/signup`} className={styles.authLink}>
+                  {t('signup')}
+                </Link>
+              </>
+            )}
             {/* Registration Button */}
             <Link
               href={`/${locale}/register`}
@@ -200,6 +254,28 @@ export default function Header() {
             >
               {t('registration')}
             </Link>
+
+            {authUser ? (
+              <>
+                {authUser.isAdmin ? (
+                  <Link href={`/${locale}/admin`} className={styles.mobileNavLink}>
+                    {t('admin')}
+                  </Link>
+                ) : null}
+                <button type="button" onClick={logout} className={styles.mobileNavLink}>
+                  {t('logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href={`/${locale}/login`} className={styles.mobileNavLink}>
+                  {t('login')}
+                </Link>
+                <Link href={`/${locale}/signup`} className={styles.mobileNavLink}>
+                  {t('signup')}
+                </Link>
+              </>
+            )}
 
             <div className={styles.mobileLangWrapper}>
               <span className="text-xs text-gray-500">{t('language')}</span>

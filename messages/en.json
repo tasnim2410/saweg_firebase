@@ -4,7 +4,11 @@
     "aboutUs": "About Us",
     "bePartners": "Be Partners",
     "registration": "Register Now",
-    "language": "English"
+    "language": "English",
+    "login": "Login",
+    "signup": "Sign up",
+    "logout": "Logout",
+    "admin": "Admin"
   },
   "carousel": {
     "title": "Featured Products",
@@ -103,5 +107,35 @@
     "trucksNeeded": "Trucks you usually need",
     "submit": "Complete Registration",
     "success": "Thank you for registering! We'll notify you when the app launches."
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "signupTitle": "Sign up",
+    "loginButton": "Login",
+    "signupButton": "Create account",
+    "emailOrPhone": "Email or phone",
+    "email": "Email",
+    "phone": "Phone",
+    "fullName": "Full name",
+    "password": "Password",
+    "repeatPassword": "Repeat password",
+    "loading": "Loading...",
+    "invalidCredentials": "Invalid credentials",
+    "signupFailed": "Could not create account",
+    "somethingWentWrong": "Something went wrong",
+    "noAccount": "No account?",
+    "haveAccount": "Already have an account?",
+    "errors": {
+      "fullNameRequired": "Full name is required",
+      "emailOrPhoneRequired": "Please enter an email or phone number",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "passwordRequired": "Password is required",
+      "userAlreadyExists": "An account with this email/phone already exists",
+      "passwordsDoNotMatch": "Passwords do not match"
+    }
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome, {name}"
   }
 }

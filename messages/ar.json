@@ -4,7 +4,11 @@
     "aboutUs": "عن الشركة",
     "bePartners": "كونوا شركاء",
     "registration": "سجل الآن",
-    "language": "العربية"
+    "language": "العربية",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "admin": "لوحة الإدارة"
   },
   "carousel": {
     "title": "المنتجات المميزة",
@@ -99,5 +103,35 @@
     "trucksNeeded": "الشاحنات التي تحتاجها عادةً",
     "submit": "إتمام التسجيل",
     "success": "شكراً لتسجيلك! سنخبرك عند إطلاق التطبيق."
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "signupTitle": "إنشاء حساب",
+    "loginButton": "تسجيل الدخول",
+    "signupButton": "إنشاء حساب",
+    "emailOrPhone": "البريد الإلكتروني أو رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "fullName": "الاسم الكامل",
+    "password": "كلمة المرور",
+    "repeatPassword": "تأكيد كلمة المرور",
+    "loading": "جارٍ التحميل...",
+    "invalidCredentials": "بيانات الدخول غير صحيحة",
+    "signupFailed": "تعذر إنشاء الحساب",
+    "somethingWentWrong": "حدث خطأ ما",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "errors": {
+      "fullNameRequired": "الاسم الكامل مطلوب",
+      "emailOrPhoneRequired": "يرجى إدخال البريد الإلكتروني أو رقم الهاتف",
+      "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "userAlreadyExists": "يوجد حساب بهذا البريد/الرقم بالفعل",
+      "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين"
+    }
+  },
+  "admin": {
+    "title": "لوحة الإدارة",
+    "welcome": "مرحباً، {name}"
   }
 }
