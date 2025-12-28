@@ -1,7 +1,7 @@
 /* ===== Base Container ===== */
 .carouselContainer {
   width: 100%;
-  max-width: 1300px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 60px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -31,7 +31,7 @@
 /* ===== Carousel Wrapper ===== */
 .carousel {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   overflow-x: auto;
   padding: 30px 20px;
   margin: 0 -20px;
@@ -47,8 +47,8 @@
 
 /* ===== Carousel Item Card ===== */
 .carouselItem {
-  flex: 0 0 350px;
-  width: 350px;
+  flex: 0 0 330px;
+  width: 300px;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -56,13 +56,13 @@
   border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  height: 735px;                  /* Fixed total card height – adjust as needed */
+  height: 600px;                  /* Fixed total card height – adjust as needed */
   overflow: hidden;
 }
 
 /* New: Image container that takes ~65% of height */
 .imageContainer {
-  height: 830px;                  /* This sets the uniform height – ~68% of card. Change to 400px-450px for your preference */
+  height: 600px;                  /* This sets the uniform height – ~68% of card. Change to 400px-450px for your preference */
   width: 100%;
   background-color: #f8f9fa;      /* Light background for letterboxing (empty space around narrower images) */
   display: flex;
@@ -76,11 +76,11 @@
 /* Content stays in the bottom part */
 .contentWrapper {
   height: 70%;
-  padding: 12px 16px;
+  padding: 20px 15px;
   background-color: white;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   justify-content: flex-start;
   overflow: hidden;
 }
@@ -175,8 +175,8 @@
 .descriptionContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 5px;
+  margin-bottom: 5;
   flex-grow: 1;
 }
 
@@ -206,33 +206,48 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
   margin: 8px 0;
   padding: 10px 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s ease;
 }
 
+/* Active status (green) */
 .currentLocationIcon[style*="color: green"],
 .currentLocationIcon.active {
-  background-color: #00ff00; /* Bright green */
-  color: #00ff00;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   box-shadow: 
-    0 0 10px #00ff00,
-    0 0 20px rgba(0, 255, 0, 0.3),
-    inset 0 0 10px rgba(255, 255, 255, 0.5);
-  animation: pulseActive 2s infinite;
+    0 0 12px rgba(16, 185, 129, 0.4),
+    0 2px 8px rgba(16, 185, 129, 0.2);
+  animation: gentlePulse 2.5s ease-in-out infinite;
 }
+/* Inactive status (red) */
 .currentLocationIcon[style*="color: red"],
 .currentLocationIcon.inactive {
-  background-color: #ff0000; /* Bright red */
-  color: #ff0000;
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   box-shadow: 
-    0 0 10px #ff0000,
-    0 0 20px rgba(255, 0, 0, 0.3),
-    inset 0 0 10px rgba(255, 255, 255, 0.5);
-  animation: pulseInactive 2s infinite;
+    0 0 12px rgba(239, 68, 68, 0.4),
+    0 2px 8px rgba(239, 68, 68, 0.2);
+  animation: gentlePulse 2.5s ease-in-out infinite;
+}
+
+
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 12px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 
+      0 0 16px rgba(0, 0, 0, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 .currentLocationIcon {
   position: relative;
@@ -242,8 +257,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px; /* Small text for the dot */
+  font-size: 35px; /* Small text for the dot */
   border-radius: 50%;
+  align-content: center;
   transition: all 0.3s ease;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
@@ -287,56 +303,77 @@
 .currentLocationLabel {
   font-weight: 600;
   font-size: 14px;
-  color: #333;
+  color: #334155;
   min-width: 60px;
 }
 
 .currentLocationText {
   font-size: 15px;
   font-weight: 500;
-  color: #2c3e50;
+  color: #1E293B;
   line-height: 1.4;
+  flex: 1;
 }
 
 /* Status tooltip */
+.currentLocationContainer:hover {
+  border-color: #CBD5E1;
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+}
+
 .currentLocationContainer:hover .currentLocationIcon::after {
   content: attr(data-status);
   position: absolute;
-  bottom: 100%;
+  top: -35px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 4px 8px;
-  background-color: #333;
+  padding: 0px;
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   font-size: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   white-space: nowrap;
-  margin-bottom: 8px;
-  opacity: 0.9;
+  opacity: 0;
+  animation: tooltipFade 0.3s ease forwards;
   pointer-events: none;
+  z-index: 10;
 }
 
-/* .currentLocationIcon[style*="color: green"]::after,
-.currentLocationIcon.active::after {
-  content: "متاح";
+@keyframes tooltipFade {
+  to {
+    opacity: 1;
+    top: -30px;
+  }
+}
+/* Status indicator with icon */
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.statusIndicator .currentLocationIcon {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
 }
 
-.currentLocationIcon[style*="color: red"]::after,
-.currentLocationIcon.inactive::after {
-  content: "غير متاح";
-} */
+.statusIndicator .currentLocationIcon::before {
+  width: 6px;
+  height: 6px;
+}
 
 /* Add responsive adjustments */
 @media (max-width: 768px) {
-  .currentLocationContainer {
+    .currentLocationContainer {
     padding: 8px 10px;
-    gap: 10px;
+    gap: 8px;
   }
+
   
-  .currentLocationIcon {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
+    .currentLocationIcon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
   }
   
   .currentLocationLabel {
@@ -355,10 +392,9 @@
     gap: 8px;
   }
   
-  .currentLocationIcon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
+  .currentLocationIcon::before {
+    width: 7px;
+    height: 7px;
   }
   
   .currentLocationLabel {
@@ -406,35 +442,62 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #4a90e2 0%, #2c5aa0 100%);
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #d1d127dd 0%, #59c30dd0 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
   width: 100%;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  letter-spacing: 0.5px;
+}
+
+.phoneButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+.phoneButton:active::before {
+  width: 200px;
+  height: 200px;
 }
 
 .phoneButton:hover {
-  background: linear-gradient(135deg, #3a80d2 0%, #1c4a90 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
 }
 
 .phoneButton:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
 }
 
 .phoneButton.copied {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  animation: pulse 0.5s ease-in-out;
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  animation: successPulse 0.6s ease-in-out;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
 }
 
 @keyframes pulse {
@@ -444,21 +507,36 @@
 }
 
 .phoneNumberIcon {
-  font-size: 18px;
+  font-size: 20px;
   min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .phoneNumberText {
   flex-grow: 1;
   text-align: center;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .checkmark {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(5px) scale(0.8); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
 }
 
 @keyframes fadeIn {
@@ -466,7 +544,7 @@
   to { opacity: 1; transform: scale(1); }
 }
 .phoneNumberIcon {
-  color: #2ecc71;
+  color: #8ebc1a;
   font-size: 20px;
   min-width: 24px;
 }
@@ -606,7 +684,7 @@
   .carouselItem {
     flex: 0 0 350px;
     width: 350px;
-    padding: 20px;
+    padding: 10px;
     min-height: 560px;
   }
   
@@ -643,8 +721,8 @@
     font-size: 24px;
   }
   .contentWrapper {
-    padding: 10px 12px;
-    gap: 6px;
+    padding: 8px 10px;
+    gap: 5px;
   }
   .productTitle {
     font-size: 16px;
@@ -699,8 +777,8 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .phoneButton {
-    padding: 10px 14px;
-    font-size: 15px;
+    padding: 12px 14px;
+    font-size: 16px;
   }
   
   .phoneNumberText {
@@ -710,16 +788,34 @@
 
 @media (max-width: 480px) {
   .phoneButton {
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 10px 12px;
+    font-size: 15px;
   }
   
-  .phoneNumberText {
-    font-size: 14px;
-    letter-spacing: 0.5px;
+  .phoneNumberIcon {
+    font-size: 18px;
   }
   
-  .phoneHint {
-    font-size: 11px;
+  .currentLocationContainer {
+    padding: 6px 8px;
+  }
+  
+  .currentLocationIcon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
+  
+  .currentLocationIcon::before {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .currentLocationLabel {
+    font-size: 13px;
+  }
+  
+  .currentLocationText {
+    font-size: 14px;
   }
 }

@@ -266,9 +266,9 @@ const CarouselSection: React.FC = () => {
                     <span className={styles.checkmark}>✓</span>
                   )}
                 </button>
-                <p className={styles.phoneHint}>
+                {/* <p className={styles.phoneHint}>
                   {copiedPhoneId === product.id ? t('copyied') : t('clickToCopy')}
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
