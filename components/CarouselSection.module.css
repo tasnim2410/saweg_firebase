@@ -682,8 +682,8 @@
   }
   
   .carouselItem {
-    flex: 0 0 350px;
-    width: 350px;
+    flex: 0 0 320px;
+    width: 320px;
     padding: 10px;
     min-height: 560px;
   }
