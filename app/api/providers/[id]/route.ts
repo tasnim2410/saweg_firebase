@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getSession(req);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
 
   const isAdmin = Boolean((session.user as any).type === 'ADMIN' || adminByIdentifier);
 
-  const { id } = await Promise.resolve((context as any).params);
+  const { id } = await context.params;
   const providerId = Number(id);
   if (!Number.isFinite(providerId)) {
     return NextResponse.json({ error: 'Invalid provider id' }, { status: 400 });
@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
   });
 }
 
-export async function DELETE(_req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getSession(_req);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -125,7 +125,7 @@ export async function DELETE(_req: NextRequest, context: { params: { id: string 
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { id } = await Promise.resolve((context as any).params);
+  const { id } = await context.params;
   const providerId = Number(id);
   if (!Number.isFinite(providerId)) {
     return NextResponse.json({ error: 'Invalid provider id' }, { status: 400 });
