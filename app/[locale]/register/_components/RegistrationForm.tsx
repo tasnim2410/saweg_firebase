@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
@@ -15,10 +16,15 @@ type Props = {
 export default function RegistrationForm({ role }: Props) {
   const t = useTranslations('register');
   const locale = useLocale();
+  const router = useRouter();
 
   const [submitted, setSubmitted] = useState(false);
   const [truckImage, setTruckImage] = useState<File | null>(null);
   const [truckImagePreview, setTruckImagePreview] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -35,11 +41,22 @@ export default function RegistrationForm({ role }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setError(null);
+    if (password.length < 6) {
+      setError(locale === 'ar' ? 'كلمة المرور قصيرة جدًا' : 'Password is too short');
+      return;
+    }
+    if (password !== repeatPassword) {
+      setError(locale === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
+      return;
+    }
+
     const payload = new FormData();
     payload.append('fullName', formData.fullName);
     payload.append('email', formData.email);
     payload.append('phone', formData.phone);
-    payload.append('role', role);
+    payload.append('password', password);
+    payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
 
     if (role === 'shipper') {
       payload.append('carKind', formData.carKind);
@@ -56,19 +73,27 @@ export default function RegistrationForm({ role }: Props) {
     }
 
     try {
-      const res = await fetch('/api/register', {
+      setLoading(true);
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         body: payload,
       });
 
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        console.error('Registration request failed');
+        setError(data?.error || (locale === 'ar' ? 'فشل إنشاء الحساب' : 'Failed to create account'));
         return;
       }
 
       setSubmitted(true);
+      router.push(`/${locale}`);
+      router.refresh();
     } catch (err) {
       console.error(err);
+      setError(locale === 'ar' ? 'حدث خطأ غير متوقع' : 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +104,7 @@ export default function RegistrationForm({ role }: Props) {
   const handleTruckImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     setTruckImage(file);
-    
+
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -187,6 +212,30 @@ export default function RegistrationForm({ role }: Props) {
               </div>
             </div>
 
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>{locale === 'ar' ? 'كلمة المرور' : 'Password'}</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>{locale === 'ar' ? 'تأكيد كلمة المرور' : 'Repeat password'}</label>
+                <input
+                  type="password"
+                  value={repeatPassword}
+                  onChange={(e) => setRepeatPassword(e.target.value)}
+                  required
+                  className={styles.input}
+                />
+              </div>
+            </div>
+
             {role === 'shipper' && (
               <>
                 <div className={styles.formGrid}>
@@ -234,8 +283,6 @@ export default function RegistrationForm({ role }: Props) {
                       </select>
                     </div>
                   </div>
-
-                  
                 </div>
 
                 <div className={styles.formGroupFull}>
@@ -249,8 +296,8 @@ export default function RegistrationForm({ role }: Props) {
                       onChange={handleTruckImageChange}
                       className={styles.fileInput}
                     />
-                    <label 
-                      htmlFor="truckImage" 
+                    <label
+                      htmlFor="truckImage"
                       className={`${styles.fileInputLabel} ${truckImage ? styles.hasFile : ''}`}
                     >
                       {truckImage ? (
@@ -276,12 +323,12 @@ export default function RegistrationForm({ role }: Props) {
                       )}
                     </label>
                   </div>
-                  
+
                   {truckImagePreview && (
                     <div className={styles.filePreview}>
-                      <img 
-                        src={truckImagePreview} 
-                        alt="Truck preview" 
+                      <img
+                        src={truckImagePreview}
+                        alt="Truck preview"
                         className={styles.filePreviewImage}
                       />
                       <div className={styles.fileName}>{truckImage?.name}</div>
@@ -325,8 +372,10 @@ export default function RegistrationForm({ role }: Props) {
               </div>
             )}
 
+            {error ? <div className={styles.error}>{error}</div> : null}
+
             <button type="submit" className={styles.submitButton}>
-              {t('submit')}
+              {loading ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...') : t('submit')}
             </button>
           </form>
         </div>

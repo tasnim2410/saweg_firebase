@@ -16,11 +16,11 @@ export async function POST(req: Request) {
     if (!identifier) return NextResponse.json({ ok: false, error: 'IDENTIFIER_REQUIRED' }, { status: 400 });
     if (!password) return NextResponse.json({ ok: false, error: 'PASSWORD_REQUIRED' }, { status: 400 });
 
-    const user = await prisma.user.findFirst({
+    const user = await (prisma as any).user.findFirst({
       where: looksLikeEmail(identifier)
         ? { email: identifier.toLowerCase() }
         : { phone: identifier },
-      select: { id: true, fullName: true, email: true, phone: true, passwordHash: true },
+      select: { id: true, fullName: true, email: true, phone: true, passwordHash: true, type: true },
     });
 
     if (!user) return NextResponse.json({ ok: false, error: 'INVALID_CREDENTIALS' }, { status: 401 });
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const ok = await verifyPassword(password, user.passwordHash);
     if (!ok) return NextResponse.json({ ok: false, error: 'INVALID_CREDENTIALS' }, { status: 401 });
 
-    const token = await signSessionToken({ sub: user.id, email: user.email, phone: user.phone });
+    const token = await signSessionToken({ sub: user.id, email: user.email, phone: user.phone, type: (user as any).type });
 
     const res = NextResponse.json({ ok: true, user: { id: user.id, fullName: user.fullName, email: user.email, phone: user.phone } });
     res.cookies.set(AUTH_COOKIE_NAME, token, {

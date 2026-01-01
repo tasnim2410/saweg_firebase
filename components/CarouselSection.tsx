@@ -1,289 +1,246 @@
 'use client';
-import React, { useRef, useState } from 'react'; // Add useState
-import { useTranslations } from 'next-intl';
-import styles from './CarouselSection.module.css';
 
-interface Product {
+import React, { useRef, useState, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import Link from 'next/link';
+import styles from './CarouselSection.module.css';
+import { getLocationLabel } from '@/lib/locations';
+
+interface Provider {
   id: number;
-  title: string;
-  originalPrice?: number;
-  currentLocatin?: string;
-  placeOfBusiness: string;
-  description: string;
-  reviewCount: number;
-  phoneNumber: string;
-  rating: number;
-  image: string;
+  name: string;           // used as title
+  location: string;       // used as current location
+  phone: string;          // phoneNumber
+  image: string | null;   // path to uploaded image
   active: boolean;
+  description?: string | null;
+  destination?: string | null;
+  placeOfBusiness?: string | null;
 }
 
 const CarouselSection: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
-  const [copiedPhoneId, setCopiedPhoneId] = useState<number | null>(null); // Track which phone was copied
+  const locale = useLocale();
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [copiedPhoneId, setCopiedPhoneId] = useState<number | null>(null);
+  const [canAdd, setCanAdd] = useState(false);
 
-   const products: Product[] = [
-    {
-      id: 1,
-      title: "الناقل الموثوق",
-      currentLocatin: "طرابلس",
-      originalPrice: 179.99,
-      reviewCount: 2,
-      phoneNumber: "0926263250",
-      placeOfBusiness: "طرابلس",
-      rating: 5,
-      description: "متشي كنتر للايجار داخل مدينة طرابلس",
-      image: "/images/truck1.png",
-      active: true
-    },
-    {
-      id: 2,
-      title: "محمد",
-      currentLocatin: "طرابلس",
-      originalPrice: 179.99,
-      reviewCount: 2,
-      phoneNumber: "0926263250",
-      placeOfBusiness: "كامل ليبيا",
-      rating: 5,
-      description: "ريكاردو ثلاجة للايجار",
-      image: "/images/truck2.png",
-      active: false
-    },
-    {
-      id: 3,
-      title: "حسام فوزي",
-      currentLocatin: "طرابلس",
-      reviewCount: 83,
-      phoneNumber: "0914080444",
-      placeOfBusiness: " ليبيا و تونس",
-      rating: 5,
-      description:"ستارة للإيجار",
-      image: "/images/truck3.png",
-      active: true
-    },
-    {
-      id: 4,
-      title: "خليل المغربي",
-      currentLocatin: "جذابيا",
-      originalPrice: 129.99,
-      reviewCount: 45,
-      phoneNumber: "0917666165",
-      placeOfBusiness: "جذابيا",
-      rating: 4,
-      description:"متوفر كنتر توصيل داخلي+ وخارجي",
-      image: "/images/truck4.png",
-      active: true
-    },
-    {
-      id: 5,
-      title: "حاتم الفغ",
-      currentLocatin: "طرابلس",
-      reviewCount: 31,
-      phoneNumber: "0930873412",
-      placeOfBusiness: "داخل وخارج طرابلس",
-      rating: 5,
-      description:"برتر كيا للايجار ",
-      image: "/images/truck5.png",
-      active: true
-    },
-    {
-      id: 6,
-      title: "محمد الزوام",
-      currentLocatin: "الخمس",
-      reviewCount: 31,
-      phoneNumber: "0934779451",
-      placeOfBusiness: "كامل ليبيا",
-      rating: 5,
-      description:"ستاره 13.5 متر للإيجار ",
-      image: "/images/truck6.png",
-      active: false
-    },
-    {
-      id: 7,
-      title: "عبد اللطيف التونسي",
-      currentLocatin: "-",
-      reviewCount: 31,
-      rating: 5,
-      description:"بنتينه للإيجار ",
-      placeOfBusiness: "كامل ليبيا", 
-      phoneNumber: "0912749907",
-      image: "/images/truck7.png",
-      active: true
-    },
-    {
-      id: 8,
-      title: "حمزة سويب",
-      currentLocatin: " مصراته",
-      reviewCount: 31,
-      phoneNumber: "0912278295",
-      placeOfBusiness: " كامل ليبيا",
-      rating: 5,
-      description:"ريكاردو ستارة 8 متر للإيجار ",
-      image: "/images/truck8.png",
-      active: false
-    },
-    {
-      id: 9,
-      title: "ابا أحمد الجالي",
-      currentLocatin: " تاجوراء",
-      reviewCount: 31,
-      phoneNumber: "0913594435",
-      placeOfBusiness: "تاجوراء",
-      rating: 5,
-      description:"حافظة للايجار",
-      image: "/images/truck9.png",
-      active: true
-    },
-    {
-      id: 10,
-      title: "ابراهيم الشيخي",
-      currentLocatin: "بنغازي",
-      reviewCount: 31,
-      phoneNumber: "0913594435",
-      placeOfBusiness: "المنطقه الشرقيه",
-      rating: 5,
-      description:"كنتر للايجار",
-      image: "/images/truck10.png",
-      active: true
-    },
+  // Fetch providers on mount
+  useEffect(() => {
+    let cancelled = false;
 
-  ];
+    const loadAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await res.json().catch(() => null);
+        if (cancelled) return;
+        const type = data?.user?.type;
+        const isAdmin = Boolean(data?.user?.isAdmin);
+        setCanAdd(isAdmin || type === 'SHIPPER' || type === 'ADMIN');
+      } catch {
+        if (cancelled) return;
+        setCanAdd(false);
+      }
+    };
+
+    const fetchProviders = async () => {
+      try {
+        const res = await fetch('/api/providers');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data: Provider[] = await res.json();
+        setProviders(data);
+      } catch (err) {
+        console.error('Error loading providers:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAuth();
+    fetchProviders();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const scrollLeft = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
-      });
+      carouselRef.current.scrollBy({ left: -300, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      });
+      carouselRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
   };
 
-  // Function to copy phone number to clipboard
-  const copyToClipboard = (phoneNumber: string, productId: number) => {
-    navigator.clipboard.writeText(phoneNumber)
-      .then(() => {
-        setCopiedPhoneId(productId);
-        // Reset the copied state after 2 seconds
-        setTimeout(() => {
-          setCopiedPhoneId(null);
-        }, 2000);
-      })
-      .catch(err => {
+  const copyToClipboard = (phoneNumber: string, providerId: number) => {
+    navigator.clipboard.writeText(phoneNumber).then(
+      () => {
+        setCopiedPhoneId(providerId);
+        setTimeout(() => setCopiedPhoneId(null), 2000);
+      },
+      (err) => {
         console.error('Failed to copy: ', err);
-        // Fallback for older browsers
+        // Fallback
         const textArea = document.createElement('textarea');
         textArea.value = phoneNumber;
         document.body.appendChild(textArea);
         textArea.select();
         try {
           document.execCommand('copy');
-          setCopiedPhoneId(productId);
-          setTimeout(() => {
-            setCopiedPhoneId(null);
-          }, 2000);
-        } catch (err) {
-          console.error('Fallback copy failed: ', err);
+          setCopiedPhoneId(providerId);
+          setTimeout(() => setCopiedPhoneId(null), 2000);
+        } catch (fallbackErr) {
+          console.error('Fallback copy failed:', fallbackErr);
         }
         document.body.removeChild(textArea);
-      });
+      }
+    );
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className={styles.carouselContainer}>
+        <div className={styles.carouselTopBar}>
+          <h2 className={styles.carouselTitle}>{t('title')}</h2>
+          {canAdd ? (
+            <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+              {t('addProvider')}
+            </Link>
+          ) : null}
+        </div>
+        <div className={styles.loading}>{t('loading') || 'جاري تحميل العروض...'}</div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error || providers.length === 0) {
+    return (
+      <section className={styles.carouselContainer}>
+        <div className={styles.carouselTopBar}>
+          <h2 className={styles.carouselTitle}>{t('title')}</h2>
+          {canAdd ? (
+            <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+              {t('addProvider')}
+            </Link>
+          ) : null}
+        </div>
+        <div className={styles.emptyState}>
+          {error
+            ? t('error') || 'حدث خطأ أثناء تحميل العروض'
+            : t('noProviders') || 'لا توجد عروض متاحة حالياً'}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.carouselContainer}>
+      <div className={styles.carouselTopBar}>
+        <h2 className={styles.carouselTitle}>{t('title')}</h2>
+        {canAdd ? (
+          <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+            {t('addProvider')}
+          </Link>
+        ) : null}
+      </div>
       <div className={styles.carousel} ref={carouselRef}>
-        {products.map((product) => (
-          <div 
-            key={product.id} 
-            className={styles.carouselItem}
-          >
-            <div 
+        {providers.map((provider) => (
+          <div key={provider.id} className={styles.carouselItem}>
+            <div
               className={styles.imageContainer}
               style={{
-                backgroundImage: `url(${product.image})`,
+                backgroundImage: provider.image ? `url(${provider.image})` : undefined,
               }}
             >
-              <img 
-                src={product.image} 
-                alt={product.title}
+              <img
+                src={provider.image || 'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck'}
+                alt={provider.name}
                 className={styles.productImage}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck";
+                  (e.target as HTMLImageElement).src =
+                    'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck';
                 }}
               />
             </div>
 
             <div className={styles.contentWrapper}>
-              <h3 className={styles.productTitle}>{product.title}</h3>
-              
-              <div className={styles.placeOfBusinessContainer}>
-                <p className={styles.placeOfBusiness}>
-                  {product.placeOfBusiness}
-                </p>
-              </div>
+            <div className={styles.titleWrapper}>
+              <h3 className={styles.productTitle}>{provider.name}</h3>
+            </div>
 
-              <div className={styles.descriptionContainer}>
-                <p className={styles.description}>
-                  {product.description.split('\n').map((line, index) => (
-                    <span key={index} className={styles.descriptionLine}>{line}</span>
-                  ))}
-                </p>
-              </div>
+              {provider.description && (
+                <div className={styles.descriptionContainer}>
+                  <p className={styles.description}>
+                    {provider.description.split('\n').map((line, index) => (
+                      <span key={index} className={styles.descriptionLine}>
+                        {line}
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              )}
+
+              {(provider.destination ?? provider.placeOfBusiness) && (
+                <div className={styles.placeOfBusinessContainer}>
+                  <p className={styles.placeOfBusiness}>
+                    {t('destinationPrefix')}{' '}
+                    {getLocationLabel((provider.destination ?? provider.placeOfBusiness) ?? '', locale === 'ar' ? 'ar' : 'en')}
+                  </p>
+                </div>
+              )}
 
               <div className={styles.currentLocationContainer}>
-                <span 
+                <span
                   className={styles.currentLocationIcon}
-                  style={{ color: product.active ? 'green' : 'red' }}
+                  style={{ color: provider.active ? 'green' : 'red' }}
                 >
                   ●
                 </span>
                 <p className={styles.currentLocation}>
-                  {product.currentLocatin || '-'}
+                  {t('currentLocationPrefix')}{' '}
+                  {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
                 </p>
               </div>
-              
-              {/* Updated phone number section */}
+
               <div className={styles.phoneContainer}>
-                <button 
-                  className={`${styles.phoneButton} ${copiedPhoneId === product.id ? styles.copied : ''}`}
-                  onClick={() => copyToClipboard(product.phoneNumber, product.id)}
-                  aria-label={`Copy phone number: ${product.phoneNumber}`}
+                <button
+                  className={`${styles.phoneButton} ${copiedPhoneId === provider.id ? styles.copied : ''}`}
+                  onClick={() => copyToClipboard(provider.phone, provider.id)}
+                  aria-label={`Copy phone number: ${provider.phone}`}
                   title="Click to copy phone number"
                 >
                   <span className={styles.phoneNumberIcon}>📞</span>
                   <span className={styles.phoneNumberText}>
-                    {copiedPhoneId === product.id ? t('copyied') : product.phoneNumber}
+                    {copiedPhoneId === provider.id ? t('copyied') : provider.phone}
                   </span>
-                  {copiedPhoneId === product.id && (
+                  {copiedPhoneId === provider.id && (
                     <span className={styles.checkmark}>✓</span>
                   )}
                 </button>
-                {/* <p className={styles.phoneHint}>
-                  {copiedPhoneId === product.id ? t('copyied') : t('clickToCopy')}
-                </p> */}
               </div>
             </div>
           </div>
         ))}
       </div>
-      
+
       <div className={styles.carouselControls}>
-        <button 
+        <button
           className={styles.controlButton}
           onClick={scrollLeft}
           aria-label={t('scrollLeft')}
         >
           ‹
         </button>
-        <button 
+        <button
           className={styles.controlButton}
           onClick={scrollRight}
           aria-label={t('scrollRight')}

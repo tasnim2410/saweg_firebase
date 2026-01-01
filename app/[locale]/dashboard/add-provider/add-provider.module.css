@@ -1,0 +1,119 @@
+.page {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 3rem 1rem;
+}
+
+.card {
+  max-width: 42rem;
+  margin: 0 auto;
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.header {
+  background-color: #eeedcc;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(24, 0, 0, 0.863);
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.form {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  display: block;
+  color: #374151;
+  font-weight: 500;
+}
+
+.input,
+.textarea,
+.file {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  outline: none;
+  font-size: 1rem;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus,
+.file:focus {
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.2);
+  border-color: #FFB81C;
+  background-color: white;
+}
+
+.checkboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.button {
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: #FFB81C;
+  color: black;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #ffa000;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.success {
+  color: #166534;
+  font-size: 0.875rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.link {
+  color: #111827;
+  text-decoration: underline;
+}

@@ -8,17 +8,57 @@
     "login": "تسجيل الدخول",
     "signup": "إنشاء حساب",
     "logout": "تسجيل الخروج",
-    "admin": "لوحة الإدارة"
+    "admin": "لوحة الإدارة",
+    "myPosts": "منشوراتي",
+    "myProfile": "ملفي الشخصي"
   },
   "carousel": {
     "title": "المنتجات المميزة",
     "addToCart": "أضف إلى السلة",
     "bookNow": "احجز الآن",
+    "addProvider": "إضافة",
+    "destinationPrefix": "مطلوب حمولةإلى",
+    "currentLocationPrefix": "حالياً في:",
     "scrollLeft": "تمرير لليسار",
     "scrollRight": "تمرير لليمين",
     "copyied" : "تم النسخ!",
     "clickToCopy" : "انقر لنسخ",
-    "reviews": "{count, plural, zero {لا مراجعات} one {مراجعة واحدة} two {مراجعةتان} few {# مراجعات} many {# مراجعة} other {# مراجعة}}"
+    "reviews": "{count, plural, zero {لا مراجعات} one {مراجعة واحدة} two {مراجعةتان} few {# مراجعات} many {# مراجعة} other {# مراجعة}}",
+    "loading": "جاري تحميل العروض...",
+    "error": "حدث خطأ أثناء تحميل العروض",
+    "noProviders": "لا توجد عروض متاحة حالياً"
+
+  },
+
+  "providerForm": {
+    "title": "إضافة مزود",
+    "name": "الاسم",
+    "destination": "الوجهة",
+    "placeOfBusiness": "مجال العمل",
+    "description": "الوصف",
+    "location": "الموقع الحالي",
+    "phone": "رقم الهاتف",
+    "image": "الصورة",
+    "active": "متاح",
+    "submit": "نشر",
+    "submitting": "جاري النشر...",
+    "success": "تم النشر بنجاح"
+  },
+
+  "providerDashboard": {
+    "title": "منشوراتي",
+    "addNew": "إضافة جديد",
+    "backHome": "رجوع",
+    "loading": "جاري التحميل...",
+    "empty": "لا توجد منشورات بعد",
+    "available": "متاح",
+    "notAvailable": "غير متاح",
+    "lastUpdate": "آخر تحديث للموقع",
+    "location": "الموقع",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "delete": "حذف",
+    "deleteHint": "الحذف للمدير فقط"
   },
   "hero": {
     "welcome": "أهلاً بك في سواق",
@@ -135,5 +175,23 @@
   "admin": {
     "title": "لوحة الإدارة",
     "welcome": "مرحباً، {name}"
+  },
+  "profile": {
+    "title": "ملفي الشخصي",
+    "loading": "جارٍ التحميل...",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "saved": "تم الحفظ بنجاح",
+    "back": "رجوع",
+    "loadFailed": "فشل التحميل",
+    "saveFailed": "فشل الحفظ",
+    "fullNameRequired": "الاسم الكامل مطلوب",
+    "emailOrPhoneRequired": "يرجى إدخال البريد الإلكتروني أو رقم الهاتف",
+    "duplicateEmail": "البريد الإلكتروني مستخدم بالفعل",
+    "duplicatePhone": "رقم الهاتف مستخدم بالفعل",
+    "duplicateIdentifier": "البريد الإلكتروني أو رقم الهاتف مستخدم بالفعل"
   }
 }

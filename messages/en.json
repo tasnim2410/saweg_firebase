@@ -8,17 +8,56 @@
     "login": "Login",
     "signup": "Sign up",
     "logout": "Logout",
-    "admin": "Admin"
+    "admin": "Admin",
+    "myPosts": "My Posts",
+    "myProfile": "My Profile"
   },
   "carousel": {
     "title": "Featured Products",
     "addToCart": "Add to cart",
     "bookNow": "Book Now",
+    "addProvider": "Add",
+    "destinationPrefix": "Required package load to",
+    "currentLocationPrefix": "Currently in:",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "copyied" : "Copied!",
     "clickToCopy" : "Click to copy",
-    "reviews": "{count, plural, one {# Review} other {# Reviews}}"
+    "reviews": "{count, plural, one {# Review} other {# Reviews}}",
+    "loading": "Loading...",
+    "error": "Error loading providers",
+    "noProviders": "No providers available"
+  },
+
+  "providerForm": {
+    "title": "Add provider",
+    "name": "Name",
+    "destination": "Destination",
+    "placeOfBusiness": "Place of business",
+    "description": "Description",
+    "location": "Current location",
+    "phone": "Phone",
+    "image": "Image",
+    "active": "Active",
+    "submit": "Publish",
+    "submitting": "Publishing...",
+    "success": "Published successfully"
+  },
+
+  "providerDashboard": {
+    "title": "My posts",
+    "addNew": "Add new",
+    "backHome": "Back",
+    "loading": "Loading...",
+    "empty": "No providers yet",
+    "available": "Available",
+    "notAvailable": "Not available",
+    "lastUpdate": "Last location update",
+    "location": "Location",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "deleteHint": "Delete is admin-only"
   },
   "hero": {
     "welcome": "Welcome to Saweg",
@@ -139,5 +178,23 @@
   "admin": {
     "title": "Admin Dashboard",
     "welcome": "Welcome, {name}"
+  },
+  "profile": {
+    "title": "My Profile",
+    "loading": "Loading...",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved successfully",
+    "back": "Back",
+    "loadFailed": "Failed to load",
+    "saveFailed": "Failed to save",
+    "fullNameRequired": "Full name is required",
+    "emailOrPhoneRequired": "Please enter an email or phone number",
+    "duplicateEmail": "Email is already used",
+    "duplicatePhone": "Phone number is already used",
+    "duplicateIdentifier": "Email or phone is already used"
   }
 }

@@ -153,6 +153,12 @@ export default function Header() {
           <div className={styles.desktopActions}>
             {authUser ? (
               <>
+                <Link href={`/${locale}/dashboard/my-posts`} className={styles.authLink}>
+                  {t('myPosts')}
+                </Link>
+                <Link href={`/${locale}/my-profile`} className={styles.authLink}>
+                  {t('myProfile')}
+                </Link>
                 {authUser.isAdmin ? (
                   <Link href={`/${locale}/admin`} className={styles.authLink}>
                     {t('admin')}
@@ -167,19 +173,11 @@ export default function Header() {
                 <Link href={`/${locale}/login`} className={styles.authLink}>
                   {t('login')}
                 </Link>
-                <Link href={`/${locale}/signup`} className={styles.authLink}>
+                <Link href={`/${locale}/register`} className={styles.authLink}>
                   {t('signup')}
                 </Link>
               </>
             )}
-            {/* Registration Button */}
-            <Link
-              href={`/${locale}/register`}
-              className={styles.registrationButton}
-            >
-              {t('registration')}
-            </Link>
-
             {/* Language Dropdown */}
             <div className={styles.langWrapper}>
               <button
@@ -248,15 +246,15 @@ export default function Header() {
             >
               {t('bePartners')}
             </button>
-            <Link
-              href={`/${locale}/register`}
-              className={styles.mobileNavLink}
-            >
-              {t('registration')}
-            </Link>
 
             {authUser ? (
               <>
+                <Link href={`/${locale}/dashboard/my-posts`} className={styles.mobileNavLink}>
+                  {t('myPosts')}
+                </Link>
+                <Link href={`/${locale}/my-profile`} className={styles.mobileNavLink}>
+                  {t('myProfile')}
+                </Link>
                 {authUser.isAdmin ? (
                   <Link href={`/${locale}/admin`} className={styles.mobileNavLink}>
                     {t('admin')}
@@ -271,7 +269,7 @@ export default function Header() {
                 <Link href={`/${locale}/login`} className={styles.mobileNavLink}>
                   {t('login')}
                 </Link>
-                <Link href={`/${locale}/signup`} className={styles.mobileNavLink}>
+                <Link href={`/${locale}/register`} className={styles.mobileNavLink}>
                   {t('signup')}
                 </Link>
               </>

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Provider" ADD COLUMN     "lastLocationUpdateAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

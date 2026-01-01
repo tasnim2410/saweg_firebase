@@ -11,7 +11,7 @@ export default function LoginClient() {
   const locale = useLocale();
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get('next');
+  const next = search.get('next') || search.get('callbackUrl');
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');

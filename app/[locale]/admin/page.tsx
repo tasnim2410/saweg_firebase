@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { AUTH_COOKIE_NAME, verifySessionToken } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { isAdminIdentifier } from '@/lib/admin';
+import AdminProvidersClient from './AdminProvidersClient';
 
 export default async function AdminPage() {
   const locale = await getLocale();
@@ -27,7 +28,9 @@ export default async function AdminPage() {
   if (!user) redirect(`/${locale}/login?next=/${locale}/admin`);
 
   const isAdmin = Boolean(
-    (user.email && isAdminIdentifier(user.email)) || (user.phone && isAdminIdentifier(user.phone))
+    (session as any).type === 'ADMIN' ||
+      (user.email && isAdminIdentifier(user.email)) ||
+      (user.phone && isAdminIdentifier(user.phone))
   );
 
   if (!isAdmin) redirect(`/${locale}`);
@@ -36,6 +39,9 @@ export default async function AdminPage() {
     <div style={{ padding: '2rem' }}>
       <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>{t('title')}</h1>
       <p style={{ marginTop: '0.5rem' }}>{t('welcome', { name: user.fullName })}</p>
+      <div style={{ marginTop: '1.5rem' }}>
+        <AdminProvidersClient />
+      </div>
     </div>
   );
 }

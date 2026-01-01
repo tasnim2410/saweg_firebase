@@ -18,11 +18,14 @@ export async function GET() {
 
     if (!user) return NextResponse.json({ ok: true, user: null });
 
+    const type = (session as any).type ?? null;
     const isAdmin = Boolean(
-      (user.email && isAdminIdentifier(user.email)) || (user.phone && isAdminIdentifier(user.phone))
+      type === 'ADMIN' ||
+        (user.email && isAdminIdentifier(user.email)) ||
+        (user.phone && isAdminIdentifier(user.phone))
     );
 
-    return NextResponse.json({ ok: true, user: { ...user, isAdmin } });
+    return NextResponse.json({ ok: true, user: { ...user, type, isAdmin } });
   } catch {
     return NextResponse.json({ ok: true, user: null });
   }
