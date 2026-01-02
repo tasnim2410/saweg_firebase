@@ -25,7 +25,6 @@ const CarouselSection: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [copiedPhoneId, setCopiedPhoneId] = useState<number | null>(null);
   const [canAdd, setCanAdd] = useState(false);
 
   // Fetch providers on mount
@@ -79,29 +78,9 @@ const CarouselSection: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (phoneNumber: string, providerId: number) => {
-    navigator.clipboard.writeText(phoneNumber).then(
-      () => {
-        setCopiedPhoneId(providerId);
-        setTimeout(() => setCopiedPhoneId(null), 2000);
-      },
-      (err) => {
-        console.error('Failed to copy: ', err);
-        // Fallback
-        const textArea = document.createElement('textarea');
-        textArea.value = phoneNumber;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          setCopiedPhoneId(providerId);
-          setTimeout(() => setCopiedPhoneId(null), 2000);
-        } catch (fallbackErr) {
-          console.error('Fallback copy failed:', fallbackErr);
-        }
-        document.body.removeChild(textArea);
-      }
-    );
+  const toTelHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^+\d]/g, '');
+    return `tel:${normalized}`;
   };
 
   // Loading state
@@ -109,7 +88,7 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
-          <h2 className={styles.carouselTitle}>{t('title')}</h2>
+          {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
           {canAdd ? (
             <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
               {t('addProvider')}
@@ -126,7 +105,7 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
-          <h2 className={styles.carouselTitle}>{t('title')}</h2>
+          {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
           {canAdd ? (
             <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
               {t('addProvider')}
@@ -145,7 +124,7 @@ const CarouselSection: React.FC = () => {
   return (
     <section className={styles.carouselContainer}>
       <div className={styles.carouselTopBar}>
-        <h2 className={styles.carouselTitle}>{t('title')}</h2>
+        {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
         {canAdd ? (
           <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
             {t('addProvider')}
@@ -173,9 +152,9 @@ const CarouselSection: React.FC = () => {
             </div>
 
             <div className={styles.contentWrapper}>
-            <div className={styles.titleWrapper}>
-              <h3 className={styles.productTitle}>{provider.name}</h3>
-            </div>
+              <div className={styles.titleWrapper}>
+                <h3 className={styles.productTitle}>{provider.name}</h3>
+              </div>
 
               {provider.description && (
                 <div className={styles.descriptionContainer}>
@@ -212,20 +191,15 @@ const CarouselSection: React.FC = () => {
               </div>
 
               <div className={styles.phoneContainer}>
-                <button
-                  className={`${styles.phoneButton} ${copiedPhoneId === provider.id ? styles.copied : ''}`}
-                  onClick={() => copyToClipboard(provider.phone, provider.id)}
-                  aria-label={`Copy phone number: ${provider.phone}`}
-                  title="Click to copy phone number"
+                <a
+                  className={styles.phoneButton}
+                  href={toTelHref(provider.phone)}
+                  aria-label={`Call: ${provider.phone}`}
+                  title={t('call') || 'Call'}
                 >
                   <span className={styles.phoneNumberIcon}>📞</span>
-                  <span className={styles.phoneNumberText}>
-                    {copiedPhoneId === provider.id ? t('copyied') : provider.phone}
-                  </span>
-                  {copiedPhoneId === provider.id && (
-                    <span className={styles.checkmark}>✓</span>
-                  )}
-                </button>
+                  <span className={styles.phoneNumberText}>{provider.phone}</span>
+                </a>
               </div>
             </div>
           </div>

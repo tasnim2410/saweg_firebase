@@ -94,6 +94,14 @@
   margin-bottom: 0.75rem;
 }
 
+.itemImage {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
 .itemTitleRow {
   display: flex;
   align-items: center;
@@ -187,6 +195,12 @@
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.75rem;
+}
+
+.saveAllRow {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .deleteButton {

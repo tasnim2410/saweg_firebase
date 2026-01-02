@@ -19,6 +19,7 @@
     "addProvider": "Add",
     "destinationPrefix": "Required package load to",
     "currentLocationPrefix": "Currently in:",
+    "call": "Call",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "copyied" : "Copied!",
@@ -182,6 +183,7 @@
   "profile": {
     "title": "My Profile",
     "loading": "Loading...",
+    "profileImage": "Profile picture",
     "fullName": "Full name",
     "email": "Email",
     "phone": "Phone",

@@ -26,6 +26,7 @@ type ProviderEdits = {
   destination: string;
   description: string;
   active: boolean;
+  imageFile: File | null;
 };
 
 export default function MyPostsPage() {
@@ -38,7 +39,8 @@ export default function MyPostsPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
 
   const refresh = async () => {
@@ -72,6 +74,7 @@ export default function MyPostsPage() {
         destination: (p.destination ?? p.placeOfBusiness) ?? '',
         description: p.description ?? '',
         active: p.active,
+        imageFile: null,
       };
     }
     setEdits(next);
@@ -83,10 +86,10 @@ export default function MyPostsPage() {
     return map;
   }, [providers]);
 
-  const updatePost = async (id: number) => {
+  const buildUpdatePayload = (id: number) => {
     const original = byId.get(id);
     const current = edits[id];
-    if (!original || !current) return;
+    if (!original || !current) return null;
 
     const payload: Record<string, unknown> = {};
 
@@ -103,33 +106,77 @@ export default function MyPostsPage() {
     const desc = current.description.trim();
     if (desc !== (original.description ?? '')) payload.description = desc || null;
 
-    if (
-      !('location' in payload) &&
-      current.active !== original.active
-    ) {
+    if (!('location' in payload) && current.active !== original.active) {
       payload.active = current.active;
     }
 
-    if (Object.keys(payload).length === 0) return;
+    const hasImage = Boolean(current.imageFile);
+    if (!hasImage && Object.keys(payload).length === 0) return null;
 
-    setSavingId(id);
+    return { payload, hasImage, imageFile: current.imageFile };
+  };
+
+  const saveAll = async () => {
+    setSavingAll(true);
     setError(null);
+
     try {
-      const res = await fetch(`/api/providers/${id}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(data?.error || 'Failed to update');
-        return;
+      const ids = providers.map((p) => p.id);
+
+      for (const id of ids) {
+        const result = buildUpdatePayload(id);
+        if (!result) continue;
+
+        const { payload, hasImage, imageFile } = result;
+
+        const res = await fetch(
+          `/api/providers/${id}`,
+          hasImage
+            ? (() => {
+                const fd = new FormData();
+                for (const [key, value] of Object.entries(payload)) {
+                  fd.append(key, value === null ? '' : String(value));
+                }
+                if (imageFile) fd.append('image', imageFile);
+                return { method: 'PATCH', body: fd } as const;
+              })()
+            : {
+                method: 'PATCH',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(payload),
+              }
+        );
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          setError(data?.error || 'Failed to update');
+          return;
+        }
       }
+
       await refresh();
     } catch {
       setError('Failed to update');
     } finally {
-      setSavingId(null);
+      setSavingAll(false);
+    }
+  };
+
+  const deletePost = async (id: number) => {
+    setDeletingId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/providers/${id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error || 'Failed to delete');
+        return;
+      }
+      await refresh();
+    } catch {
+      setError('Failed to delete');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -162,6 +209,9 @@ export default function MyPostsPage() {
                 return (
                   <div key={p.id} className={styles.item}>
                     <div className={styles.itemTop}>
+                      {p.image ? (
+                        <img className={styles.itemImage} src={p.image} alt={p.name} />
+                      ) : null}
                       <div className={styles.itemTitleRow}>
                         <div className={styles.itemTitle}>{p.name}</div>
                         <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
@@ -192,14 +242,6 @@ export default function MyPostsPage() {
                           </option>
                         ))}
                       </select>
-                      <button
-                        className={styles.button}
-                        onClick={() => updatePost(p.id)}
-                        disabled={savingId === p.id}
-                        type="button"
-                      >
-                        {savingId === p.id ? tDash('saving') : tDash('save')}
-                      </button>
                     </div>
 
                     <div className={styles.formRow}>
@@ -214,14 +256,6 @@ export default function MyPostsPage() {
                           }))
                         }
                       />
-                      <button
-                        className={styles.button}
-                        onClick={() => updatePost(p.id)}
-                        disabled={savingId === p.id}
-                        type="button"
-                      >
-                        {savingId === p.id ? tDash('saving') : tDash('save')}
-                      </button>
                     </div>
 
                     <div className={styles.formRow}>
@@ -243,14 +277,6 @@ export default function MyPostsPage() {
                           </option>
                         ))}
                       </select>
-                      <button
-                        className={styles.button}
-                        onClick={() => updatePost(p.id)}
-                        disabled={savingId === p.id}
-                        type="button"
-                      >
-                        {savingId === p.id ? tDash('saving') : tDash('save')}
-                      </button>
                     </div>
 
                     <div className={styles.formRow}>
@@ -265,14 +291,22 @@ export default function MyPostsPage() {
                           }))
                         }
                       />
-                      <button
-                        className={styles.button}
-                        onClick={() => updatePost(p.id)}
-                        disabled={savingId === p.id}
-                        type="button"
-                      >
-                        {savingId === p.id ? tDash('saving') : tDash('save')}
-                      </button>
+                    </div>
+
+                    <div className={styles.formRow}>
+                      <label className={styles.label}>{tForm('image')}</label>
+                      <input
+                        className={styles.input}
+                        type="file"
+                        accept="image/*"
+                        onChange={(ev) =>
+                          setEdits((prev) => ({
+                            ...prev,
+                            [p.id]: { ...prev[p.id], imageFile: ev.target.files?.[0] ?? null },
+                          }))
+                        }
+                      />
+                      <div />
                     </div>
 
                     <div className={styles.actionsRow}>
@@ -290,17 +324,23 @@ export default function MyPostsPage() {
                         <span>{tForm('active')}</span>
                       </label>
                       <button
-                        className={styles.button}
-                        onClick={() => updatePost(p.id)}
-                        disabled={savingId === p.id}
+                        className={styles.deleteButton}
+                        onClick={() => deletePost(p.id)}
+                        disabled={deletingId === p.id}
                         type="button"
                       >
-                        {savingId === p.id ? tDash('saving') : tDash('save')}
+                        {deletingId === p.id ? tDash('saving') : tDash('delete')}
                       </button>
                     </div>
                   </div>
                 );
               })}
+
+              <div className={styles.saveAllRow}>
+                <button className={styles.button} type="button" onClick={saveAll} disabled={savingAll}>
+                  {savingAll ? tDash('saving') : tDash('save')}
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -17,6 +17,7 @@ export default function AddProviderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
@@ -34,8 +35,9 @@ export default function AddProviderPage() {
         const data = await res.json().catch(() => null);
         if (cancelled) return;
         const type = data?.user?.type;
-        const isAdmin = Boolean(data?.user?.isAdmin);
-        if (!isAdmin && type === 'MERCHANT') {
+        const admin = Boolean(data?.user?.isAdmin);
+        setIsAdmin(admin);
+        if (!admin && type === 'MERCHANT') {
           router.push(`/${locale}`);
           router.refresh();
           return;
@@ -65,6 +67,7 @@ export default function AddProviderPage() {
     }
 
     const payload = new FormData();
+    if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('destination', destination);
     payload.append('placeOfBusiness', destination);
     payload.append('description', description);
@@ -107,7 +110,12 @@ export default function AddProviderPage() {
         <form className={styles.form} onSubmit={onSubmit}>
           <div className={styles.row}>
             <label className={styles.label}>{t('name')}</label>
-            <input className={styles.input} value={name} disabled />
+            <input
+              className={styles.input}
+              value={name}
+              disabled={!isAdmin}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           <div className={styles.row}>

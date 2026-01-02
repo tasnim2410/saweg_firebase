@@ -28,6 +28,7 @@ model User {
   trucksNeeded String?
   placeOfBusiness String?
   truckImage   String?
+  profileImage String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   providers    Provider[]

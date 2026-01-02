@@ -19,6 +19,7 @@
     "addProvider": "إضافة",
     "destinationPrefix": "مطلوب حمولةإلى",
     "currentLocationPrefix": "حالياً في:",
+    "call": "اتصال",
     "scrollLeft": "تمرير لليسار",
     "scrollRight": "تمرير لليمين",
     "copyied" : "تم النسخ!",
@@ -179,6 +180,7 @@
   "profile": {
     "title": "ملفي الشخصي",
     "loading": "جارٍ التحميل...",
+    "profileImage": "الصورة الشخصية",
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
     "phone": "رقم الهاتف",

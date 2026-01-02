@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
   );
 
   const sessionType = (session.user as any).type;
+  const isAdmin = Boolean(sessionType === 'ADMIN' || adminOk);
 
   try {
     if (!adminOk && sessionType !== 'SHIPPER' && sessionType !== 'ADMIN') {
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
 
+    const nameFromForm =
+      typeof formData.get('name') === 'string' ? String(formData.get('name')).trim() : '';
     const location = formData.get('location') as string | null;
     const phone = formData.get('phone') as string | null;
     const destination = (formData.get('destination') ?? formData.get('placeOfBusiness')) as string | null;
@@ -90,6 +93,10 @@ export async function POST(req: NextRequest) {
 
     if (!location || !phone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (!isAdmin && nameFromForm && nameFromForm !== user.fullName) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     let imagePath: string | null = null;
@@ -120,7 +127,7 @@ export async function POST(req: NextRequest) {
     }
 
     const createData: any = {
-      name: user.fullName,
+      name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
       location: location.trim(),
       phone: phone.trim(),
       destination: destination?.trim() || null,

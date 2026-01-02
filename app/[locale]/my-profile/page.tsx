@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Camera } from 'lucide-react';
 import styles from './my-profile.module.css';
 
 type User = {
@@ -12,12 +13,16 @@ type User = {
   email: string | null;
   phone: string | null;
   type?: string | null;
+  profileImage?: string | null;
 };
 
 export default function MyProfilePage() {
   const t = useTranslations('profile');
   const locale = useLocale();
   const router = useRouter();
+
+  const profileImageInputRef = useRef<HTMLInputElement | null>(null);
+  const profileImagePreviewUrlRef = useRef<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,6 +32,17 @@ export default function MyProfilePage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreviewUrlRef.current) {
+        URL.revokeObjectURL(profileImagePreviewUrlRef.current);
+        profileImagePreviewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +65,7 @@ export default function MyProfilePage() {
         setFullName(user.fullName ?? '');
         setEmail(user.email ?? '');
         setPhone(user.phone ?? '');
+        setProfileImage(user.profileImage ?? null);
       } catch {
         if (cancelled) return;
         setError(t('loadFailed'));
@@ -63,6 +80,21 @@ export default function MyProfilePage() {
       cancelled = true;
     };
   }, [locale, router, t]);
+
+  const onProfileImageChange = (file: File | null) => {
+    setProfileImageFile(file);
+
+    if (profileImagePreviewUrlRef.current) {
+      URL.revokeObjectURL(profileImagePreviewUrlRef.current);
+      profileImagePreviewUrlRef.current = null;
+    }
+
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      profileImagePreviewUrlRef.current = previewUrl;
+      setProfileImage(previewUrl);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,14 +113,15 @@ export default function MyProfilePage() {
 
     setSaving(true);
     try {
+      const fd = new FormData();
+      fd.append('fullName', fullName);
+      fd.append('email', email);
+      fd.append('phone', phone);
+      if (profileImageFile) fd.append('profileImage', profileImageFile);
+
       const res = await fetch('/api/users/me', {
         method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-        }),
+        body: fd,
       });
 
       const data = await res.json().catch(() => null);
@@ -111,6 +144,10 @@ export default function MyProfilePage() {
       }
 
       setSuccess(true);
+      if (data?.user?.profileImage !== undefined) {
+        setProfileImage(data.user.profileImage ?? null);
+        setProfileImageFile(null);
+      }
       router.refresh();
     } catch {
       setError(t('saveFailed'));
@@ -130,6 +167,33 @@ export default function MyProfilePage() {
           <div className={styles.loading}>{t('loading')}</div>
         ) : (
           <form className={styles.form} onSubmit={onSubmit}>
+            <div className={styles.avatarRow}>
+              <div className={styles.avatarWrapper}>
+                {profileImage ? (
+                  <img className={styles.avatar} src={profileImage} alt={fullName} />
+                ) : (
+                  <div className={styles.avatarPlaceholder} aria-hidden="true">
+                    {(fullName || '?').trim().slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={styles.avatarEditButton}
+                  onClick={() => profileImageInputRef.current?.click()}
+                  aria-label={t('profileImage')}
+                >
+                  <Camera size={16} />
+                </button>
+                <input
+                  ref={profileImageInputRef}
+                  className={styles.avatarInput}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => onProfileImageChange(e.target.files?.[0] ?? null)}
+                />
+              </div>
+            </div>
+
             <div className={styles.row}>
               <label className={styles.label}>{t('fullName')}</label>
               <input className={styles.input} value={fullName} onChange={(e) => setFullName(e.target.value)} />
