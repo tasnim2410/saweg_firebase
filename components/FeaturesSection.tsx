@@ -26,12 +26,12 @@ export default function FeaturesSection() {
       <div className={styles.mapWrapper}>
         {/* Map background */}
           <div className={styles.mapContainer}>
-            <Image
+            {/* <Image
               src="/images/map.png"
               alt={isRTL ? 'خريطة العالم' : 'World map'}
               fill
               className={styles.mapImage}
-            />
+            /> */}
 
             {/* Text card overlay */}
             <div className={styles.textCardOverlay}>

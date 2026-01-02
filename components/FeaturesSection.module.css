@@ -61,6 +61,7 @@
 .mapWrapper {
   position: relative;
   width: 100%;
+  background-color: rgba(237, 242, 221, 0.4);
 }
 
 .mapContainer {
@@ -68,6 +69,7 @@
   width: 100%;
   height: 360px;
   overflow: hidden;
+
 }
 
 @media (min-width: 768px) {
@@ -101,15 +103,23 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(0, 0, 0, 0.05);
   padding: 1rem 1.25rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1.625;
   color: #1f2937; /* gray-800 */
   width: 100%;
   max-width: 72rem;
   margin-left: 1rem;
   margin-right: 1rem;
-  height: fit-content;
+  height: 250px;
+  /* height: fit-content; */
   pointer-events: auto;
+}
+
+.textCard p {
+  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  height: fit-content;
 }
 
 @media (min-width: 768px) {
