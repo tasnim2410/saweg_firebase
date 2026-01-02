@@ -8,6 +8,7 @@ import { getLocationLabel } from '@/lib/locations';
 
 interface Provider {
   id: number;
+  userId?: string;
   name: string;           // used as title
   location: string;       // used as current location
   phone: string;          // phoneNumber
@@ -153,7 +154,12 @@ const CarouselSection: React.FC = () => {
 
             <div className={styles.contentWrapper}>
               <div className={styles.titleWrapper}>
-                <h3 className={styles.productTitle}>{provider.name}</h3>
+                <Link
+                  className={styles.productTitleLink}
+                  href={provider.userId ? `/${locale}/users/${provider.userId}` : `/${locale}`}
+                >
+                  <h3 className={styles.productTitle}>{provider.name}</h3>
+                </Link>
               </div>
 
               {provider.description && (

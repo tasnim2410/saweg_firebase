@@ -9,9 +9,14 @@ import path from 'path';
 export const runtime = 'nodejs';
 
 const uploadDir = path.join(process.cwd(), 'public/images/profiles');
+const uploadDirTruck = path.join(process.cwd(), 'public/images/users');
 
 async function ensureUploadDir() {
   await fs.mkdir(uploadDir, { recursive: true });
+}
+
+async function ensureTruckUploadDir() {
+  await fs.mkdir(uploadDirTruck, { recursive: true });
 }
 
 export async function PATCH(req: Request) {
@@ -40,9 +45,19 @@ export async function PATCH(req: Request) {
     }
   }
 
-  const fullNameRaw = formData ? formData.get('fullName') : body?.fullName;
-  const emailInput = formData ? formData.get('email') : body?.email;
-  const phoneInput = formData ? formData.get('phone') : body?.phone;
+  const hasFullNameField = formData
+    ? formData.has('fullName')
+    : Object.prototype.hasOwnProperty.call(body ?? {}, 'fullName');
+  const hasEmailField = formData
+    ? formData.has('email')
+    : Object.prototype.hasOwnProperty.call(body ?? {}, 'email');
+  const hasPhoneField = formData
+    ? formData.has('phone')
+    : Object.prototype.hasOwnProperty.call(body ?? {}, 'phone');
+
+  const fullNameRaw = hasFullNameField ? (formData ? formData.get('fullName') : body?.fullName) : '';
+  const emailInput = hasEmailField ? (formData ? formData.get('email') : body?.email) : undefined;
+  const phoneInput = hasPhoneField ? (formData ? formData.get('phone') : body?.phone) : undefined;
 
   const fullName = typeof fullNameRaw === 'string' ? fullNameRaw.trim() : '';
   const emailRaw = typeof emailInput === 'string' ? emailInput.trim() : '';
@@ -52,15 +67,48 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: false, error: 'FULL_NAME_REQUIRED' }, { status: 400 });
   }
 
-  const email = emailRaw ? emailRaw.toLowerCase() : null;
-  const phone = phoneRaw ? phoneRaw : null;
-
-  if (!email && !phone) {
-    return NextResponse.json({ ok: false, error: 'EMAIL_OR_PHONE_REQUIRED' }, { status: 400 });
-  }
+  const emailUpdate = hasEmailField ? (emailRaw ? emailRaw.toLowerCase() : null) : undefined;
+  const phoneUpdate = hasPhoneField ? (phoneRaw ? phoneRaw : null) : undefined;
 
   try {
+    const existingUser = (await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, email: true, phone: true, type: true } as any,
+    })) as any;
+
+    if (!existingUser) {
+      return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+    }
+
+    const nextEmail = emailUpdate !== undefined ? emailUpdate : (existingUser.email ?? null);
+    const nextPhone = phoneUpdate !== undefined ? phoneUpdate : (existingUser.phone ?? null);
+
+    if (!nextEmail && !nextPhone) {
+      return NextResponse.json({ ok: false, error: 'EMAIL_OR_PHONE_REQUIRED' }, { status: 400 });
+    }
+
     let profileImage: string | null | undefined = undefined;
+    let truckImage: string | null | undefined = undefined;
+
+    const userType = (session.user as any).type ?? existingUser.type ?? null;
+
+    const parseStringField = (key: string) => {
+      const hasField = formData
+        ? formData.has(key)
+        : Object.prototype.hasOwnProperty.call(body ?? {}, key);
+      if (!hasField) return undefined;
+      const raw = formData ? formData.get(key) : body?.[key];
+      const v = typeof raw === 'string' ? raw.trim() : '';
+      return v ? v : null;
+    };
+
+    const merchantCity = parseStringField('merchantCity');
+    const shipperCity = parseStringField('shipperCity');
+    const carKind = parseStringField('carKind');
+    const maxCharge = parseStringField('maxCharge');
+    const maxChargeUnit = parseStringField('maxChargeUnit');
+    const trucksNeeded = parseStringField('trucksNeeded');
+    const placeOfBusiness = parseStringField('placeOfBusiness');
 
     if (formData) {
       const file = formData.get('profileImage');
@@ -86,17 +134,65 @@ export async function PATCH(req: Request) {
           }
         }
       }
+
+      if (userType === 'SHIPPER') {
+        const file2 = formData.get('truckImage');
+        if (file2 && typeof file2 !== 'string') {
+          const f2 = file2 as File;
+          if (f2.size > 0) {
+            const buffer = Buffer.from(await f2.arrayBuffer());
+            if (cloudinaryEnabled()) {
+              const uploaded = await uploadImageBuffer({
+                buffer,
+                folder: 'saweg/users',
+                publicId: `truck-${session.user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+                contentType: f2.type,
+              });
+              truckImage = uploaded.url;
+            } else {
+              await ensureTruckUploadDir();
+              const ext = path.extname(f2.name) || '.jpg';
+              const filename = `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
+              const filepath = path.join(uploadDirTruck, filename);
+              await fs.writeFile(filepath, buffer);
+              truckImage = `/images/users/${filename}`;
+            }
+          }
+        }
+      }
     }
 
     const updated = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         fullName,
-        email,
-        phone,
+        ...(emailUpdate !== undefined ? ({ email: emailUpdate } as any) : {}),
+        ...(phoneUpdate !== undefined ? ({ phone: phoneUpdate } as any) : {}),
+        ...(merchantCity !== undefined ? ({ merchantCity } as any) : {}),
+        ...(shipperCity !== undefined ? ({ shipperCity } as any) : {}),
+        ...(carKind !== undefined ? ({ carKind } as any) : {}),
+        ...(maxCharge !== undefined ? ({ maxCharge } as any) : {}),
+        ...(maxChargeUnit !== undefined ? ({ maxChargeUnit } as any) : {}),
+        ...(trucksNeeded !== undefined ? ({ trucksNeeded } as any) : {}),
+        ...(placeOfBusiness !== undefined ? ({ placeOfBusiness } as any) : {}),
         ...(profileImage !== undefined ? ({ profileImage } as any) : {}),
+        ...(truckImage !== undefined ? ({ truckImage } as any) : {}),
       } as any,
-      select: { id: true, fullName: true, email: true, phone: true, profileImage: true } as any,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        profileImage: true,
+        merchantCity: true,
+        shipperCity: true,
+        carKind: true,
+        maxCharge: true,
+        maxChargeUnit: true,
+        trucksNeeded: true,
+        placeOfBusiness: true,
+        truckImage: true,
+      } as any,
     });
 
     const token = await signSessionToken({

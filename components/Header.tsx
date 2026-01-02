@@ -15,10 +15,12 @@ export default function Header() {
   const pathname = usePathname();
 
   const headerRef = useRef<HTMLElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [authUser, setAuthUser] = useState<null | { isAdmin?: boolean }>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<null | { isAdmin?: boolean; fullName?: string | null; profileImage?: string | null }>(null);
 
   const isRTL = locale === 'ar';
 
@@ -83,15 +85,41 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const onDocMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isUserMenuOpen]);
+
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
       setAuthUser(null);
+      setIsUserMenuOpen(false);
       router.push(`/${locale}`);
       router.refresh();
     }
   };
+
+  const avatarLetter = (authUser?.fullName || '?').trim().slice(0, 1).toUpperCase();
 
   return (
     <header ref={headerRef} className={styles.header}>
@@ -151,64 +179,207 @@ export default function Header() {
 
           {/* Registration & Language Switcher - Desktop */}
           <div className={styles.desktopActions}>
-            {authUser ? (
+            {isRTL ? (
               <>
-                <Link href={`/${locale}/dashboard/my-posts`} className={styles.authLink}>
-                  {t('myPosts')}
-                </Link>
-                <Link href={`/${locale}/my-profile`} className={styles.authLink}>
-                  {t('myProfile')}
-                </Link>
-                {authUser.isAdmin ? (
-                  <Link href={`/${locale}/admin`} className={styles.authLink}>
-                    {t('admin')}
-                  </Link>
-                ) : null}
-                <button type="button" onClick={logout} className={styles.authButton}>
-                  {t('logout')}
-                </button>
+                {authUser ? (
+                  <div className={styles.userMenuWrapper} ref={userMenuRef}>
+                    <button
+                      type="button"
+                      className={styles.avatarButton}
+                      onClick={() => setIsUserMenuOpen((v) => !v)}
+                      aria-haspopup="menu"
+                      aria-expanded={isUserMenuOpen ? 'true' : 'false'}
+                      aria-label={t('myProfile')}
+                    >
+                      {authUser.profileImage ? (
+                        <img className={styles.avatarImage} src={authUser.profileImage} alt={authUser.fullName ?? ''} />
+                      ) : (
+                        <span className={styles.avatarPlaceholder} aria-hidden="true">
+                          {avatarLetter}
+                        </span>
+                      )}
+                    </button>
+
+                    {isUserMenuOpen ? (
+                      <div
+                        className={styles.userDropdown}
+                        style={isRTL ? ({ left: 0, right: 'auto' } as any) : undefined}
+                        role="menu"
+                      >
+                        <Link
+                          href={`/${locale}/dashboard/my-posts`}
+                          className={styles.userDropdownItem}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          role="menuitem"
+                        >
+                          {t('myPosts')}
+                        </Link>
+                        <Link
+                          href={`/${locale}/my-profile`}
+                          className={styles.userDropdownItem}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          role="menuitem"
+                        >
+                          {t('myProfile')}
+                        </Link>
+                        {authUser.isAdmin ? (
+                          <Link
+                            href={`/${locale}/admin`}
+                            className={styles.userDropdownItem}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            role="menuitem"
+                          >
+                            {t('admin')}
+                          </Link>
+                        ) : null}
+                        <button type="button" onClick={logout} className={styles.userDropdownItemButton} role="menuitem">
+                          {t('logout')}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <>
+                    <Link href={`/${locale}/login`} className={styles.authLink}>
+                      {t('login')}
+                    </Link>
+                    <Link href={`/${locale}/register`} className={styles.authLink}>
+                      {t('signup')}
+                    </Link>
+                  </>
+                )}
+
+                {/* Language Dropdown */}
+                <div className={styles.langWrapper}>
+                  <button
+                    onClick={() => setIsLangOpen(!isLangOpen)}
+                    className={styles.langButton}
+                  >
+                    <span>{t('language')}</span>
+                    <ChevronDown className={styles.iconSmall} />
+                  </button>
+
+                  <div className={styles.globeWrapper}>
+                    <Globe className={styles.globeIcon} />
+                  </div>
+
+                  {isLangOpen && (
+                    <div className={styles.langDropdown}>
+                      <button
+                        onClick={() => switchLocale('en')}
+                        className={styles.langOption}
+                      >
+                        English
+                      </button>
+                      <button
+                        onClick={() => switchLocale('ar')}
+                        className={styles.langOption}
+                      >
+                        العربية
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
-                <Link href={`/${locale}/login`} className={styles.authLink}>
-                  {t('login')}
-                </Link>
-                <Link href={`/${locale}/register`} className={styles.authLink}>
-                  {t('signup')}
-                </Link>
+                {/* Language Dropdown */}
+                <div className={styles.langWrapper}>
+                  <button
+                    onClick={() => setIsLangOpen(!isLangOpen)}
+                    className={styles.langButton}
+                  >
+                    <span>{t('language')}</span>
+                    <ChevronDown className={styles.iconSmall} />
+                  </button>
+
+                  <div className={styles.globeWrapper}>
+                    <Globe className={styles.globeIcon} />
+                  </div>
+
+                  {isLangOpen && (
+                    <div className={styles.langDropdown}>
+                      <button
+                        onClick={() => switchLocale('en')}
+                        className={styles.langOption}
+                      >
+                        English
+                      </button>
+                      <button
+                        onClick={() => switchLocale('ar')}
+                        className={styles.langOption}
+                      >
+                        العربية
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {authUser ? (
+                  <div className={styles.userMenuWrapper} ref={userMenuRef}>
+                    <button
+                      type="button"
+                      className={styles.avatarButton}
+                      onClick={() => setIsUserMenuOpen((v) => !v)}
+                      aria-haspopup="menu"
+                      aria-expanded={isUserMenuOpen ? 'true' : 'false'}
+                      aria-label={t('myProfile')}
+                    >
+                      {authUser.profileImage ? (
+                        <img className={styles.avatarImage} src={authUser.profileImage} alt={authUser.fullName ?? ''} />
+                      ) : (
+                        <span className={styles.avatarPlaceholder} aria-hidden="true">
+                          {avatarLetter}
+                        </span>
+                      )}
+                    </button>
+
+                    {isUserMenuOpen ? (
+                      <div className={styles.userDropdown} role="menu">
+                        <Link
+                          href={`/${locale}/dashboard/my-posts`}
+                          className={styles.userDropdownItem}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          role="menuitem"
+                        >
+                          {t('myPosts')}
+                        </Link>
+                        <Link
+                          href={`/${locale}/my-profile`}
+                          className={styles.userDropdownItem}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          role="menuitem"
+                        >
+                          {t('myProfile')}
+                        </Link>
+                        {authUser.isAdmin ? (
+                          <Link
+                            href={`/${locale}/admin`}
+                            className={styles.userDropdownItem}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            role="menuitem"
+                          >
+                            {t('admin')}
+                          </Link>
+                        ) : null}
+                        <button type="button" onClick={logout} className={styles.userDropdownItemButton} role="menuitem">
+                          {t('logout')}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <>
+                    <Link href={`/${locale}/login`} className={styles.authLink}>
+                      {t('login')}
+                    </Link>
+                    <Link href={`/${locale}/register`} className={styles.authLink}>
+                      {t('signup')}
+                    </Link>
+                  </>
+                )}
               </>
             )}
-            {/* Language Dropdown */}
-            <div className={styles.langWrapper}>
-              <button
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                className={styles.langButton}
-              >
-                <span>{t('language')}</span>
-                <ChevronDown className={styles.iconSmall} />
-              </button>
-
-              <div className={styles.globeWrapper}>
-                <Globe className={styles.globeIcon} />
-              </div>
-
-              {isLangOpen && (
-                <div className={styles.langDropdown}>
-                  <button
-                    onClick={() => switchLocale('en')}
-                    className={styles.langOption}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => switchLocale('ar')}
-                    className={styles.langOption}
-                  >
-                    العربية
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Mobile menu button */}

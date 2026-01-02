@@ -14,15 +14,25 @@ type User = {
   phone: string | null;
   type?: string | null;
   profileImage?: string | null;
+  merchantCity?: string | null;
+  shipperCity?: string | null;
+  carKind?: string | null;
+  maxCharge?: string | null;
+  maxChargeUnit?: string | null;
+  trucksNeeded?: string | null;
+  placeOfBusiness?: string | null;
+  truckImage?: string | null;
 };
 
 export default function MyProfilePage() {
   const t = useTranslations('profile');
+  const tRegister = useTranslations('register');
   const locale = useLocale();
   const router = useRouter();
 
   const profileImageInputRef = useRef<HTMLInputElement | null>(null);
   const profileImagePreviewUrlRef = useRef<string | null>(null);
+  const truckImagePreviewUrlRef = useRef<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,12 +44,28 @@ export default function MyProfilePage() {
   const [phone, setPhone] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [userType, setUserType] = useState<string | null>(null);
+
+  const [merchantCity, setMerchantCity] = useState('');
+  const [shipperCity, setShipperCity] = useState('');
+  const [carKind, setCarKind] = useState('');
+  const [maxCharge, setMaxCharge] = useState('');
+  const [maxChargeUnit, setMaxChargeUnit] = useState('kg');
+  const [placeOfBusiness, setPlaceOfBusiness] = useState('');
+  const [trucksNeeded, setTrucksNeeded] = useState('');
+  const [truckImage, setTruckImage] = useState<string | null>(null);
+  const [truckImageFile, setTruckImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     return () => {
       if (profileImagePreviewUrlRef.current) {
         URL.revokeObjectURL(profileImagePreviewUrlRef.current);
         profileImagePreviewUrlRef.current = null;
+      }
+
+      if (truckImagePreviewUrlRef.current) {
+        URL.revokeObjectURL(truckImagePreviewUrlRef.current);
+        truckImagePreviewUrlRef.current = null;
       }
     };
   }, []);
@@ -66,6 +92,16 @@ export default function MyProfilePage() {
         setEmail(user.email ?? '');
         setPhone(user.phone ?? '');
         setProfileImage(user.profileImage ?? null);
+        setUserType(user.type ?? null);
+
+        setMerchantCity(user.merchantCity ?? '');
+        setShipperCity(user.shipperCity ?? '');
+        setCarKind(user.carKind ?? '');
+        setMaxCharge(user.maxCharge ?? '');
+        setMaxChargeUnit(user.maxChargeUnit ?? 'kg');
+        setPlaceOfBusiness(user.placeOfBusiness ?? '');
+        setTrucksNeeded(user.trucksNeeded ?? '');
+        setTruckImage(user.truckImage ?? null);
       } catch {
         if (cancelled) return;
         setError(t('loadFailed'));
@@ -96,6 +132,21 @@ export default function MyProfilePage() {
     }
   };
 
+  const onTruckImageChange = (file: File | null) => {
+    setTruckImageFile(file);
+
+    if (truckImagePreviewUrlRef.current) {
+      URL.revokeObjectURL(truckImagePreviewUrlRef.current);
+      truckImagePreviewUrlRef.current = null;
+    }
+
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      truckImagePreviewUrlRef.current = previewUrl;
+      setTruckImage(previewUrl);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -118,6 +169,20 @@ export default function MyProfilePage() {
       fd.append('email', email);
       fd.append('phone', phone);
       if (profileImageFile) fd.append('profileImage', profileImageFile);
+
+      if (userType === 'SHIPPER') {
+        fd.append('shipperCity', shipperCity);
+        fd.append('carKind', carKind);
+        fd.append('maxCharge', maxCharge);
+        fd.append('maxChargeUnit', maxChargeUnit);
+        if (truckImageFile) fd.append('truckImage', truckImageFile);
+      }
+
+      if (userType === 'MERCHANT') {
+        fd.append('merchantCity', merchantCity);
+        fd.append('placeOfBusiness', placeOfBusiness);
+        fd.append('trucksNeeded', trucksNeeded);
+      }
 
       const res = await fetch('/api/users/me', {
         method: 'PATCH',
@@ -147,6 +212,10 @@ export default function MyProfilePage() {
       if (data?.user?.profileImage !== undefined) {
         setProfileImage(data.user.profileImage ?? null);
         setProfileImageFile(null);
+      }
+      if (data?.user?.truckImage !== undefined) {
+        setTruckImage(data.user.truckImage ?? null);
+        setTruckImageFile(null);
       }
       router.refresh();
     } catch {
@@ -208,6 +277,74 @@ export default function MyProfilePage() {
               <label className={styles.label}>{t('phone')}</label>
               <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
+
+            {userType === 'SHIPPER' ? (
+              <>
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('shipperCity')}</label>
+                  <input className={styles.input} value={shipperCity} onChange={(e) => setShipperCity(e.target.value)} />
+                </div>
+
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('carKind')}</label>
+                  <input className={styles.input} value={carKind} onChange={(e) => setCarKind(e.target.value)} />
+                </div>
+
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('maxCharge')}</label>
+                  <div className={styles.inlineRow}>
+                    <input
+                      className={styles.input}
+                      value={maxCharge}
+                      onChange={(e) => setMaxCharge(e.target.value)}
+                      inputMode="decimal"
+                    />
+                    <select
+                      className={styles.select}
+                      value={maxChargeUnit}
+                      onChange={(e) => setMaxChargeUnit(e.target.value)}
+                    >
+                      <option value="kg">kg</option>
+                      <option value="ton">ton</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('truckImage')}</label>
+                  {truckImage ? <img className={styles.truckImagePreview} src={truckImage} alt={tRegister('truckImage')} /> : null}
+                  <input
+                    className={styles.fileInput}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => onTruckImageChange(e.target.files?.[0] ?? null)}
+                  />
+                </div>
+              </>
+            ) : null}
+
+            {userType === 'MERCHANT' ? (
+              <>
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('merchantCity')}</label>
+                  <input className={styles.input} value={merchantCity} onChange={(e) => setMerchantCity(e.target.value)} />
+                </div>
+
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('placeOfBusiness')}</label>
+                  <input
+                    className={styles.input}
+                    value={placeOfBusiness}
+                    onChange={(e) => setPlaceOfBusiness(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.row}>
+                  <label className={styles.label}>{tRegister('trucksNeeded')}</label>
+                  <input className={styles.input} value={trucksNeeded} onChange={(e) => setTrucksNeeded(e.target.value)} />
+                </div>
+              </>
+            ) : null}
 
             {error ? <div className={styles.error}>{error}</div> : null}
             {success ? <div className={styles.success}>{t('saved')}</div> : null}

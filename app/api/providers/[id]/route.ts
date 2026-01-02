@@ -14,6 +14,56 @@ async function ensureUploadDir() {
   await fs.mkdir(uploadDir, { recursive: true });
 }
 
+export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+    const providerId = Number(id);
+    if (!Number.isFinite(providerId)) {
+      return NextResponse.json({ error: 'Invalid provider id' }, { status: 400 });
+    }
+
+    const provider = await (prisma as any).provider.findUnique({
+      where: { id: providerId },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        phone: true,
+        destination: true,
+        description: true,
+        image: true,
+        active: true,
+        lastLocationUpdateAt: true,
+        createdAt: true,
+        user: {
+          select: {
+            fullName: true,
+            profileImage: true,
+            truckImage: true,
+            carKind: true,
+            maxCharge: true,
+            maxChargeUnit: true,
+            trucksNeeded: true,
+            placeOfBusiness: true,
+          },
+        },
+      },
+    });
+
+    if (!provider) {
+      return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      ...provider,
+      destination: (provider as any).destination ?? (provider as any).placeOfBusiness ?? null,
+    });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: 'Failed to fetch provider' }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getSession(req);
   if (!session?.user?.id) {

@@ -160,6 +160,17 @@
   z-index: 2;
   padding: 4px 0;
 }
+
+.productTitleLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.productTitleLink:hover {
+  text-decoration: underline;
+}
+
 /* ===== Product Title ===== */
 /* .productTitle {
   font-size: 20px;
