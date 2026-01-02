@@ -13,6 +13,15 @@ const intlMiddleware = createMiddleware({
 });
 
 export default async function middleware(req: NextRequest) {
+  const host = req.headers.get('host') ?? '';
+  const hostname = host.split(':')[0];
+  if (hostname === 'saweg.app') {
+    const url = req.nextUrl.clone();
+    url.hostname = 'www.saweg.app';
+    url.protocol = 'https:';
+    return NextResponse.redirect(url, 308);
+  }
+
   const pathname = req.nextUrl.pathname;
 
   // Extract locale (first segment after leading slash)
