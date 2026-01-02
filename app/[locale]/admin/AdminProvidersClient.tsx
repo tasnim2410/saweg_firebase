@@ -38,6 +38,7 @@ export default function AdminProvidersClient() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
 
@@ -56,6 +57,43 @@ export default function AdminProvidersClient() {
       setError('Failed to load');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveAll = async () => {
+    if (savingAll) return;
+
+    setSavingAll(true);
+    setError(null);
+    try {
+      const requests: Array<{ id: number; payload: Record<string, unknown> }> = [];
+
+      for (const p of providers) {
+        const current = edits[p.id];
+        if (!current) continue;
+        const payload = buildPayload(p, current);
+        if (Object.keys(payload).length === 0) continue;
+        requests.push({ id: p.id, payload });
+      }
+
+      for (const req of requests) {
+        const res = await fetch(`/api/providers/${req.id}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(req.payload),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          setError(data?.error || 'Failed to update');
+          return;
+        }
+      }
+
+      await refresh();
+    } catch {
+      setError('Failed to update');
+    } finally {
+      setSavingAll(false);
     }
   };
 
@@ -84,11 +122,7 @@ export default function AdminProvidersClient() {
     return map;
   }, [providers]);
 
-  const updateProvider = async (id: number) => {
-    const original = byId.get(id);
-    const current = edits[id];
-    if (!original || !current) return;
-
+  const buildPayload = (original: Provider, current: ProviderEdits) => {
     const payload: Record<string, unknown> = {};
 
     const nextName = current.name.trim();
@@ -107,34 +141,11 @@ export default function AdminProvidersClient() {
     const desc = current.description.trim();
     if (desc !== (original.description ?? '')) payload.description = desc || null;
 
-    if (
-      !('location' in payload) &&
-      current.active !== original.active
-    ) {
+    if (!('location' in payload) && current.active !== original.active) {
       payload.active = current.active;
     }
 
-    if (Object.keys(payload).length === 0) return;
-
-    setSavingId(id);
-    setError(null);
-    try {
-      const res = await fetch(`/api/providers/${id}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(data?.error || 'Failed to update');
-        return;
-      }
-      await refresh();
-    } catch {
-      setError('Failed to update');
-    } finally {
-      setSavingId(null);
-    }
+    return payload;
   };
 
   const deleteProvider = async (id: number) => {
@@ -198,14 +209,6 @@ export default function AdminProvidersClient() {
                         }))
                       }
                     />
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.formRow}>
@@ -227,14 +230,6 @@ export default function AdminProvidersClient() {
                         </option>
                       ))}
                     </select>
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.formRow}>
@@ -249,14 +244,6 @@ export default function AdminProvidersClient() {
                         }))
                       }
                     />
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.formRow}>
@@ -278,14 +265,6 @@ export default function AdminProvidersClient() {
                         </option>
                       ))}
                     </select>
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.formRow}>
@@ -300,14 +279,6 @@ export default function AdminProvidersClient() {
                         }))
                       }
                     />
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.actionsRow}>
@@ -324,14 +295,6 @@ export default function AdminProvidersClient() {
                       />
                       <span>{tForm('active')}</span>
                     </label>
-                    <button
-                      className={styles.button}
-                      onClick={() => updateProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? tDash('saving') : tDash('save')}
-                    </button>
                   </div>
 
                   <div className={styles.actionsRow}>
@@ -348,6 +311,12 @@ export default function AdminProvidersClient() {
                 </div>
               );
             })}
+
+            <div className={styles.saveAllRow}>
+              <button className={styles.button} type="button" onClick={saveAll} disabled={savingAll || savingId !== null}>
+                {savingAll ? tDash('saving') : tDash('save')}
+              </button>
+            </div>
           </div>
         )}
       </div>
