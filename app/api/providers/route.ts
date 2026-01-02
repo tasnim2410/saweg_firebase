@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -95,16 +96,27 @@ export async function POST(req: NextRequest) {
     const file = formData.get('image') as File | null;
 
     if (file && file.size > 0) {
-      await ensureUploadDir();
-
-      const ext = path.extname(file.name) || '.jpg';
-      const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
-      const filepath = path.join(uploadDir, filename);
-
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(filepath, buffer);
 
-      imagePath = `/images/providers/${filename}`;
+      if (cloudinaryEnabled()) {
+        const uploaded = await uploadImageBuffer({
+          buffer,
+          folder: 'saweg/providers',
+          publicId: `provider-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          contentType: file.type,
+        });
+        imagePath = uploaded.url;
+      } else {
+        await ensureUploadDir();
+
+        const ext = path.extname(file.name) || '.jpg';
+        const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
+        const filepath = path.join(uploadDir, filename);
+
+        await fs.writeFile(filepath, buffer);
+
+        imagePath = `/images/providers/${filename}`;
+      }
     }
 
     const createData: any = {

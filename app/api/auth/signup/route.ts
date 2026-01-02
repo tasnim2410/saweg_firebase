@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/password';
 import { AUTH_COOKIE_NAME, signSessionToken } from '@/lib/session';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -97,13 +98,24 @@ export async function POST(req: Request) {
 
     let truckImagePath: string | null = null;
     if (truckImage && truckImage.size > 0) {
-      await ensureUploadDir();
-      const ext = path.extname(truckImage.name) || '.jpg';
-      const filename = `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
-      const filepath = path.join(uploadDir, filename);
       const buffer = Buffer.from(await truckImage.arrayBuffer());
-      await fs.writeFile(filepath, buffer);
-      truckImagePath = `/images/users/${filename}`;
+
+      if (cloudinaryEnabled()) {
+        const uploaded = await uploadImageBuffer({
+          buffer,
+          folder: 'saweg/users',
+          publicId: `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          contentType: truckImage.type,
+        });
+        truckImagePath = uploaded.url;
+      } else {
+        await ensureUploadDir();
+        const ext = path.extname(truckImage.name) || '.jpg';
+        const filename = `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
+        const filepath = path.join(uploadDir, filename);
+        await fs.writeFile(filepath, buffer);
+        truckImagePath = `/images/users/${filename}`;
+      }
     }
 
     const user = await (prisma as any).user.create({
