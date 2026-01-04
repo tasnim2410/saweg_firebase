@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './add-provider.module.css';
-import { getLocationOptions } from '@/lib/locations';
+import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
 
 export default function AddProviderPage() {
@@ -13,7 +13,7 @@ export default function AddProviderPage() {
   const locale = useLocale();
   const router = useRouter();
 
-  const locationOptions = getLocationOptions(locale === 'ar' ? 'ar' : 'en');
+  const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,10 +152,14 @@ export default function AddProviderPage() {
               required
             >
               <option value="" />
-              {locationOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+              {locationOptionGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -179,10 +183,14 @@ export default function AddProviderPage() {
               required
             >
               <option value="" />
-              {locationOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+              {locationOptionGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>

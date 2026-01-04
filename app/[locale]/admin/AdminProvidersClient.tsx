@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import styles from '../dashboard/my-providers/my-providers.module.css';
-import { getLocationOptions } from '@/lib/locations';
+import { getLocationOptionGroups } from '@/lib/locations';
 
 type Provider = {
   id: number;
@@ -33,7 +33,7 @@ export default function AdminProvidersClient() {
   const tDash = useTranslations('providerDashboard');
   const tForm = useTranslations('providerForm');
 
-  const locationOptions = getLocationOptions(locale === 'ar' ? 'ar' : 'en');
+  const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,10 +225,14 @@ export default function AdminProvidersClient() {
                       }
                     >
                       <option value="" />
-                      {locationOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
+                      {locationOptionGroups.map((group) => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
@@ -260,10 +264,14 @@ export default function AdminProvidersClient() {
                       }
                     >
                       <option value="" />
-                      {locationOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
+                      {locationOptionGroups.map((group) => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>

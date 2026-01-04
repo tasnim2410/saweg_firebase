@@ -6,7 +6,15 @@ export type LocationOption = {
   ar: string;
 };
 
+export type LocationOptionGroup = {
+  label: string;
+  options: Array<{ value: string; label: string }>;
+};
+
 export const LOCATION_OPTIONS: LocationOption[] = [
+  { value: 'ALL_LIBYA', en: 'All of Libya', ar: 'كل ليبيا' },
+  { value: 'ALL_TUNISIA', en: 'All of Tunisia', ar: 'كل تونس' },
+  { value: 'ALL_EGYPT', en: 'All of Egypt', ar: 'كل مصر' },
   { value: 'Tobruk', en: 'Tobruk', ar: 'طبرق' },
   { value: 'Musaid', en: 'Musaid', ar: 'مساعد' },
   { value: 'Jaghbub', en: 'Jaghbub', ar: 'الجغبوب' },
@@ -125,16 +133,139 @@ export const LOCATION_OPTIONS: LocationOption[] = [
   { value: 'Tozeur', en: 'Tozeur', ar: 'توزر' },
   { value: 'Tunis', en: 'Tunis', ar: 'تونس' },
   { value: 'Zaghouan', en: 'Zaghouan', ar: 'زغوان' },
+
+  { value: 'Cairo', en: 'Cairo', ar: 'القاهرة' },
+  { value: 'Giza', en: 'Giza', ar: 'الجيزة' },
+  { value: 'Alexandria', en: 'Alexandria', ar: 'الإسكندرية' },
+  { value: 'Port Said', en: 'Port Said', ar: 'بورسعيد' },
+  { value: 'Suez', en: 'Suez', ar: 'السويس' },
+  { value: 'Ismailia', en: 'Ismailia', ar: 'الإسماعيلية' },
+  { value: 'Damietta', en: 'Damietta', ar: 'دمياط' },
+  { value: 'Mansoura', en: 'Mansoura', ar: 'المنصورة' },
+  { value: 'Tanta', en: 'Tanta', ar: 'طنطا' },
+  { value: 'Zagazig', en: 'Zagazig', ar: 'الزقازيق' },
+  { value: 'Fayoum', en: 'Fayoum', ar: 'الفيوم' },
+  { value: 'Beni Suef', en: 'Beni Suef', ar: 'بني سويف' },
+  { value: 'Minya', en: 'Minya', ar: 'المنيا' },
+  { value: 'Asyut', en: 'Asyut', ar: 'أسيوط' },
+  { value: 'Sohag', en: 'Sohag', ar: 'سوهاج' },
+  { value: 'Qena', en: 'Qena', ar: 'قنا' },
+  { value: 'Luxor', en: 'Luxor', ar: 'الأقصر' },
+  { value: 'Aswan', en: 'Aswan', ar: 'أسوان' },
+  { value: 'Hurghada', en: 'Hurghada', ar: 'الغردقة' },
+  { value: 'Sharm El Sheikh', en: 'Sharm El Sheikh', ar: 'شرم الشيخ' },
 ].reduce<LocationOption[]>((acc, opt) => {
   if (!acc.some((x) => x.value === opt.value)) acc.push(opt);
   return acc;
 }, []).sort((a, b) => a.en.localeCompare(b.en));
+
+const TUNISIA_VALUES = new Set<string>([
+  'Ariana',
+  'Beja',
+  'Ben Arous',
+  'Bizerte',
+  'Gabes',
+  'Gafsa',
+  'Jendouba',
+  'Kairouan',
+  'Kasserine',
+  'Kebili',
+  'Kef',
+  'Mahdia',
+  'Manouba',
+  'Medenine',
+  'Monastir',
+  'Nabeul',
+  'Sfax',
+  'Sidi Bouzid',
+  'Siliana',
+  'Sousse',
+  'Tataouine',
+  'Tozeur',
+  'Tunis',
+  'Zaghouan',
+]);
+
+const EGYPT_VALUES = new Set<string>([
+  'Cairo',
+  'Giza',
+  'Alexandria',
+  'Port Said',
+  'Suez',
+  'Ismailia',
+  'Damietta',
+  'Mansoura',
+  'Tanta',
+  'Zagazig',
+  'Fayoum',
+  'Beni Suef',
+  'Minya',
+  'Asyut',
+  'Sohag',
+  'Qena',
+  'Luxor',
+  'Aswan',
+  'Hurghada',
+  'Sharm El Sheikh',
+]);
 
 export function getLocationOptions(locale: LocaleKey): Array<{ value: string; label: string }> {
   return LOCATION_OPTIONS.map((o) => ({
     value: o.value,
     label: locale === 'ar' ? o.ar : o.en,
   }));
+}
+
+export function getLocationOptionGroups(locale: LocaleKey): LocationOptionGroup[] {
+  const mapLabel = (o: LocationOption) => (locale === 'ar' ? o.ar : o.en);
+
+  const allLibya = LOCATION_OPTIONS.find((o) => o.value === 'ALL_LIBYA');
+  const allTunisia = LOCATION_OPTIONS.find((o) => o.value === 'ALL_TUNISIA');
+  const allEgypt = LOCATION_OPTIONS.find((o) => o.value === 'ALL_EGYPT');
+
+  const libya: LocationOption[] = [];
+  const tunisia: LocationOption[] = [];
+  const egypt: LocationOption[] = [];
+
+  for (const o of LOCATION_OPTIONS) {
+    if (o.value === 'ALL_LIBYA' || o.value === 'ALL_TUNISIA' || o.value === 'ALL_EGYPT') continue;
+    if (TUNISIA_VALUES.has(o.value)) {
+      tunisia.push(o);
+      continue;
+    }
+    if (EGYPT_VALUES.has(o.value)) {
+      egypt.push(o);
+      continue;
+    }
+    libya.push(o);
+  }
+
+  const sortByLabel = (a: LocationOption, b: LocationOption) => mapLabel(a).localeCompare(mapLabel(b));
+  libya.sort(sortByLabel);
+  tunisia.sort(sortByLabel);
+  egypt.sort(sortByLabel);
+
+  const toOptions = (items: LocationOption[], all?: LocationOption | undefined) => {
+    const out: Array<{ value: string; label: string }> = [];
+    if (all) out.push({ value: all.value, label: mapLabel(all) });
+    for (const o of items) out.push({ value: o.value, label: mapLabel(o) });
+    return out;
+  };
+
+  return [
+    {
+      label: locale === 'ar' ? 'ليبيا' : 'Libya',
+      options: toOptions(libya, allLibya),
+    },
+    {
+      label: locale === 'ar' ? 'تونس' : 'Tunisia',
+      options: toOptions(tunisia, allTunisia),
+    },
+    {
+      label: locale === 'ar' ? 'مصر' : 'Egypt',
+      options: toOptions(egypt, allEgypt),
+    },
+  ];
 }
 
 export function getLocationLabel(value: string | null | undefined, locale: LocaleKey): string {
