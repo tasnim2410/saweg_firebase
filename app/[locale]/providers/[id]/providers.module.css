@@ -147,6 +147,12 @@
   text-decoration: none;
 }
 
+ .callButtonDisabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.85;
+ }
+
 .callButton:hover {
   opacity: 0.92;
 }

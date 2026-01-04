@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/password';
 import { AUTH_COOKIE_NAME, signSessionToken } from '@/lib/session';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -82,11 +83,20 @@ export async function POST(req: Request) {
     if (password.length < 6) return NextResponse.json({ ok: false, error: 'PASSWORD_TOO_SHORT' }, { status: 400 });
     if (!type) return NextResponse.json({ ok: false, error: 'USER_TYPE_REQUIRED' }, { status: 400 });
 
+    let phoneE164: string | null = null;
+    if (phone) {
+      const normalizedPhone = normalizePhoneNumber(phone);
+      if (!normalizedPhone.ok) {
+        return NextResponse.json({ ok: false, error: normalizedPhone.error }, { status: 400 });
+      }
+      phoneE164 = normalizedPhone.e164;
+    }
+
     const existing = await prisma.user.findFirst({
       where: {
         OR: [
           ...(email ? [{ email }] : []),
-          ...(phone ? [{ phone }] : []),
+          ...(phoneE164 ? [{ phone: phoneE164 }] : []),
         ],
       },
       select: { id: true },
@@ -122,7 +132,7 @@ export async function POST(req: Request) {
       data: {
         fullName,
         email,
-        phone,
+        phone: phoneE164,
         passwordHash,
         type: type as any,
         merchantCity: type === 'MERCHANT' ? (merchantCity || null) : null,

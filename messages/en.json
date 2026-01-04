@@ -42,7 +42,14 @@
     "active": "Active",
     "submit": "Publish",
     "submitting": "Publishing...",
-    "success": "Published successfully"
+    "success": "Published successfully",
+    "errors": {
+      "missingRequiredFields": "Please fill in all required fields",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalidCharacters": "Phone number contains invalid characters",
+      "phoneInvalidLength": "Phone number must be 8 (Tunisia), 10 (Libya), or 11 (Egypt) digits",
+      "publishFailed": "Failed to publish"
+    }
   },
 
   "providerDashboard": {
@@ -148,7 +155,17 @@
     "placeOfBusiness": "Place of business",
     "trucksNeeded": "Trucks you usually need",
     "submit": "Complete Registration",
-    "success": "Thank you for registering! We'll notify you when the app launches."
+    "success": "Thank you for registering! We'll notify you when the app launches.",
+    "errors": {
+      "passwordTooShort": "Password must be at least 6 characters",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalidCharacters": "Phone number contains invalid characters",
+      "phoneInvalidLength": "Phone number must be 8 (Tunisia), 10 (Libya), or 11 (Egypt) digits",
+      "userAlreadyExists": "An account with this email/phone already exists",
+      "signupFailed": "Could not create account",
+      "somethingWentWrong": "Something went wrong"
+    }
   },
   "auth": {
     "loginTitle": "Login",
@@ -187,6 +204,7 @@
     "fullName": "Full name",
     "email": "Email",
     "phone": "Phone",
+    "callsReceived": "Calls received",
     "save": "Save",
     "saving": "Saving...",
     "saved": "Saved successfully",
@@ -197,6 +215,9 @@
     "emailOrPhoneRequired": "Please enter an email or phone number",
     "duplicateEmail": "Email is already used",
     "duplicatePhone": "Phone number is already used",
-    "duplicateIdentifier": "Email or phone is already used"
+    "duplicateIdentifier": "Email or phone is already used",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalidCharacters": "Phone number contains invalid characters",
+    "phoneInvalidLength": "Phone number must be 8 (Tunisia), 10 (Libya), or 11 (Egypt) digits"
   }
 }

@@ -18,6 +18,7 @@ export async function GET() {
         fullName: true,
         email: true,
         phone: true,
+        callsReceived: true,
         profileImage: true,
         merchantCity: true,
         shipperCity: true,

@@ -10,6 +10,7 @@ type PublicUser = {
   phone: string | null;
   type: 'SHIPPER' | 'MERCHANT' | 'ADMIN' | null;
   profileImage: string | null;
+  callsReceived: number;
   merchantCity: string | null;
   shipperCity: string | null;
   carKind: string | null;
@@ -28,6 +29,7 @@ export default async function PublicUserProfilePage({
   const { locale, id } = await params;
 
   const tRegister = await getTranslations('register');
+  const tProfile = await getTranslations('profile');
 
   const userId = typeof id === 'string' ? id.trim() : '';
   if (!userId) {
@@ -50,6 +52,7 @@ export default async function PublicUserProfilePage({
       phone: true,
       type: true,
       profileImage: true,
+      callsReceived: true,
       merchantCity: true,
       shipperCity: true,
       carKind: true,
@@ -103,6 +106,11 @@ export default async function PublicUserProfilePage({
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{tRegister('phone')}</div>
               <div className={styles.infoValue}>{user.phone || '-'}</div>
+            </div>
+
+            <div className={styles.infoBlock}>
+              <div className={styles.infoLabel}>{tProfile('callsReceived')}</div>
+              <div className={styles.infoValue}>{String(user.callsReceived ?? 0)}</div>
             </div>
 
             {user.type === 'SHIPPER' ? (

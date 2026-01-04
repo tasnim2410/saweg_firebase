@@ -111,6 +111,7 @@ export default function AdminProvidersClient() {
         destination: (p.destination ?? p.placeOfBusiness) ?? '',
         description: p.description ?? '',
         active: p.active,
+        
       };
     }
     setEdits(next);

@@ -14,7 +14,8 @@ type ProviderDetails = {
   description: string | null;
   image: string | null;
   active: boolean;
-  createdAt: string;
+  lastLocationUpdateAt: string | Date;
+  createdAt: string | Date;
   user: {
     fullName: string;
     profileImage: string | null;
@@ -63,6 +64,7 @@ export default async function ProviderDetailsPage({
       description: true,
       image: true,
       active: true,
+      lastLocationUpdateAt: true,
       createdAt: true,
       user: {
         select: {
@@ -103,6 +105,10 @@ export default async function ProviderDetailsPage({
   const destLabel = provider.destination
     ? getLocationLabel(provider.destination, locale === 'ar' ? 'ar' : 'en')
     : '';
+
+  const lastUpdateMs = new Date(provider.lastLocationUpdateAt as any).getTime();
+  const isStale = Number.isFinite(lastUpdateMs) ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000 : false;
+  const canCall = provider.active && !isStale;
 
   return (
     <main className={styles.main}>
@@ -173,9 +179,13 @@ export default async function ProviderDetailsPage({
 
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{tForm('phone')}</div>
-              <a className={styles.callButton} href={toTelHref(provider.phone)} title={tCarousel('call')}>
-                {provider.phone}
-              </a>
+              {canCall ? (
+                <a className={styles.callButton} href={toTelHref(provider.phone)} title={tCarousel('call')}>
+                  {provider.phone}
+                </a>
+              ) : (
+                <span className={`${styles.callButton} ${styles.callButtonDisabled}`}>{provider.phone}</span>
+              )}
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ export async function GET(
       phone: true,
       type: true,
       profileImage: true,
+      callsReceived: true,
       merchantCity: true,
       shipperCity: true,
       carKind: true,

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, getSession, signSessionToken } from '@/lib/session';
 import { Prisma } from '@prisma/client';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -63,25 +64,50 @@ export async function PATCH(req: Request) {
   const emailRaw = typeof emailInput === 'string' ? emailInput.trim() : '';
   const phoneRaw = typeof phoneInput === 'string' ? phoneInput.trim() : '';
 
-  if (!fullName) {
+  if (hasFullNameField && !fullName) {
     return NextResponse.json({ ok: false, error: 'FULL_NAME_REQUIRED' }, { status: 400 });
   }
 
   const emailUpdate = hasEmailField ? (emailRaw ? emailRaw.toLowerCase() : null) : undefined;
   const phoneUpdate = hasPhoneField ? (phoneRaw ? phoneRaw : null) : undefined;
 
+  const phoneUpdateNormalized =
+    phoneUpdate === undefined
+      ? undefined
+      : phoneUpdate === null
+        ? null
+        : (() => {
+            const normalized = normalizePhoneNumber(phoneUpdate);
+            if (!normalized.ok) {
+              return normalized;
+            }
+            return normalized.e164;
+          })();
+
+  if (phoneUpdateNormalized && typeof phoneUpdateNormalized === 'object') {
+    return NextResponse.json({ ok: false, error: phoneUpdateNormalized.error }, { status: 400 });
+  }
+
   try {
     const existingUser = (await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, email: true, phone: true, type: true } as any,
+      select: { id: true, fullName: true, email: true, phone: true, type: true } as any,
     })) as any;
 
     if (!existingUser) {
       return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
+    const fullNameUpdate = hasFullNameField ? fullName : undefined;
+
     const nextEmail = emailUpdate !== undefined ? emailUpdate : (existingUser.email ?? null);
-    const nextPhone = phoneUpdate !== undefined ? phoneUpdate : (existingUser.phone ?? null);
+    const nextPhone = phoneUpdateNormalized !== undefined ? phoneUpdateNormalized : (existingUser.phone ?? null);
+
+    const nextFullName = fullNameUpdate !== undefined ? fullNameUpdate : (existingUser.fullName ?? null);
+
+    if (!nextFullName) {
+      return NextResponse.json({ ok: false, error: 'FULL_NAME_REQUIRED' }, { status: 400 });
+    }
 
     if (!nextEmail && !nextPhone) {
       return NextResponse.json({ ok: false, error: 'EMAIL_OR_PHONE_REQUIRED' }, { status: 400 });
@@ -165,9 +191,9 @@ export async function PATCH(req: Request) {
     const updated = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        fullName,
+        ...(fullNameUpdate !== undefined ? ({ fullName: fullNameUpdate } as any) : {}),
         ...(emailUpdate !== undefined ? ({ email: emailUpdate } as any) : {}),
-        ...(phoneUpdate !== undefined ? ({ phone: phoneUpdate } as any) : {}),
+        ...(phoneUpdateNormalized !== undefined ? ({ phone: phoneUpdateNormalized } as any) : {}),
         ...(merchantCity !== undefined ? ({ merchantCity } as any) : {}),
         ...(shipperCity !== undefined ? ({ shipperCity } as any) : {}),
         ...(carKind !== undefined ? ({ carKind } as any) : {}),

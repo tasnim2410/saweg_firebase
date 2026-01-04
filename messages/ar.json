@@ -43,7 +43,14 @@
     "active": "متاح",
     "submit": "نشر",
     "submitting": "جاري النشر...",
-    "success": "تم النشر بنجاح"
+    "success": "تم النشر بنجاح",
+    "errors": {
+      "missingRequiredFields": "يرجى ملء جميع الحقول المطلوبة",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalidCharacters": "رقم الهاتف يحتوي على أحرف/رموز غير صالحة",
+      "phoneInvalidLength": "يجب أن يكون رقم الهاتف 8 أرقام (تونس) أو 10 أرقام (ليبيا) أو 11 رقمًا (مصر)",
+      "publishFailed": "فشل النشر"
+    }
   },
 
   "providerDashboard": {
@@ -145,7 +152,17 @@
     "placeOfBusiness": "إسم الشركة",
     "trucksNeeded": "الشاحنات التي تحتاجها عادةً",
     "submit": "إتمام التسجيل",
-    "success": "شكراً لتسجيلك! سنخبرك عند إطلاق التطبيق."
+    "success": "شكراً لتسجيلك! سنخبرك عند إطلاق التطبيق.",
+    "errors": {
+      "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalidCharacters": "رقم الهاتف يحتوي على أحرف/رموز غير صالحة",
+      "phoneInvalidLength": "يجب أن يكون رقم الهاتف 8 أرقام (تونس) أو 10 أرقام (ليبيا) أو 11 رقمًا (مصر)",
+      "userAlreadyExists": "يوجد حساب بهذا البريد/الرقم بالفعل",
+      "signupFailed": "تعذر إنشاء الحساب",
+      "somethingWentWrong": "حدث خطأ ما"
+    }
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -184,6 +201,7 @@
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
     "phone": "رقم الهاتف",
+    "callsReceived": "المكالمات المستلمة",
     "save": "حفظ",
     "saving": "جاري الحفظ...",
     "saved": "تم الحفظ بنجاح",
@@ -194,6 +212,9 @@
     "emailOrPhoneRequired": "يرجى إدخال البريد الإلكتروني أو رقم الهاتف",
     "duplicateEmail": "البريد الإلكتروني مستخدم بالفعل",
     "duplicatePhone": "رقم الهاتف مستخدم بالفعل",
-    "duplicateIdentifier": "البريد الإلكتروني أو رقم الهاتف مستخدم بالفعل"
+    "duplicateIdentifier": "البريد الإلكتروني أو رقم الهاتف مستخدم بالفعل",
+    "phoneRequired": "رقم الهاتف مطلوب",
+    "phoneInvalidCharacters": "رقم الهاتف يحتوي على أحرف/رموز غير صالحة",
+    "phoneInvalidLength": "يجب أن يكون رقم الهاتف 8 أرقام (تونس) أو 10 أرقام (ليبيا) أو 11 رقمًا (مصر)"
   }
 }

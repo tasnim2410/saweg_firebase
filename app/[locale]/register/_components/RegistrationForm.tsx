@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
 import styles from '../register.module.css';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 type RegistrationRole = 'shipper' | 'merchant';
 
@@ -43,18 +44,30 @@ export default function RegistrationForm({ role }: Props) {
 
     setError(null);
     if (password.length < 6) {
-      setError(locale === 'ar' ? 'كلمة المرور قصيرة جدًا' : 'Password is too short');
+      setError(t('errors.passwordTooShort'));
       return;
     }
     if (password !== repeatPassword) {
-      setError(locale === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
+      setError(t('errors.passwordsDoNotMatch'));
+      return;
+    }
+
+    const normalizedPhone = normalizePhoneNumber(formData.phone);
+    if (!normalizedPhone.ok) {
+      if (normalizedPhone.error === 'PHONE_REQUIRED') {
+        setError(t('errors.phoneRequired'));
+      } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
+        setError(t('errors.phoneInvalidCharacters'));
+      } else {
+        setError(t('errors.phoneInvalidLength'));
+      }
       return;
     }
 
     const payload = new FormData();
     payload.append('fullName', formData.fullName);
     payload.append('email', formData.email);
-    payload.append('phone', formData.phone);
+    payload.append('phone', normalizedPhone.e164);
     payload.append('password', password);
     payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
 
@@ -82,7 +95,20 @@ export default function RegistrationForm({ role }: Props) {
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(data?.error || (locale === 'ar' ? 'فشل إنشاء الحساب' : 'Failed to create account'));
+        const code = data?.error;
+        if (code === 'PHONE_REQUIRED') {
+          setError(t('errors.phoneRequired'));
+        } else if (code === 'PHONE_INVALID_CHARACTERS') {
+          setError(t('errors.phoneInvalidCharacters'));
+        } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+          setError(t('errors.phoneInvalidLength'));
+        } else if (code === 'PASSWORD_TOO_SHORT') {
+          setError(t('errors.passwordTooShort'));
+        } else if (code === 'USER_ALREADY_EXISTS') {
+          setError(t('errors.userAlreadyExists'));
+        } else {
+          setError(t('errors.signupFailed'));
+        }
         return;
       }
 
@@ -91,7 +117,7 @@ export default function RegistrationForm({ role }: Props) {
       router.refresh();
     } catch (err) {
       console.error(err);
-      setError(locale === 'ar' ? 'حدث خطأ غير متوقع' : 'Something went wrong');
+      setError(t('errors.somethingWentWrong'));
     } finally {
       setLoading(false);
     }

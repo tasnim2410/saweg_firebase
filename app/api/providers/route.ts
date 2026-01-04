@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -92,7 +93,12 @@ export async function POST(req: NextRequest) {
     const activeStr = formData.get('active') as string | null;
 
     if (!location || !phone) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone.ok) {
+      return NextResponse.json({ error: normalizedPhone.error }, { status: 400 });
     }
 
     if (!isAdmin && nameFromForm && nameFromForm !== user.fullName) {
@@ -129,7 +135,7 @@ export async function POST(req: NextRequest) {
     const createData: any = {
       name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
       location: location.trim(),
-      phone: phone.trim(),
+      phone: normalizedPhone.e164,
       destination: destination?.trim() || null,
       description: description?.trim() || null,
       image: imagePath,

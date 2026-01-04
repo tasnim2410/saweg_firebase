@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './add-provider.module.css';
 import { getLocationOptions } from '@/lib/locations';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 export default function AddProviderPage() {
   const t = useTranslations('providerForm');
@@ -62,7 +63,19 @@ export default function AddProviderPage() {
     setSuccess(false);
 
     if (!location.trim() || !phone.trim()) {
-      setError('Missing required fields');
+      setError(t('errors.missingRequiredFields'));
+      return;
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone.ok) {
+      if (normalizedPhone.error === 'PHONE_REQUIRED') {
+        setError(t('errors.phoneRequired'));
+      } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
+        setError(t('errors.phoneInvalidCharacters'));
+      } else {
+        setError(t('errors.phoneInvalidLength'));
+      }
       return;
     }
 
@@ -72,7 +85,7 @@ export default function AddProviderPage() {
     payload.append('placeOfBusiness', destination);
     payload.append('description', description);
     payload.append('location', location);
-    payload.append('phone', phone);
+    payload.append('phone', normalizedPhone.e164);
     payload.append('active', active ? 'true' : 'false');
     if (imageFile) payload.append('image', imageFile);
 
@@ -86,7 +99,18 @@ export default function AddProviderPage() {
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(data?.error || 'Failed to publish');
+        const code = data?.error;
+        if (code === 'PHONE_REQUIRED') {
+          setError(t('errors.phoneRequired'));
+        } else if (code === 'PHONE_INVALID_CHARACTERS') {
+          setError(t('errors.phoneInvalidCharacters'));
+        } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+          setError(t('errors.phoneInvalidLength'));
+        } else if (code === 'MISSING_REQUIRED_FIELDS') {
+          setError(t('errors.missingRequiredFields'));
+        } else {
+          setError(t('errors.publishFailed'));
+        }
         return;
       }
 
@@ -94,7 +118,7 @@ export default function AddProviderPage() {
       router.push(`/${locale}`);
       router.refresh();
     } catch {
-      setError('Failed to publish');
+      setError(t('errors.publishFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -115,6 +139,7 @@ export default function AddProviderPage() {
               value={name}
               disabled={!isAdmin}
               onChange={(e) => setName(e.target.value)}
+              required
             />
           </div>
 
@@ -124,6 +149,7 @@ export default function AddProviderPage() {
               className={styles.input}
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
+              required
             >
               <option value="" />
               {locationOptions.map((opt) => (
@@ -162,7 +188,7 @@ export default function AddProviderPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{t('phone')}</label>
+            <label className={styles.label}>{t('phone')} </label>
             <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} required />
           </div>
 
@@ -173,11 +199,12 @@ export default function AddProviderPage() {
               type="file"
               accept="image/*"
               onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              required
             />
           </div>
 
           <label className={styles.checkboxRow}>
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} required />
             <span>{t('active')}</span>
           </label>
 

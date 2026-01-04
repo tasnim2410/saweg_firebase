@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Camera } from 'lucide-react';
 import styles from './my-profile.module.css';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 type User = {
   id: string;
@@ -14,6 +15,7 @@ type User = {
   phone: string | null;
   type?: string | null;
   profileImage?: string | null;
+  callsReceived?: number;
   merchantCity?: string | null;
   shipperCity?: string | null;
   carKind?: string | null;
@@ -45,6 +47,8 @@ export default function MyProfilePage() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
+  const [callsReceived, setCallsReceived] = useState(0);
+  const [initialUser, setInitialUser] = useState<User | null>(null);
 
   const [merchantCity, setMerchantCity] = useState('');
   const [shipperCity, setShipperCity] = useState('');
@@ -93,6 +97,7 @@ export default function MyProfilePage() {
         setPhone(user.phone ?? '');
         setProfileImage(user.profileImage ?? null);
         setUserType(user.type ?? null);
+        setCallsReceived(typeof (user as any).callsReceived === 'number' ? (user as any).callsReceived : 0);
 
         setMerchantCity(user.merchantCity ?? '');
         setShipperCity(user.shipperCity ?? '');
@@ -102,6 +107,8 @@ export default function MyProfilePage() {
         setPlaceOfBusiness(user.placeOfBusiness ?? '');
         setTrucksNeeded(user.trucksNeeded ?? '');
         setTruckImage(user.truckImage ?? null);
+
+        setInitialUser(user);
       } catch {
         if (cancelled) return;
         setError(t('loadFailed'));
@@ -152,36 +159,97 @@ export default function MyProfilePage() {
     setError(null);
     setSuccess(false);
 
-    if (!fullName.trim()) {
+    if (!initialUser) {
+      setError(t('loadFailed'));
+      return;
+    }
+
+    const fullNameTrimmed = fullName.trim();
+    const emailTrimmed = email.trim();
+    const emailNormalized = emailTrimmed ? emailTrimmed.toLowerCase() : '';
+    const phoneTrimmed = phone.trim();
+
+    const initialFullName = (initialUser.fullName ?? '').trim();
+    const initialEmail = (initialUser.email ?? '').trim().toLowerCase();
+    const initialPhone = (initialUser.phone ?? '').trim();
+
+    const fullNameChanged = fullNameTrimmed !== initialFullName;
+    const emailChanged = emailNormalized !== initialEmail;
+    const phoneChanged = phoneTrimmed !== initialPhone;
+
+    const normalizedPhone = phoneChanged && phoneTrimmed ? normalizePhoneNumber(phoneTrimmed) : null;
+    if (normalizedPhone && !normalizedPhone.ok) {
+      if (normalizedPhone.error === 'PHONE_REQUIRED') {
+        setError(t('phoneRequired'));
+      } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
+        setError(t('phoneInvalidCharacters'));
+      } else {
+        setError(t('phoneInvalidLength'));
+      }
+      return;
+    }
+
+    const nextFullName = fullNameChanged ? fullNameTrimmed : initialFullName;
+    const nextEmail = emailChanged ? (emailNormalized ? emailNormalized : '') : initialEmail;
+    const nextPhone = phoneChanged
+      ? normalizedPhone && normalizedPhone.ok
+        ? normalizedPhone.e164
+        : phoneTrimmed
+      : initialPhone;
+
+    if (!nextFullName) {
       setError(t('fullNameRequired'));
       return;
     }
 
-    if (!email.trim() && !phone.trim()) {
+    if (!nextEmail && !nextPhone) {
       setError(t('emailOrPhoneRequired'));
+      return;
+    }
+
+    const merchantCityChanged = merchantCity.trim() !== (initialUser.merchantCity ?? '').trim();
+    const placeOfBusinessChanged = placeOfBusiness.trim() !== (initialUser.placeOfBusiness ?? '').trim();
+    const trucksNeededChanged = trucksNeeded.trim() !== (initialUser.trucksNeeded ?? '').trim();
+
+    const shipperCityChanged = shipperCity.trim() !== (initialUser.shipperCity ?? '').trim();
+    const carKindChanged = carKind.trim() !== (initialUser.carKind ?? '').trim();
+    const maxChargeChanged = maxCharge.trim() !== (initialUser.maxCharge ?? '').trim();
+    const maxChargeUnitChanged = maxChargeUnit !== (initialUser.maxChargeUnit ?? 'kg');
+
+    const hasAnyChange =
+      fullNameChanged ||
+      emailChanged ||
+      phoneChanged ||
+      Boolean(profileImageFile) ||
+      Boolean(truckImageFile) ||
+      (userType === 'MERCHANT' && (merchantCityChanged || placeOfBusinessChanged || trucksNeededChanged)) ||
+      (userType === 'SHIPPER' && (shipperCityChanged || carKindChanged || maxChargeChanged || maxChargeUnitChanged));
+
+    if (!hasAnyChange) {
+      setSuccess(true);
       return;
     }
 
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('fullName', fullName);
-      fd.append('email', email);
-      fd.append('phone', phone);
+      if (fullNameChanged) fd.append('fullName', fullNameTrimmed);
+      if (emailChanged) fd.append('email', emailNormalized);
+      if (phoneChanged) fd.append('phone', normalizedPhone && normalizedPhone.ok ? normalizedPhone.e164 : phoneTrimmed);
       if (profileImageFile) fd.append('profileImage', profileImageFile);
 
       if (userType === 'SHIPPER') {
-        fd.append('shipperCity', shipperCity);
-        fd.append('carKind', carKind);
-        fd.append('maxCharge', maxCharge);
-        fd.append('maxChargeUnit', maxChargeUnit);
+        if (shipperCityChanged) fd.append('shipperCity', shipperCity.trim());
+        if (carKindChanged) fd.append('carKind', carKind.trim());
+        if (maxChargeChanged) fd.append('maxCharge', maxCharge.trim());
+        if (maxChargeUnitChanged) fd.append('maxChargeUnit', maxChargeUnit);
         if (truckImageFile) fd.append('truckImage', truckImageFile);
       }
 
       if (userType === 'MERCHANT') {
-        fd.append('merchantCity', merchantCity);
-        fd.append('placeOfBusiness', placeOfBusiness);
-        fd.append('trucksNeeded', trucksNeeded);
+        if (merchantCityChanged) fd.append('merchantCity', merchantCity.trim());
+        if (placeOfBusinessChanged) fd.append('placeOfBusiness', placeOfBusiness.trim());
+        if (trucksNeededChanged) fd.append('trucksNeeded', trucksNeeded.trim());
       }
 
       const res = await fetch('/api/users/me', {
@@ -198,6 +266,12 @@ export default function MyProfilePage() {
           setError(t('duplicatePhone'));
         } else if (code === 'DUPLICATE_IDENTIFIER') {
           setError(t('duplicateIdentifier'));
+        } else if (code === 'PHONE_REQUIRED') {
+          setError(t('phoneRequired'));
+        } else if (code === 'PHONE_INVALID_CHARACTERS') {
+          setError(t('phoneInvalidCharacters'));
+        } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+          setError(t('phoneInvalidLength'));
         } else if (code === 'FULL_NAME_REQUIRED') {
           setError(t('fullNameRequired'));
         } else if (code === 'EMAIL_OR_PHONE_REQUIRED') {
@@ -217,6 +291,11 @@ export default function MyProfilePage() {
         setTruckImage(data.user.truckImage ?? null);
         setTruckImageFile(null);
       }
+
+      setInitialUser((prev) => ({
+        ...(prev ?? initialUser),
+        ...(data?.user ?? {}),
+      }));
       router.refresh();
     } catch {
       setError(t('saveFailed'));
@@ -276,6 +355,11 @@ export default function MyProfilePage() {
             <div className={styles.row}>
               <label className={styles.label}>{t('phone')}</label>
               <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+
+            <div className={styles.row}>
+              <label className={styles.label}>{t('callsReceived')}</label>
+              <input className={styles.input} value={String(callsReceived)} readOnly />
             </div>
 
             {userType === 'SHIPPER' ? (

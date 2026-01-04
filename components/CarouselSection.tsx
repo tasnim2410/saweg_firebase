@@ -14,6 +14,7 @@ interface Provider {
   phone: string;          // phoneNumber
   image: string | null;   // path to uploaded image
   active: boolean;
+  lastLocationUpdateAt?: string | Date;
   description?: string | null;
   destination?: string | null;
   placeOfBusiness?: string | null;
@@ -82,6 +83,17 @@ const CarouselSection: React.FC = () => {
   const toTelHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
+  };
+
+  const trackCall = (providerId: number) => {
+    try {
+      void fetch(`/api/providers/${providerId}/calls`, {
+        method: 'POST',
+        keepalive: true,
+      }).catch(() => null);
+    } catch {
+      // ignore
+    }
   };
 
   // Loading state
@@ -183,30 +195,46 @@ const CarouselSection: React.FC = () => {
                 </div>
               )}
 
-              <div className={styles.currentLocationContainer}>
-                <span
-                  className={styles.currentLocationIcon}
-                  style={{ color: provider.active ? 'green' : 'red' }}
-                >
-                  ●
-                </span>
-                <p className={styles.currentLocation}>
-                  {t('currentLocationPrefix')}{' '}
-                  {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
-                </p>
-              </div>
+              {(() => {
+                const lastUpdateMs = provider.lastLocationUpdateAt
+                  ? new Date(provider.lastLocationUpdateAt as any).getTime()
+                  : NaN;
+                const isStale = Number.isFinite(lastUpdateMs)
+                  ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000
+                  : false;
+                const dotClass = isStale
+                  ? styles.statusDotStale
+                  : provider.active
+                    ? styles.statusDotActive
+                    : styles.statusDotInactive;
 
-              <div className={styles.phoneContainer}>
-                <a
-                  className={styles.phoneButton}
-                  href={toTelHref(provider.phone)}
-                  aria-label={`Call: ${provider.phone}`}
-                  title={t('call') || 'Call'}
-                >
-                  <span className={styles.phoneNumberIcon}>📞</span>
-                  <span className={styles.phoneNumberText}>{provider.phone}</span>
-                </a>
-              </div>
+                return (
+                  <>
+                    <div className={styles.currentLocationContainer}>
+                      <span className={`${styles.currentLocationIcon} ${dotClass}`} aria-hidden="true" />
+                      <p className={styles.currentLocation}>
+                        {t('currentLocationPrefix')}{' '}
+                        {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
+                      </p>
+                    </div>
+
+                    <div className={styles.phoneContainer}>
+                      <a
+                        className={`${styles.phoneButton} ${isStale ? styles.phoneButtonStale : ''}`}
+                        href={toTelHref(provider.phone)}
+                        onClick={(e) => {
+                          trackCall(provider.id);
+                        }}
+                        aria-label={`Call: ${provider.phone}`}
+                        title={t('call') || 'Call'}
+                      >
+                        <span className={styles.phoneNumberIcon}>📞</span>
+                        <span className={styles.phoneNumberText}>{provider.phone}</span>
+                      </a>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}
