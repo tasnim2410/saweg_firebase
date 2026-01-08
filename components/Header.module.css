@@ -228,6 +228,30 @@
   color: #111827;
 }
 
+.signupButton {
+  background-color: #FFB81C;
+  color: #111827;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.12);
+}
+
+.signupButton:hover {
+  background-color: #ffa000;
+  color: #111827;
+}
+
+.mobileSignupButton {
+  background-color: #FFB81C;
+  color: #111827;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.12);
+}
+
+.mobileSignupButton:hover {
+  background-color: #ffa000;
+  color: #111827;
+}
+
 .langWrapper {
   position: relative;
   display: flex;

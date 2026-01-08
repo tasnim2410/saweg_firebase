@@ -147,6 +147,11 @@
   text-decoration: none;
 }
 
+ .phoneNumberLtr {
+  direction: ltr;
+  unicode-bidi: isolate;
+ }
+
  .callButtonDisabled {
   background: #9ca3af;
   cursor: not-allowed;

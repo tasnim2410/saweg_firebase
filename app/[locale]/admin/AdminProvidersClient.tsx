@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import styles from '../dashboard/my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 
@@ -30,6 +31,7 @@ type ProviderEdits = {
 
 export default function AdminProvidersClient() {
   const locale = useLocale();
+  const router = useRouter();
   const tDash = useTranslations('providerDashboard');
   const tForm = useTranslations('providerForm');
 
@@ -40,6 +42,9 @@ export default function AdminProvidersClient() {
   const [error, setError] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [imageFiles, setImageFiles] = useState<Record<number, File | null>>({});
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [removingImageId, setRemovingImageId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
 
   const refresh = async () => {
@@ -57,6 +62,58 @@ export default function AdminProvidersClient() {
       setError('Failed to load');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadImage = async (id: number) => {
+    const file = imageFiles[id];
+    if (!file) return;
+
+    setUploadingId(id);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.set('image', file);
+
+      const res = await fetch(`/api/providers/${id}`, {
+        method: 'PATCH',
+        body: formData,
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error || 'Failed to update image');
+        return;
+      }
+
+      await refresh();
+      setImageFiles(prev => ({ ...prev, [id]: null }));
+    } catch {
+      setError('Failed to update image');
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  const removeImage = async (id: number) => {
+    setRemovingImageId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/providers/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ removeImage: true }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error || 'Failed to remove image');
+        return;
+      }
+
+      await refresh();
+    } catch {
+      setError('Failed to remove image');
+    } finally {
+      setRemovingImageId(null);
     }
   };
 
@@ -111,10 +168,13 @@ export default function AdminProvidersClient() {
         destination: (p.destination ?? p.placeOfBusiness) ?? '',
         description: p.description ?? '',
         active: p.active,
-        
       };
     }
     setEdits(next);
+  }, [providers]);
+
+  useEffect(() => {
+    setImageFiles({});
   }, [providers]);
 
   const byId = useMemo(() => {
@@ -171,6 +231,21 @@ export default function AdminProvidersClient() {
     <div className={styles.card}>
       <div className={styles.header}>
         <h2 className={styles.title}>{locale === 'ar' ? 'إدارة المنشورات' : 'Manage Posts'}</h2>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.linkButtonSecondary}
+            onClick={() => {
+              try {
+                router.back();
+              } catch {
+                router.push(`/${locale}`);
+              }
+            }}
+          >
+            {locale === 'ar' ? 'رجوع' : 'Back'}
+          </button>
+        </div>
       </div>
 
       <div className={styles.body}>
@@ -198,7 +273,92 @@ export default function AdminProvidersClient() {
                     </div>
                   </div>
 
-                  <div className={styles.formRow}>
+                  {/* Enhanced Image Section */}
+                  <div className={styles.imageSection}>
+                    <div className={styles.imagePreviewContainer}>
+                      {p.image ? (
+                        <div className={styles.imageWrapper}>
+                          <img 
+                            className={styles.itemImage} 
+                            src={p.image} 
+                            alt={p.name} 
+                          />
+                          <div className={styles.imageOverlay}>
+                            <span className={styles.imageLabel}>
+                              {locale === 'ar' ? 'الصورة الحالية' : 'Current Image'}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.noImage}>
+                          <span>{locale === 'ar' ? 'لا توجد صورة' : 'No Image'}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.imageControls}>
+                      <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                        <label className={styles.label}>{locale === 'ar' ? 'تحميل صورة جديدة' : 'Upload New Image'}</label>
+                        <div className={styles.fileInputWrapper}>
+                          <input
+                            className={styles.fileInput}
+                            type="file"
+                            id={`image-upload-${p.id}`}
+                            accept="image/*"
+                            onChange={(ev) => {
+                              const f = ev.target.files?.[0] ?? null;
+                              setImageFiles((prev) => ({ ...prev, [p.id]: f }));
+                            }}
+                          />
+                          <label 
+                            htmlFor={`image-upload-${p.id}`} 
+                            className={styles.fileInputLabel}
+                          >
+                            {imageFiles[p.id] 
+                              ? imageFiles[p.id]?.name 
+                              : locale === 'ar' 
+                                ? 'اختر ملف' 
+                                : 'Choose file'}
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className={styles.imageButtonsRow}>
+                        <button
+                          className={`${styles.button} ${styles.imageButton}`}
+                          type="button"
+                          onClick={() => uploadImage(p.id)}
+                          disabled={!imageFiles[p.id] || uploadingId === p.id || savingAll || savingId !== null}
+                        >
+                          {uploadingId === p.id
+                            ? locale === 'ar'
+                              ? 'جارٍ الرفع...'
+                              : 'Uploading...'
+                            : locale === 'ar'
+                              ? 'رفع الصورة'
+                              : 'Upload Image'}
+                        </button>
+
+                        <button
+                          className={`${styles.deleteButton} ${styles.imageButton}`}
+                          type="button"
+                          onClick={() => removeImage(p.id)}
+                          disabled={!p.image || removingImageId === p.id || savingAll || savingId !== null}
+                        >
+                          {removingImageId === p.id
+                            ? locale === 'ar'
+                              ? 'جارٍ الحذف...'
+                              : 'Removing...'
+                            : locale === 'ar'
+                              ? 'حذف الصورة'
+                              : 'Remove Image'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Inputs with Spacing */}
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{tForm('name')}</label>
                     <input
                       className={styles.input}
@@ -209,10 +369,11 @@ export default function AdminProvidersClient() {
                           [p.id]: { ...prev[p.id], name: ev.target.value },
                         }))
                       }
+                      placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter name'}
                     />
                   </div>
 
-                  <div className={styles.formRow}>
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{tForm('location')}</label>
                     <select
                       className={styles.input}
@@ -224,7 +385,7 @@ export default function AdminProvidersClient() {
                         }))
                       }
                     >
-                      <option value="" />
+                      <option value="">{locale === 'ar' ? '-- اختر الموقع --' : '-- Select Location --'}</option>
                       {locationOptionGroups.map((group) => (
                         <optgroup key={group.label} label={group.label}>
                           {group.options.map((opt) => (
@@ -237,7 +398,7 @@ export default function AdminProvidersClient() {
                     </select>
                   </div>
 
-                  <div className={styles.formRow}>
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{tForm('phone')}</label>
                     <input
                       className={styles.input}
@@ -248,10 +409,11 @@ export default function AdminProvidersClient() {
                           [p.id]: { ...prev[p.id], phone: ev.target.value },
                         }))
                       }
+                      placeholder={locale === 'ar' ? 'أدخل رقم الهاتف' : 'Enter phone number'}
                     />
                   </div>
 
-                  <div className={styles.formRow}>
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{tForm('destination')}</label>
                     <select
                       className={styles.input}
@@ -263,7 +425,7 @@ export default function AdminProvidersClient() {
                         }))
                       }
                     >
-                      <option value="" />
+                      <option value="">{locale === 'ar' ? '-- اختر الوجهة --' : '-- Select Destination --'}</option>
                       {locationOptionGroups.map((group) => (
                         <optgroup key={group.label} label={group.label}>
                           {group.options.map((opt) => (
@@ -276,10 +438,10 @@ export default function AdminProvidersClient() {
                     </select>
                   </div>
 
-                  <div className={styles.formRow}>
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{tForm('description')}</label>
-                    <input
-                      className={styles.input}
+                    <textarea
+                      className={styles.textarea}
                       value={e?.description ?? ''}
                       onChange={(ev) =>
                         setEdits((prev) => ({
@@ -287,10 +449,12 @@ export default function AdminProvidersClient() {
                           [p.id]: { ...prev[p.id], description: ev.target.value },
                         }))
                       }
+                      placeholder={locale === 'ar' ? 'أدخل الوصف' : 'Enter description'}
+                      rows={3}
                     />
                   </div>
 
-                  <div className={styles.actionsRow}>
+                  <div className={`${styles.actionsRow} ${styles.checkboxRowSpaced}`}>
                     <label className={styles.checkboxRow}>
                       <input
                         type="checkbox"
@@ -306,14 +470,23 @@ export default function AdminProvidersClient() {
                     </label>
                   </div>
 
-                  <div className={styles.actionsRow}>
+                  <div className={`${styles.actionsRow} ${styles.deleteSection}`}>
                     <button
-                      className={styles.deleteButton}
-                      onClick={() => deleteProvider(p.id)}
+                      className={`${styles.deleteButton} ${styles.deleteProviderButton}`}
+                      onClick={() => {
+                        if (window.confirm(locale === 'ar' 
+                          ? 'هل أنت متأكد من حذف هذا المنشور؟' 
+                          : 'Are you sure you want to delete this provider?'
+                        )) {
+                          deleteProvider(p.id);
+                        }
+                      }}
                       disabled={savingId === p.id}
                       type="button"
                     >
-                      {tDash('delete')}
+                      {savingId === p.id 
+                        ? (locale === 'ar' ? 'جارٍ الحذف...' : 'Deleting...') 
+                        : tDash('delete')}
                     </button>
                     <span className={styles.hint}>{tDash('deleteHint')}</span>
                   </div>
@@ -322,8 +495,15 @@ export default function AdminProvidersClient() {
             })}
 
             <div className={styles.saveAllRow}>
-              <button className={styles.button} type="button" onClick={saveAll} disabled={savingAll || savingId !== null}>
-                {savingAll ? tDash('saving') : tDash('save')}
+              <button 
+                className={`${styles.button} ${styles.saveAllButton}`} 
+                type="button" 
+                onClick={saveAll} 
+                disabled={savingAll || savingId !== null}
+              >
+                {savingAll 
+                  ? (locale === 'ar' ? 'جارٍ الحفظ...' : tDash('saving')) 
+                  : tDash('save')}
               </button>
             </div>
           </div>

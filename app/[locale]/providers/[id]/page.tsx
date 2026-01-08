@@ -101,6 +101,14 @@ export default async function ProviderDetailsPage({
     return `tel:${normalized}`;
   };
 
+  const formatPhoneForDisplay = (phoneNumber: string) => {
+    const trimmed = (phoneNumber || '').trim();
+    if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
+      return `+${trimmed.slice(0, -1)}`;
+    }
+    return trimmed;
+  };
+
   const locLabel = getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en');
   const destLabel = provider.destination
     ? getLocationLabel(provider.destination, locale === 'ar' ? 'ar' : 'en')
@@ -181,10 +189,16 @@ export default async function ProviderDetailsPage({
               <div className={styles.infoLabel}>{tForm('phone')}</div>
               {canCall ? (
                 <a className={styles.callButton} href={toTelHref(provider.phone)} title={tCarousel('call')}>
-                  {provider.phone}
+                  <span dir="ltr" className={styles.phoneNumberLtr}>
+                    {formatPhoneForDisplay(provider.phone)}
+                  </span>
                 </a>
               ) : (
-                <span className={`${styles.callButton} ${styles.callButtonDisabled}`}>{provider.phone}</span>
+                <span className={`${styles.callButton} ${styles.callButtonDisabled}`}>
+                  <span dir="ltr" className={styles.phoneNumberLtr}>
+                    {formatPhoneForDisplay(provider.phone)}
+                  </span>
+                </span>
               )}
             </div>
           </div>

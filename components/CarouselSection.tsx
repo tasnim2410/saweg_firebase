@@ -85,6 +85,14 @@ const CarouselSection: React.FC = () => {
     return `tel:${normalized}`;
   };
 
+  const formatPhoneForDisplay = (phoneNumber: string) => {
+    const trimmed = (phoneNumber || '').trim();
+    if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
+      return `+${trimmed.slice(0, -1)}`;
+    }
+    return trimmed;
+  };
+
   const trackCall = (providerId: number) => {
     try {
       void fetch(`/api/providers/${providerId}/calls`, {
@@ -190,7 +198,9 @@ const CarouselSection: React.FC = () => {
                 <div className={styles.placeOfBusinessContainer}>
                   <p className={styles.placeOfBusiness}>
                     {t('destinationPrefix')}{' '}
-                    {getLocationLabel((provider.destination ?? provider.placeOfBusiness) ?? '', locale === 'ar' ? 'ar' : 'en')}
+                    <span className={styles.placeOfBusinessText}>
+                      {getLocationLabel((provider.destination ?? provider.placeOfBusiness) ?? '', locale === 'ar' ? 'ar' : 'en')}
+                    </span>
                   </p>
                 </div>
               )}
@@ -229,7 +239,9 @@ const CarouselSection: React.FC = () => {
                         title={t('call') || 'Call'}
                       >
                         <span className={styles.phoneNumberIcon}>📞</span>
-                        <span className={styles.phoneNumberText}>{provider.phone}</span>
+                        <span dir="ltr" className={`${styles.phoneNumberText} ${styles.phoneNumberLtr}`}>
+                          {formatPhoneForDisplay(provider.phone)}
+                        </span>
                       </a>
                     </div>
                   </>

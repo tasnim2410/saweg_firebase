@@ -149,7 +149,7 @@ export default function AddProviderPage() {
               className={styles.input}
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              required
+            
             >
               <option value="" />
               {locationOptionGroups.map((group) => (

@@ -41,7 +41,16 @@ export function normalizePhoneNumber(rawInput: string | null | undefined): Norma
     return { ok: false, raw, error: 'PHONE_REQUIRED' };  
   }  
 
-  let cleaned = trimmed.replace(/[\s-()]/g, '');  
+  const toAsciiDigits = (value: string) =>
+    value
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[０-９]/g, (d) => String(d.charCodeAt(0) - 0xff10));
+
+  const withoutMarks = trimmed.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '');
+  const normalized = toAsciiDigits(withoutMarks);
+
+  let cleaned = normalized.replace(/[\s-()]/g, '');  
 
   if (/[^0-9+]/.test(cleaned) || (cleaned.indexOf('+') > 0)) {  
     return { ok: false, raw, error: 'PHONE_INVALID_CHARACTERS' };  

@@ -243,7 +243,7 @@ export default function Header() {
                     <Link href={`/${locale}/login`} className={styles.authLink}>
                       {t('login')}
                     </Link>
-                    <Link href={`/${locale}/register`} className={styles.authLink}>
+                    <Link href={`/${locale}/register`} className={`${styles.authLink} ${styles.signupButton}`}>
                       {t('signup')}
                     </Link>
                   </>
@@ -373,7 +373,7 @@ export default function Header() {
                     <Link href={`/${locale}/login`} className={styles.authLink}>
                       {t('login')}
                     </Link>
-                    <Link href={`/${locale}/register`} className={styles.authLink}>
+                    <Link href={`/${locale}/register`} className={`${styles.authLink} ${styles.signupButton}`}>
                       {t('signup')}
                     </Link>
                   </>
@@ -440,7 +440,7 @@ export default function Header() {
                 <Link href={`/${locale}/login`} className={styles.mobileNavLink}>
                   {t('login')}
                 </Link>
-                <Link href={`/${locale}/register`} className={styles.mobileNavLink}>
+                <Link href={`/${locale}/register`} className={`${styles.mobileNavLink} ${styles.mobileSignupButton}`}>
                   {t('signup')}
                 </Link>
               </>

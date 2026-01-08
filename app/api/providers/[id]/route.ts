@@ -224,6 +224,11 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     data.active = activeValue;
   }
 
+  const removeImageValue = getBool('removeImage');
+  if (removeImageValue === true) {
+    data.image = null;
+  }
+
   if (formData) {
     const file = formData.get('image');
     if (file && typeof file !== 'string') {
