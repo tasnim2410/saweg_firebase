@@ -10,6 +10,8 @@ import { normalizePhoneNumber } from '@/lib/phone';
 
 type RegistrationRole = 'shipper' | 'merchant';
 
+const MAX_TRUCK_IMAGE_BYTES = 10 * 1024 * 1024;
+
 type Props = {
   role: RegistrationRole;
 };
@@ -24,8 +26,41 @@ export default function RegistrationForm({ role }: Props) {
   const [truckImagePreview, setTruckImagePreview] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      title: string;
+      message: string;
+    }>
+  >([]);
+
+  const pushToast = (toast: { title: string; message: string }) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
+    }, 5000);
+  };
+
+  const titleFor = (kind: 'form' | 'phone' | 'password' | 'image' | 'server' | 'network') => {
+    if (locale === 'ar') {
+      if (kind === 'form') return 'خطأ في النموذج';
+      if (kind === 'phone') return 'خطأ في الهاتف';
+      if (kind === 'password') return 'خطأ في كلمة المرور';
+      if (kind === 'image') return 'خطأ في الصورة';
+      if (kind === 'network') return 'خطأ في الاتصال';
+      return 'خطأ في الخادم';
+    }
+    if (kind === 'form') return 'Form error';
+    if (kind === 'phone') return 'Phone error';
+    if (kind === 'password') return 'Password error';
+    if (kind === 'image') return 'Image error';
+    if (kind === 'network') return 'Network error';
+    return 'Server error';
+  };
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -42,24 +77,32 @@ export default function RegistrationForm({ role }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setError(null);
+    if (truckImage && truckImage.size > MAX_TRUCK_IMAGE_BYTES) {
+      const maxMb = Math.floor(MAX_TRUCK_IMAGE_BYTES / (1024 * 1024));
+      pushToast({
+        title: titleFor('image'),
+        message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
+      });
+      return;
+    }
+
     if (password.length < 6) {
-      setError(t('errors.passwordTooShort'));
+      pushToast({ title: titleFor('password'), message: t('errors.passwordTooShort') });
       return;
     }
     if (password !== repeatPassword) {
-      setError(t('errors.passwordsDoNotMatch'));
+      pushToast({ title: titleFor('password'), message: t('errors.passwordsDoNotMatch') });
       return;
     }
 
     const normalizedPhone = normalizePhoneNumber(formData.phone);
     if (!normalizedPhone.ok) {
       if (normalizedPhone.error === 'PHONE_REQUIRED') {
-        setError(t('errors.phoneRequired'));
+        pushToast({ title: titleFor('phone'), message: t('errors.phoneRequired') });
       } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
-        setError(t('errors.phoneInvalidCharacters'));
+        pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
       } else {
-        setError(t('errors.phoneInvalidLength'));
+        pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
       }
       return;
     }
@@ -96,18 +139,25 @@ export default function RegistrationForm({ role }: Props) {
 
       if (!res.ok) {
         const code = data?.error;
-        if (code === 'PHONE_REQUIRED') {
-          setError(t('errors.phoneRequired'));
+        if (code === 'IMAGE_TOO_LARGE') {
+          const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_TRUCK_IMAGE_BYTES;
+          const maxMb = Math.floor(maxBytes / (1024 * 1024));
+          pushToast({
+            title: titleFor('image'),
+            message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
+          });
+        } else if (code === 'PHONE_REQUIRED') {
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneRequired') });
         } else if (code === 'PHONE_INVALID_CHARACTERS') {
-          setError(t('errors.phoneInvalidCharacters'));
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
         } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
-          setError(t('errors.phoneInvalidLength'));
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
         } else if (code === 'PASSWORD_TOO_SHORT') {
-          setError(t('errors.passwordTooShort'));
+          pushToast({ title: titleFor('password'), message: t('errors.passwordTooShort') });
         } else if (code === 'USER_ALREADY_EXISTS') {
-          setError(t('errors.userAlreadyExists'));
+          pushToast({ title: titleFor('server'), message: t('errors.userAlreadyExists') });
         } else {
-          setError(t('errors.signupFailed'));
+          pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
         }
         return;
       }
@@ -117,7 +167,7 @@ export default function RegistrationForm({ role }: Props) {
       router.refresh();
     } catch (err) {
       console.error(err);
-      setError(t('errors.somethingWentWrong'));
+      pushToast({ title: titleFor('network'), message: t('errors.somethingWentWrong') });
     } finally {
       setLoading(false);
     }
@@ -160,6 +210,26 @@ export default function RegistrationForm({ role }: Props) {
 
   return (
     <div className={styles.pageContainer}>
+      {toasts.length ? (
+        <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={`${styles.toast} ${styles.toastError}`} role="status">
+              <div>
+                <div className={styles.toastTitle}>{toast.title}</div>
+                <div className={styles.toastMessage}>{toast.message}</div>
+              </div>
+              <button
+                type="button"
+                className={styles.toastClose}
+                aria-label="Close"
+                onClick={() => setToasts((prev) => prev.filter((tItem) => tItem.id !== toast.id))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className={styles.contentWrapper}>
         <Link href={`/${locale}/register`} className={styles.backLink}>
           <ArrowLeft className={styles.backIcon} />
@@ -397,8 +467,6 @@ export default function RegistrationForm({ role }: Props) {
                 </div>
               </div>
             )}
-
-            {error ? <div className={styles.error}>{error}</div> : null}
 
             <button type="submit" className={styles.submitButton}>
               {loading ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...') : t('submit')}

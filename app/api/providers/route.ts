@@ -12,6 +12,8 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
+const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
+
 const uploadDir = path.join(process.cwd(), 'public/images/providers');
 
 async function ensureUploadDir() {
@@ -116,6 +118,17 @@ export async function POST(req: NextRequest) {
       | null = null;
 
     if (file && file.size > 0) {
+      if (file.size > MAX_PROVIDER_IMAGE_BYTES) {
+        return NextResponse.json(
+          {
+            error: 'IMAGE_TOO_LARGE',
+            maxBytes: MAX_PROVIDER_IMAGE_BYTES,
+            sizeBytes: file.size,
+          },
+          { status: 413 }
+        );
+      }
+
       const buffer = Buffer.from(await file.arrayBuffer());
       imageAttachment = {
         filename: file.name || 'provider-image',

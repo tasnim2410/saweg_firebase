@@ -6,6 +6,8 @@ import Link from 'next/link';
 import styles from '../my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 
+const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
+
 type Provider = {
   id: number;
   name: string;
@@ -38,24 +40,62 @@ export default function MyPostsPage() {
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
 
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      variant: 'error' | 'success';
+      title: string;
+      message: string;
+    }>
+  >([]);
+
+  const pushToast = (toast: { variant: 'error' | 'success'; title: string; message: string }) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
+    }, 5000);
+  };
+
+  const titleFor = (kind: 'form' | 'image' | 'server' | 'network' | 'success') => {
+    if (locale === 'ar') {
+      if (kind === 'form') return 'خطأ في النموذج';
+      if (kind === 'image') return 'خطأ في الصورة';
+      if (kind === 'network') return 'خطأ في الاتصال';
+      if (kind === 'success') return 'تم بنجاح';
+      return 'خطأ في الخادم';
+    }
+    if (kind === 'form') return 'Form error';
+    if (kind === 'image') return 'Image error';
+    if (kind === 'network') return 'Network error';
+    if (kind === 'success') return 'Success';
+    return 'Server error';
+  };
+
   const refresh = async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch('/api/providers/mine');
       const data = await res.json();
       if (!res.ok) {
-        setError(data?.error || 'Failed to load');
+        pushToast({
+          variant: 'error',
+          title: titleFor('server'),
+          message: typeof data?.error === 'string' ? data.error : (locale === 'ar' ? 'فشل التحميل' : 'Failed to load'),
+        });
         return;
       }
       setProviders(data);
     } catch {
-      setError('Failed to load');
+      pushToast({
+        variant: 'error',
+        title: titleFor('network'),
+        message: locale === 'ar' ? 'فشل التحميل' : 'Failed to load',
+      });
     } finally {
       setLoading(false);
     }
@@ -118,7 +158,6 @@ export default function MyPostsPage() {
 
   const saveAll = async () => {
     setSavingAll(true);
-    setError(null);
 
     try {
       const ids = providers.map((p) => p.id);
@@ -128,6 +167,16 @@ export default function MyPostsPage() {
         if (!result) continue;
 
         const { payload, hasImage, imageFile } = result;
+
+        if (hasImage && imageFile && imageFile.size > MAX_PROVIDER_IMAGE_BYTES) {
+          const maxMb = Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024));
+          pushToast({
+            variant: 'error',
+            title: titleFor('image'),
+            message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
+          });
+          return;
+        }
 
         const res = await fetch(
           `/api/providers/${id}`,
@@ -149,14 +198,44 @@ export default function MyPostsPage() {
 
         const data = await res.json().catch(() => null);
         if (!res.ok) {
-          setError(data?.error || 'Failed to update');
+          const code = data?.error;
+          if (code === 'IMAGE_TOO_LARGE') {
+            const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_PROVIDER_IMAGE_BYTES;
+            const maxMb = Math.floor(maxBytes / (1024 * 1024));
+            pushToast({
+              variant: 'error',
+              title: titleFor('image'),
+              message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
+            });
+          } else if (code === 'PHONE_REQUIRED') {
+            pushToast({ variant: 'error', title: titleFor('form'), message: tForm('errors.phoneRequired') });
+          } else if (code === 'PHONE_INVALID_CHARACTERS') {
+            pushToast({ variant: 'error', title: titleFor('form'), message: tForm('errors.phoneInvalidCharacters') });
+          } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+            pushToast({ variant: 'error', title: titleFor('form'), message: tForm('errors.phoneInvalidLength') });
+          } else {
+            pushToast({
+              variant: 'error',
+              title: titleFor('server'),
+              message: typeof code === 'string' ? code : (locale === 'ar' ? 'فشل التحديث' : 'Failed to update'),
+            });
+          }
           return;
         }
       }
 
       await refresh();
+      pushToast({
+        variant: 'success',
+        title: titleFor('success'),
+        message: locale === 'ar' ? 'تم الحفظ بنجاح' : 'Saved successfully',
+      });
     } catch {
-      setError('Failed to update');
+      pushToast({
+        variant: 'error',
+        title: titleFor('network'),
+        message: locale === 'ar' ? 'فشل التحديث' : 'Failed to update',
+      });
     } finally {
       setSavingAll(false);
     }
@@ -164,17 +243,29 @@ export default function MyPostsPage() {
 
   const deletePost = async (id: number) => {
     setDeletingId(id);
-    setError(null);
     try {
       const res = await fetch(`/api/providers/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data?.error || 'Failed to delete');
+        pushToast({
+          variant: 'error',
+          title: titleFor('server'),
+          message: typeof data?.error === 'string' ? data.error : (locale === 'ar' ? 'فشل الحذف' : 'Failed to delete'),
+        });
         return;
       }
       await refresh();
+      pushToast({
+        variant: 'success',
+        title: titleFor('success'),
+        message: locale === 'ar' ? 'تم الحذف بنجاح' : 'Deleted successfully',
+      });
     } catch {
-      setError('Failed to delete');
+      pushToast({
+        variant: 'error',
+        title: titleFor('network'),
+        message: locale === 'ar' ? 'فشل الحذف' : 'Failed to delete',
+      });
     } finally {
       setDeletingId(null);
     }
@@ -182,6 +273,30 @@ export default function MyPostsPage() {
 
   return (
     <div className={styles.page}>
+      {toasts.length ? (
+        <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`${styles.toast} ${toast.variant === 'success' ? styles.toastSuccess : styles.toastError}`}
+              role="status"
+            >
+              <div>
+                <div className={styles.toastTitle}>{toast.title}</div>
+                <div className={styles.toastMessage}>{toast.message}</div>
+              </div>
+              <button
+                type="button"
+                className={styles.toastClose}
+                aria-label="Close"
+                onClick={() => setToasts((prev) => prev.filter((tItem) => tItem.id !== toast.id))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className={styles.card}>
         <div className={styles.header}>
           <h1 className={styles.title}>{tDash('title')}</h1>
@@ -196,8 +311,6 @@ export default function MyPostsPage() {
         </div>
 
         <div className={styles.body}>
-          {error ? <div className={styles.error}>{error}</div> : null}
-
           {loading ? (
             <div className={styles.loading}>{tDash('loading')}</div>
           ) : providers.length === 0 ? (
@@ -307,12 +420,26 @@ export default function MyPostsPage() {
                         className={styles.input}
                         type="file"
                         accept="image/*"
-                        onChange={(ev) =>
+                        onChange={(ev) => {
+                          const file = ev.target.files?.[0] ?? null;
+                          if (file && file.size > MAX_PROVIDER_IMAGE_BYTES) {
+                            const maxMb = Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024));
+                            pushToast({
+                              variant: 'error',
+                              title: titleFor('image'),
+                              message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
+                            });
+                            setEdits((prev) => ({
+                              ...prev,
+                              [p.id]: { ...prev[p.id], imageFile: null },
+                            }));
+                            return;
+                          }
                           setEdits((prev) => ({
                             ...prev,
-                            [p.id]: { ...prev[p.id], imageFile: ev.target.files?.[0] ?? null },
-                          }))
-                        }
+                            [p.id]: { ...prev[p.id], imageFile: file },
+                          }));
+                        }}
                       />
                       <div />
                     </div>

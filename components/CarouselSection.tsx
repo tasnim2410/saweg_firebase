@@ -109,7 +109,6 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
-          {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
           {canAdd ? (
             <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
               {t('addProvider')}
@@ -126,7 +125,6 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
-          {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
           {canAdd ? (
             <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
               {t('addProvider')}
@@ -145,13 +143,23 @@ const CarouselSection: React.FC = () => {
   return (
     <section className={styles.carouselContainer}>
       <div className={styles.carouselTopBar}>
-        {/* <h2 className={styles.carouselTitle}>{t('title')}</h2> */}
         {canAdd ? (
           <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
             {t('addProvider')}
           </Link>
         ) : null}
       </div>
+      
+      {/* Left Arrow */}
+      <button
+        className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
+        onClick={scrollLeft}
+        aria-label={t('scrollLeft')}
+      >
+        ‹
+      </button>
+      
+      {/* Carousel */}
       <div className={styles.carousel} ref={carouselRef}>
         {providers.map((provider) => (
           <div key={provider.id} className={styles.carouselItem}>
@@ -251,23 +259,17 @@ const CarouselSection: React.FC = () => {
           </div>
         ))}
       </div>
+      
+      {/* Right Arrow */}
+      <button
+        className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
+        onClick={scrollRight}
+        aria-label={t('scrollRight')}
+      >
+        ›
+      </button>
 
-      <div className={styles.carouselControls}>
-        <button
-          className={styles.controlButton}
-          onClick={scrollLeft}
-          aria-label={t('scrollLeft')}
-        >
-          ‹
-        </button>
-        <button
-          className={styles.controlButton}
-          onClick={scrollRight}
-          aria-label={t('scrollRight')}
-        >
-          ›
-        </button>
-      </div>
+      {/* Remove the old carouselControls div since we now have side arrows */}
     </section>
   );
 };

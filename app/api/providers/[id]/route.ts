@@ -9,6 +9,8 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
+const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
+
 const uploadDir = path.join(process.cwd(), 'public/images/providers');
 
 async function ensureUploadDir() {
@@ -234,6 +236,17 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     if (file && typeof file !== 'string') {
       const f = file as File;
       if (f.size > 0) {
+        if (f.size > MAX_PROVIDER_IMAGE_BYTES) {
+          return NextResponse.json(
+            {
+              error: 'IMAGE_TOO_LARGE',
+              maxBytes: MAX_PROVIDER_IMAGE_BYTES,
+              sizeBytes: f.size,
+            },
+            { status: 413 }
+          );
+        }
+
         const buffer = Buffer.from(await f.arrayBuffer());
 
         let imagePath: string | null = null;

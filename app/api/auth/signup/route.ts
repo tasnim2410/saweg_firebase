@@ -9,6 +9,8 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
+const MAX_TRUCK_IMAGE_BYTES = 10 * 1024 * 1024;
+
 const uploadDir = path.join(process.cwd(), 'public/images/users');
 
 async function ensureUploadDir() {
@@ -108,6 +110,18 @@ export async function POST(req: Request) {
 
     let truckImagePath: string | null = null;
     if (truckImage && truckImage.size > 0) {
+      if (truckImage.size > MAX_TRUCK_IMAGE_BYTES) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'IMAGE_TOO_LARGE',
+            maxBytes: MAX_TRUCK_IMAGE_BYTES,
+            sizeBytes: truckImage.size,
+          },
+          { status: 413 }
+        );
+      }
+
       const buffer = Buffer.from(await truckImage.arrayBuffer());
 
       if (cloudinaryEnabled()) {

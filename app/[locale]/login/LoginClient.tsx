@@ -15,8 +15,34 @@ export default function LoginClient() {
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      title: string;
+      message: string;
+    }>
+  >([]);
+
+  const pushToast = (toast: { title: string; message: string }) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
+    }, 5000);
+  };
+
+  const titleFor = (kind: 'form' | 'auth' | 'network') => {
+    if (locale === 'ar') {
+      if (kind === 'form') return 'خطأ في النموذج';
+      if (kind === 'auth') return 'خطأ في تسجيل الدخول';
+      return 'خطأ في الاتصال';
+    }
+    if (kind === 'form') return 'Form error';
+    if (kind === 'auth') return 'Login error';
+    return 'Network error';
+  };
 
   const getErrorMessage = (code: string) => {
     switch (code) {
@@ -33,14 +59,13 @@ export default function LoginClient() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (!identifier.trim()) {
-      setError(t('errors.emailOrPhoneRequired'));
+      pushToast({ title: titleFor('form'), message: t('errors.emailOrPhoneRequired') });
       return;
     }
     if (!password) {
-      setError(t('errors.passwordRequired'));
+      pushToast({ title: titleFor('form'), message: t('errors.passwordRequired') });
       return;
     }
 
@@ -55,7 +80,7 @@ export default function LoginClient() {
 
       const data = await res.json();
       if (!res.ok || !data?.ok) {
-        setError(getErrorMessage(data?.error ?? 'UNKNOWN'));
+        pushToast({ title: titleFor('auth'), message: getErrorMessage(data?.error ?? 'UNKNOWN') });
         setLoading(false);
         return;
       }
@@ -63,7 +88,7 @@ export default function LoginClient() {
       router.push(next || `/${locale}`);
       router.refresh();
     } catch {
-      setError(t('somethingWentWrong'));
+      pushToast({ title: titleFor('network'), message: t('somethingWentWrong') });
     } finally {
       setLoading(false);
     }
@@ -71,6 +96,26 @@ export default function LoginClient() {
 
   return (
     <div className={styles.page}>
+      {toasts.length ? (
+        <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={`${styles.toast} ${styles.toastError}`} role="status">
+              <div>
+                <div className={styles.toastTitle}>{toast.title}</div>
+                <div className={styles.toastMessage}>{toast.message}</div>
+              </div>
+              <button
+                type="button"
+                className={styles.toastClose}
+                aria-label="Close"
+                onClick={() => setToasts((prev) => prev.filter((tItem) => tItem.id !== toast.id))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className={styles.card}>
         <div className={styles.header}>
           <h1 className={styles.title}>{t('loginTitle')}</h1>
@@ -97,8 +142,6 @@ export default function LoginClient() {
               autoComplete="current-password"
             />
           </div>
-
-          {error ? <div className={styles.error}>{error}</div> : null}
 
           <button className={styles.button} type="submit" disabled={loading}>
             {loading ? t('loading') : t('loginButton')}

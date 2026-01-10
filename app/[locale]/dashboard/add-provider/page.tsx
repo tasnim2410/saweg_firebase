@@ -8,6 +8,8 @@ import styles from './add-provider.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
 
+const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export default function AddProviderPage() {
   const t = useTranslations('providerForm');
   const locale = useLocale();
@@ -16,9 +18,16 @@ export default function AddProviderPage() {
   const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      variant: 'error' | 'success' | 'info';
+      title: string;
+      message: string;
+    }>
+  >([]);
 
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
@@ -26,6 +35,14 @@ export default function AddProviderPage() {
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
+    }, 5000);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -58,22 +75,33 @@ export default function AddProviderPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
+
+    if (imageFile && imageFile.size > MAX_PROVIDER_IMAGE_BYTES) {
+      pushToast({
+        variant: 'error',
+        title: 'Image error',
+        message: `File is too large. Max is ${Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024))}MB.`,
+      });
+      return;
+    }
 
     if (!location.trim() || !phone.trim()) {
-      setError(t('errors.missingRequiredFields'));
+      pushToast({
+        variant: 'error',
+        title: 'Form error',
+        message: t('errors.missingRequiredFields'),
+      });
       return;
     }
 
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone.ok) {
       if (normalizedPhone.error === 'PHONE_REQUIRED') {
-        setError(t('errors.phoneRequired'));
+        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneRequired') });
       } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
-        setError(t('errors.phoneInvalidCharacters'));
+        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidCharacters') });
       } else {
-        setError(t('errors.phoneInvalidLength'));
+        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidLength') });
       }
       return;
     }
@@ -99,25 +127,32 @@ export default function AddProviderPage() {
 
       if (!res.ok) {
         const code = data?.error;
-        if (code === 'PHONE_REQUIRED') {
-          setError(t('errors.phoneRequired'));
+        if (code === 'IMAGE_TOO_LARGE') {
+          const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_PROVIDER_IMAGE_BYTES;
+          pushToast({
+            variant: 'error',
+            title: 'Image error',
+            message: `File is too large. Max is ${Math.floor(maxBytes / (1024 * 1024))}MB.`,
+          });
+        } else if (code === 'PHONE_REQUIRED') {
+          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneRequired') });
         } else if (code === 'PHONE_INVALID_CHARACTERS') {
-          setError(t('errors.phoneInvalidCharacters'));
+          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidCharacters') });
         } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
-          setError(t('errors.phoneInvalidLength'));
+          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidLength') });
         } else if (code === 'MISSING_REQUIRED_FIELDS') {
-          setError(t('errors.missingRequiredFields'));
+          pushToast({ variant: 'error', title: 'Form error', message: t('errors.missingRequiredFields') });
         } else {
-          setError(t('errors.publishFailed'));
+          pushToast({ variant: 'error', title: 'Server error', message: t('errors.publishFailed') });
         }
         return;
       }
 
-      setSuccess(true);
+      pushToast({ variant: 'success', title: 'Success', message: t('success') });
       router.push(`/${locale}`);
       router.refresh();
     } catch {
-      setError(t('errors.publishFailed'));
+      pushToast({ variant: 'error', title: 'Network error', message: t('errors.publishFailed') });
     } finally {
       setSubmitting(false);
     }
@@ -125,6 +160,36 @@ export default function AddProviderPage() {
 
   return (
     <div className={styles.page}>
+      {toasts.length ? (
+        <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`${styles.toast} ${
+                toast.variant === 'error'
+                  ? styles.toastError
+                  : toast.variant === 'success'
+                    ? styles.toastSuccess
+                    : styles.toastInfo
+              }`}
+              role="status"
+            >
+              <div>
+                <div className={styles.toastTitle}>{toast.title}</div>
+                <div className={styles.toastMessage}>{toast.message}</div>
+              </div>
+              <button
+                type="button"
+                className={styles.toastClose}
+                aria-label="Close"
+                onClick={() => setToasts((prev) => prev.filter((tItem) => tItem.id !== toast.id))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className={styles.card}>
         <div className={styles.header}>
           <h1 className={styles.title}>{t('title')}</h1>
@@ -205,13 +270,22 @@ export default function AddProviderPage() {
               className={styles.file}
               type="file"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > MAX_PROVIDER_IMAGE_BYTES) {
+                  setImageFile(null);
+                  pushToast({
+                    variant: 'error',
+                    title: 'Image error',
+                    message: `File is too large. Max is ${Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024))}MB.`,
+                  });
+                  return;
+                }
+                setImageFile(file);
+              }}
               required
             />
           </div>
-
-          {error ? <div className={styles.error}>{error}</div> : null}
-          {success ? <div className={styles.success}>{t('success')}</div> : null}
 
           <button className={styles.button} type="submit" disabled={submitting}>
             {submitting ? t('submitting') : t('submit')}
