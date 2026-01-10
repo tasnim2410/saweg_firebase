@@ -15,6 +15,15 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(req: NextRequest) {
   const host = req.headers.get('host') ?? '';
   const hostname = host.split(':')[0];
+  if (hostname === 'sawe.app' || hostname === 'www.sawe.app') {
+    const url = req.nextUrl.clone();
+    const pathname = url.pathname;
+    const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
+    url.hostname = 'saweg.app';
+    url.protocol = 'https:';
+    url.pathname = normalizedPathname === '/' ? '/ar' : `/ar${normalizedPathname}`;
+    return NextResponse.redirect(url, 308);
+  }
   if (hostname === 'saweg.app') {
     const url = req.nextUrl.clone();
     url.hostname = 'www.saweg.app';
