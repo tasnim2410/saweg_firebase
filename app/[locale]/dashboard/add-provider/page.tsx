@@ -44,6 +44,29 @@ export default function AddProviderPage() {
     }, 5000);
   };
 
+  const titleFor = (kind: 'image' | 'phone' | 'form' | 'server' | 'network' | 'success') => {
+    if (locale === 'ar') {
+      if (kind === 'image') return 'خطأ في الصورة';
+      if (kind === 'phone') return 'خطأ في الهاتف';
+      if (kind === 'form') return 'خطأ في النموذج';
+      if (kind === 'network') return 'خطأ في الاتصال';
+      if (kind === 'success') return 'تم بنجاح';
+      return 'خطأ في الخادم';
+    }
+
+    if (kind === 'image') return 'Image error';
+    if (kind === 'phone') return 'Phone error';
+    if (kind === 'form') return 'Form error';
+    if (kind === 'network') return 'Network error';
+    if (kind === 'success') return 'Success';
+    return 'Server error';
+  };
+
+  const imageTooLargeMessage = (maxBytes: number) => {
+    const maxMb = Math.floor(maxBytes / (1024 * 1024));
+    return locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `File is too large. Max is ${maxMb}MB.`;
+  };
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -79,8 +102,8 @@ export default function AddProviderPage() {
     if (imageFile && imageFile.size > MAX_PROVIDER_IMAGE_BYTES) {
       pushToast({
         variant: 'error',
-        title: 'Image error',
-        message: `File is too large. Max is ${Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024))}MB.`,
+        title: titleFor('image'),
+        message: imageTooLargeMessage(MAX_PROVIDER_IMAGE_BYTES),
       });
       return;
     }
@@ -88,7 +111,7 @@ export default function AddProviderPage() {
     if (!location.trim() || !phone.trim()) {
       pushToast({
         variant: 'error',
-        title: 'Form error',
+        title: titleFor('form'),
         message: t('errors.missingRequiredFields'),
       });
       return;
@@ -97,11 +120,11 @@ export default function AddProviderPage() {
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone.ok) {
       if (normalizedPhone.error === 'PHONE_REQUIRED') {
-        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneRequired') });
+        pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneRequired') });
       } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
-        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidCharacters') });
+        pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
       } else {
-        pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidLength') });
+        pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
       }
       return;
     }
@@ -131,28 +154,28 @@ export default function AddProviderPage() {
           const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_PROVIDER_IMAGE_BYTES;
           pushToast({
             variant: 'error',
-            title: 'Image error',
-            message: `File is too large. Max is ${Math.floor(maxBytes / (1024 * 1024))}MB.`,
+            title: titleFor('image'),
+            message: imageTooLargeMessage(maxBytes),
           });
         } else if (code === 'PHONE_REQUIRED') {
-          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneRequired') });
+          pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneRequired') });
         } else if (code === 'PHONE_INVALID_CHARACTERS') {
-          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidCharacters') });
+          pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
         } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
-          pushToast({ variant: 'error', title: 'Phone error', message: t('errors.phoneInvalidLength') });
+          pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
         } else if (code === 'MISSING_REQUIRED_FIELDS') {
-          pushToast({ variant: 'error', title: 'Form error', message: t('errors.missingRequiredFields') });
+          pushToast({ variant: 'error', title: titleFor('form'), message: t('errors.missingRequiredFields') });
         } else {
-          pushToast({ variant: 'error', title: 'Server error', message: t('errors.publishFailed') });
+          pushToast({ variant: 'error', title: titleFor('server'), message: t('errors.publishFailed') });
         }
         return;
       }
 
-      pushToast({ variant: 'success', title: 'Success', message: t('success') });
+      pushToast({ variant: 'success', title: titleFor('success'), message: t('success') });
       router.push(`/${locale}`);
       router.refresh();
     } catch {
-      pushToast({ variant: 'error', title: 'Network error', message: t('errors.publishFailed') });
+      pushToast({ variant: 'error', title: titleFor('network'), message: t('errors.publishFailed') });
     } finally {
       setSubmitting(false);
     }
@@ -276,8 +299,8 @@ export default function AddProviderPage() {
                   setImageFile(null);
                   pushToast({
                     variant: 'error',
-                    title: 'Image error',
-                    message: `File is too large. Max is ${Math.floor(MAX_PROVIDER_IMAGE_BYTES / (1024 * 1024))}MB.`,
+                    title: titleFor('image'),
+                    message: imageTooLargeMessage(MAX_PROVIDER_IMAGE_BYTES),
                   });
                   return;
                 }
