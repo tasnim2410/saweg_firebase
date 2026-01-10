@@ -25,7 +25,6 @@ export default function AddProviderPage() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
-  const [active, setActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -86,7 +85,7 @@ export default function AddProviderPage() {
     payload.append('description', description);
     payload.append('location', location);
     payload.append('phone', normalizedPhone.e164);
-    payload.append('active', active ? 'true' : 'false');
+    payload.append('active', 'true');
     if (imageFile) payload.append('image', imageFile);
 
     setSubmitting(true);
@@ -210,11 +209,6 @@ export default function AddProviderPage() {
               required
             />
           </div>
-
-          <label className={styles.checkboxRow}>
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} required />
-            <span>{t('active')}</span>
-          </label>
 
           {error ? <div className={styles.error}>{error}</div> : null}
           {success ? <div className={styles.success}>{t('success')}</div> : null}
