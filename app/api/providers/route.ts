@@ -1,5 +1,6 @@
 // app/api/providers/route.ts
 
+import nodemailer from 'nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
@@ -107,9 +108,21 @@ export async function POST(req: NextRequest) {
 
     let imagePath: string | null = null;
     const file = formData.get('image') as File | null;
+    let imageAttachment:
+      | {
+          filename: string;
+          content: Buffer;
+          contentType: string;
+        }
+      | null = null;
 
     if (file && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
+      imageAttachment = {
+        filename: file.name || 'provider-image',
+        content: buffer,
+        contentType: file.type || 'application/octet-stream',
+      };
 
       if (cloudinaryEnabled()) {
         const uploaded = await uploadImageBuffer({
@@ -145,6 +158,54 @@ export async function POST(req: NextRequest) {
     };
 
     const provider = await prisma.provider.create({ data: createData });
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      const detailsText = [
+        `Name: ${provider.name}`,
+        `Phone: ${provider.phone}`,
+        `Location: ${provider.location}`,
+        `Destination: ${(provider as any).destination ?? (provider as any).placeOfBusiness ?? '-'}`,
+        `Description: ${provider.description ?? '-'}`,
+        `Active: ${provider.active ? 'true' : 'false'}`,
+        `Image: ${provider.image ?? '-'}`,
+        `CreatedAt: ${(provider as any).createdAt ? new Date((provider as any).createdAt).toISOString() : '-'}`,
+        `Id: ${provider.id}`,
+      ].join('\n');
+
+      await transporter.sendMail({
+        from: `"Saweg Website" <${process.env.SMTP_USER}>`,
+        to: process.env.CONTACT_TO_EMAIL,
+        subject: `New carousel post added: ${provider.name}`,
+        text: `A new provider post was added to the carousel.\n\n${detailsText}`,
+        html: `
+<p>A new provider post was added to the carousel.</p>
+<pre style="white-space:pre-wrap">${detailsText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+${imageAttachment ? '<p><strong>Image:</strong></p><img src="cid:provider-image" alt="Provider image" style="max-width:600px;width:100%;height:auto" />' : ''}
+        `,
+        attachments: imageAttachment
+          ? [
+              {
+                filename: imageAttachment.filename,
+                content: imageAttachment.content,
+                contentType: imageAttachment.contentType,
+                cid: 'provider-image',
+              },
+            ]
+          : undefined,
+      });
+    } catch (error) {
+      console.error('POST /api/providers notify email error:', error);
+    }
 
     return NextResponse.json(
       {
