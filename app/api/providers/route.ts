@@ -177,7 +177,6 @@ export async function POST(req: NextRequest) {
         `Destination: ${(provider as any).destination ?? (provider as any).placeOfBusiness ?? '-'}`,
         `Description: ${provider.description ?? '-'}`,
         `Active: ${provider.active ? 'true' : 'false'}`,
-        `Image: ${provider.image ?? '-'}`,
         `CreatedAt: ${(provider as any).createdAt ? new Date((provider as any).createdAt).toISOString() : '-'}`,
         `Id: ${provider.id}`,
       ].join('\n');
