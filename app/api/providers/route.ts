@@ -1,7 +1,7 @@
 // app/api/providers/route.ts
 
-import nodemailer from 'nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
@@ -111,8 +111,7 @@ export async function POST(req: NextRequest) {
     let imageAttachment:
       | {
           filename: string;
-          content: Buffer;
-          contentType: string;
+          contentBase64: string;
         }
       | null = null;
 
@@ -120,8 +119,7 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(await file.arrayBuffer());
       imageAttachment = {
         filename: file.name || 'provider-image',
-        content: buffer,
-        contentType: file.type || 'application/octet-stream',
+        contentBase64: buffer.toString('base64'),
       };
 
       if (cloudinaryEnabled()) {
@@ -160,15 +158,12 @@ export async function POST(req: NextRequest) {
     const provider = await prisma.provider.create({ data: createData });
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT || 465),
-        secure: true,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const resendFrom = process.env.RESEND_FROM_EMAIL;
+      const to = process.env.CONTACT_TO_EMAIL;
+      if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
+
+      const resend = new Resend(resendApiKey);
 
       const detailsText = [
         `Name: ${provider.name}`,
@@ -181,23 +176,26 @@ export async function POST(req: NextRequest) {
         `Id: ${provider.id}`,
       ].join('\n');
 
-      await transporter.sendMail({
-        from: `"Saweg Website" <${process.env.SMTP_USER}>`,
-        to: process.env.CONTACT_TO_EMAIL,
+      const safeDetailsHtml = detailsText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      await resend.emails.send({
+        from: resendFrom,
+        to,
         subject: `New carousel post added: ${provider.name}`,
         text: `A new provider post was added to the carousel.\n\n${detailsText}`,
         html: `
 <p>A new provider post was added to the carousel.</p>
-<pre style="white-space:pre-wrap">${detailsText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-${imageAttachment ? '<p><strong>Image:</strong></p><img src="cid:provider-image" alt="Provider image" style="max-width:600px;width:100%;height:auto" />' : ''}
+<pre style="white-space:pre-wrap">${safeDetailsHtml}</pre>
+${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
         `,
         attachments: imageAttachment
           ? [
               {
                 filename: imageAttachment.filename,
-                content: imageAttachment.content,
-                contentType: imageAttachment.contentType,
-                cid: 'provider-image',
+                content: imageAttachment.contentBase64,
               },
             ]
           : undefined,

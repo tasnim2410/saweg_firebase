@@ -1,32 +1,22 @@
-import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
 export async function POST(req: Request) {
   try {
     const { name, email, phone, subject, message } = await req.json();
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFrom = process.env.RESEND_FROM_EMAIL;
+    const to = process.env.CONTACT_TO_EMAIL;
+    if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
 
-    await transporter.sendMail({
-      from: `"Saweg Website" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_TO_EMAIL,
+    const resend = new Resend(resendApiKey);
+
+    await resend.emails.send({
+      from: resendFrom,
+      to,
       subject: `New contact: ${subject}`,
-      text: `
-Name: ${name}
-Email: ${email}
-Phone: ${phone}
-
-Message:
-${message}
-      `,
+      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage:\n${message}`,
     });
 
     return NextResponse.json({ ok: true });

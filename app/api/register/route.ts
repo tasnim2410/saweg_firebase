@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
 export async function POST(req: Request) {
   try {
@@ -56,30 +56,28 @@ export async function POST(req: Request) {
 
     const effectiveRole = role ?? userType;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFrom = process.env.RESEND_FROM_EMAIL;
+    const to = process.env.CONTACT_TO_EMAIL;
+    if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
 
-    await transporter.sendMail({
-      from: `"Saweg Website" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_TO_EMAIL,
+    const resend = new Resend(resendApiKey);
+
+    const text = `New pre-launch registration:\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nCity: ${shipperCity || merchantCity || city}\nRole: ${effectiveRole}${placeOfBusiness ? `\nPlace of business: ${placeOfBusiness}` : ''}${trucksNeeded ? `\nTrucks needed: ${trucksNeeded}` : ''}${carKind ? `\nCar kind: ${carKind}` : ''}${maxCharge ? `\nMax charge: ${maxCharge}${maxChargeUnit ? ` ${maxChargeUnit}` : ''}` : ''}`;
+
+    const attachment = truckImage
+      ? {
+          filename: truckImage.name || 'truck-image',
+          content: Buffer.from(await truckImage.arrayBuffer()).toString('base64'),
+        }
+      : null;
+
+    await resend.emails.send({
+      from: resendFrom,
+      to,
       subject: `New registration: ${fullName}`,
-      text: `New pre-launch registration:\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nCity: ${shipperCity || merchantCity || city}\nRole: ${effectiveRole}${placeOfBusiness ? `\nPlace of business: ${placeOfBusiness}` : ''}${trucksNeeded ? `\nTrucks needed: ${trucksNeeded}` : ''}${carKind ? `\nCar kind: ${carKind}` : ''}${maxCharge ? `\nMax charge: ${maxCharge}${maxChargeUnit ? ` ${maxChargeUnit}` : ''}` : ''}`,
-      attachments: truckImage
-        ? [
-            {
-              filename: truckImage.name || 'truck-image',
-              content: Buffer.from(await truckImage.arrayBuffer()),
-              contentType: truckImage.type || 'application/octet-stream',
-            },
-          ]
-        : undefined,
+      text,
+      attachments: attachment ? [attachment] : undefined,
     });
 
     return NextResponse.json({ ok: true });
