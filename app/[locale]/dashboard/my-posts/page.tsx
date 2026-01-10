@@ -40,6 +40,7 @@ export default function MyPostsPage() {
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<'shippers' | 'merchants'>('shippers');
   const [savingAll, setSavingAll] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
@@ -76,10 +77,10 @@ export default function MyPostsPage() {
     return 'Server error';
   };
 
-  const refresh = async () => {
+  const refresh = async (nextMode: 'shippers' | 'merchants') => {
     setLoading(true);
     try {
-      const res = await fetch('/api/providers/mine');
+      const res = await fetch(nextMode === 'merchants' ? '/api/merchant-posts/mine' : '/api/providers/mine');
       const data = await res.json();
       if (!res.ok) {
         pushToast({
@@ -102,7 +103,26 @@ export default function MyPostsPage() {
   };
 
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await res.json().catch(() => null);
+        if (cancelled) return;
+        const type = data?.user?.type;
+        const nextMode: 'shippers' | 'merchants' = type === 'MERCHANT' ? 'merchants' : 'shippers';
+        setMode(nextMode);
+        await refresh(nextMode);
+      } catch {
+        if (cancelled) return;
+        setMode('shippers');
+        await refresh('shippers');
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -179,7 +199,7 @@ export default function MyPostsPage() {
         }
 
         const res = await fetch(
-          `/api/providers/${id}`,
+          mode === 'merchants' ? `/api/merchant-posts/${id}` : `/api/providers/${id}`,
           hasImage
             ? (() => {
                 const fd = new FormData();
@@ -224,7 +244,7 @@ export default function MyPostsPage() {
         }
       }
 
-      await refresh();
+      await refresh(mode);
       pushToast({
         variant: 'success',
         title: titleFor('success'),
@@ -244,7 +264,7 @@ export default function MyPostsPage() {
   const deletePost = async (id: number) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/providers/${id}`, { method: 'DELETE' });
+      const res = await fetch(mode === 'merchants' ? `/api/merchant-posts/${id}` : `/api/providers/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         pushToast({
@@ -254,7 +274,7 @@ export default function MyPostsPage() {
         });
         return;
       }
-      await refresh();
+      await refresh(mode);
       pushToast({
         variant: 'success',
         title: titleFor('success'),
@@ -301,7 +321,10 @@ export default function MyPostsPage() {
         <div className={styles.header}>
           <h1 className={styles.title}>{tDash('title')}</h1>
           <div className={styles.headerActions}>
-            <Link className={styles.linkButton} href={`/${locale}/dashboard/add-provider`}>
+            <Link
+              className={styles.linkButton}
+              href={mode === 'merchants' ? `/${locale}/dashboard/add-merchant-post` : `/${locale}/dashboard/add-provider`}
+            >
               {tDash('addNew')}
             </Link>
             <Link className={styles.linkButtonSecondary} href={`/${locale}`}>

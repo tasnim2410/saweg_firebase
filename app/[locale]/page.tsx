@@ -13,7 +13,8 @@ export default function HomePage() {
     <main className={styles.main}>
       <Header />
       <HeroSection />
-      <CarouselSection />
+      <CarouselSection variant="shippers" />
+      <CarouselSection variant="merchants" />
       <FeaturesSection />
       <section id="about">
         <HowToUseSection />

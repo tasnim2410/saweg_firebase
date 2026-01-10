@@ -20,7 +20,13 @@ interface Provider {
   placeOfBusiness?: string | null;
 }
 
-const CarouselSection: React.FC = () => {
+type CarouselVariant = 'shippers' | 'merchants';
+
+type Props = {
+  variant?: CarouselVariant;
+};
+
+const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
@@ -28,6 +34,21 @@ const CarouselSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
+
+  const isMerchants = variant === 'merchants';
+  const endpoint = isMerchants ? '/api/merchant-posts' : '/api/providers';
+  const addHref = isMerchants
+    ? `/${locale}/dashboard/add-merchant-post`
+    : `/${locale}/dashboard/add-provider`;
+  const callsEndpointFor = (id: number) =>
+    isMerchants ? `/api/merchant-posts/${id}/calls` : `/api/providers/${id}/calls`;
+  const title = isMerchants
+    ? locale === 'ar'
+      ? 'عروض التجّار'
+      : 'Merchants offers'
+    : locale === 'ar'
+      ? 'عروض السوّاق'
+      : 'Shippers offers';
 
   // Fetch providers on mount
   useEffect(() => {
@@ -40,7 +61,11 @@ const CarouselSection: React.FC = () => {
         if (cancelled) return;
         const type = data?.user?.type;
         const isAdmin = Boolean(data?.user?.isAdmin);
-        setCanAdd(isAdmin || type === 'SHIPPER' || type === 'ADMIN');
+        if (isMerchants) {
+          setCanAdd(isAdmin || type === 'MERCHANT' || type === 'ADMIN');
+        } else {
+          setCanAdd(isAdmin || type === 'SHIPPER' || type === 'ADMIN');
+        }
       } catch {
         if (cancelled) return;
         setCanAdd(false);
@@ -49,7 +74,7 @@ const CarouselSection: React.FC = () => {
 
     const fetchProviders = async () => {
       try {
-        const res = await fetch('/api/providers');
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch');
         const data: Provider[] = await res.json();
         setProviders(data);
@@ -95,7 +120,7 @@ const CarouselSection: React.FC = () => {
 
   const trackCall = (providerId: number) => {
     try {
-      void fetch(`/api/providers/${providerId}/calls`, {
+      void fetch(callsEndpointFor(providerId), {
         method: 'POST',
         keepalive: true,
       }).catch(() => null);
@@ -109,8 +134,9 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
+          <h2 className={styles.carouselTitle}>{title}</h2>
           {canAdd ? (
-            <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+            <Link className={styles.addButton} href={addHref}>
               {t('addProvider')}
             </Link>
           ) : null}
@@ -125,8 +151,9 @@ const CarouselSection: React.FC = () => {
     return (
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
+          <h2 className={styles.carouselTitle}>{title}</h2>
           {canAdd ? (
-            <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+            <Link className={styles.addButton} href={addHref}>
               {t('addProvider')}
             </Link>
           ) : null}
@@ -143,13 +170,14 @@ const CarouselSection: React.FC = () => {
   return (
     <section className={styles.carouselContainer}>
       <div className={styles.carouselTopBar}>
+        <h2 className={styles.carouselTitle}>{title}</h2>
         {canAdd ? (
-          <Link className={styles.addButton} href={`/${locale}/dashboard/add-provider`}>
+          <Link className={styles.addButton} href={addHref}>
             {t('addProvider')}
           </Link>
         ) : null}
       </div>
-      
+
       {/* Left Arrow */}
       <button
         className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}

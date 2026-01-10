@@ -33,6 +33,7 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   providers    Provider[]
+  merchantPosts MerchantPost[]
 }
 
 model Provider {
@@ -43,6 +44,23 @@ model Provider {
   destination     String? @map("placeOfBusiness")
   description     String?
   image     String? // Path to uploaded image, optional
+  active    Boolean  @default(true)
+  userId    String
+  lastLocationUpdateAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MerchantPost {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String
+  phone     String
+  destination String?
+  description String?
+  image     String?
   active    Boolean  @default(true)
   userId    String
   lastLocationUpdateAt DateTime @default(now())
