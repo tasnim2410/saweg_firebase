@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import "../globals.css";
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
@@ -9,7 +9,6 @@ const locales = ['en', 'ar'];
 
 export const metadata: Metadata = {
   manifest: '/manifest.json',
-  themeColor: '#ffffff',
   icons: {
     icon: [
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -22,6 +21,10 @@ export const metadata: Metadata = {
     title: 'Saweg',
     statusBarStyle: 'default',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
 };
 
 export function generateStaticParams() {
