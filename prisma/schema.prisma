@@ -34,6 +34,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   providers    Provider[]
   merchantPosts MerchantPost[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Provider {
@@ -66,6 +67,19 @@ model MerchantPost {
   lastLocationUpdateAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id             String   @id @default(cuid())
+  endpoint       String   @unique
+  p256dh         String
+  auth           String
+  expirationTime Int?
+  userId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -4,7 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { getLocationLabel } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { sendPushToSubscription } from '@/lib/webPush';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -196,6 +198,50 @@ ${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
       });
     } catch (error) {
       console.error('POST /api/merchant-posts notify email error:', error);
+    }
+
+    try {
+      const subs = await (prisma as any).pushSubscription.findMany({
+        where: {
+          user: {
+            type: 'SHIPPER',
+          },
+        },
+        select: {
+          endpoint: true,
+          p256dh: true,
+          auth: true,
+          expirationTime: true,
+        },
+      });
+
+      const locationAr = getLocationLabel(post.location, 'ar');
+      const destinationValue = (post as any).destination ?? null;
+      const destinationAr = destinationValue ? getLocationLabel(destinationValue, 'ar') : '';
+      const body = `عرض جديد على طلبك إلى ${locationAr}${destinationAr ? ` ${destinationAr}` : ''}`;
+
+      const payload = {
+        title: 'Saweg',
+        body,
+        url: '/ar',
+      };
+
+      for (const sub of subs) {
+        const result = await sendPushToSubscription(
+          {
+            endpoint: sub.endpoint,
+            expirationTime: sub.expirationTime,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          payload
+        );
+
+        if (!result.ok && result.gone) {
+          await (prisma as any).pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => null);
+        }
+      }
+    } catch (error) {
+      console.error('POST /api/merchant-posts push notify error:', error);
     }
 
     return NextResponse.json(post, { status: 201 });

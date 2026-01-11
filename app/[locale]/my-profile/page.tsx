@@ -60,6 +60,9 @@ export default function MyProfilePage() {
   const [truckImage, setTruckImage] = useState<string | null>(null);
   const [truckImageFile, setTruckImageFile] = useState<File | null>(null);
 
+  const [enablingPush, setEnablingPush] = useState(false);
+  const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'blocked' | 'not_supported'>('unknown');
+
   useEffect(() => {
     return () => {
       if (profileImagePreviewUrlRef.current) {
@@ -109,6 +112,13 @@ export default function MyProfilePage() {
         setTruckImage(user.truckImage ?? null);
 
         setInitialUser(user);
+
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          const permission: NotificationPermission = Notification.permission;
+          if (permission === 'granted') setPushStatus('enabled');
+          else if (permission === 'denied') setPushStatus('blocked');
+          else setPushStatus('unknown');
+        }
       } catch {
         if (cancelled) return;
         setError(t('loadFailed'));
@@ -123,6 +133,90 @@ export default function MyProfilePage() {
       cancelled = true;
     };
   }, [locale, router, t]);
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const enablePushNotifications = async () => {
+    setEnablingPush(true);
+    setError(null);
+
+    try {
+      if (!('Notification' in window)) {
+        setPushStatus('not_supported');
+        setError(locale === 'ar' ? 'المتصفح لا يدعم الإشعارات.' : 'This browser does not support notifications.');
+        return;
+      }
+
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setPushStatus('not_supported');
+        setError(locale === 'ar' ? 'المتصفح لا يدعم Push.' : 'Push is not supported in this browser.');
+        return;
+      }
+
+      let permission: NotificationPermission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission !== 'granted') {
+        setPushStatus(permission === 'denied' ? 'blocked' : 'unknown');
+        setError(
+          locale === 'ar'
+            ? permission === 'denied'
+              ? 'تم رفض الإذن للإشعارات.'
+              : 'يرجى السماح بالإشعارات من إعدادات المتصفح.'
+            : permission === 'denied'
+              ? 'Notification permission was denied.'
+              : 'Please allow notifications in your browser settings.'
+        );
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' });
+      const keyData = await keyRes.json().catch(() => null);
+      if (!keyRes.ok || !keyData?.publicKey) {
+        setError(locale === 'ar' ? 'فشل إعداد مفاتيح الإشعارات.' : 'Failed to load push keys.');
+        return;
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
+      });
+
+      const saveRes = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(sub),
+      });
+      const saveData = await saveRes.json().catch(() => null);
+      if (!saveRes.ok) {
+        setError(
+          locale === 'ar'
+            ? (typeof saveData?.error === 'string' ? saveData.error : 'فشل حفظ الاشتراك.')
+            : (typeof saveData?.error === 'string' ? saveData.error : 'Failed to save subscription.')
+        );
+        return;
+      }
+
+      setPushStatus('enabled');
+      setSuccess(true);
+    } catch {
+      setError(locale === 'ar' ? 'فشل تفعيل الإشعارات.' : 'Failed to enable notifications.');
+    } finally {
+      setEnablingPush(false);
+    }
+  };
 
   const onProfileImageChange = (file: File | null) => {
     setProfileImageFile(file);
@@ -364,6 +458,28 @@ export default function MyProfilePage() {
 
             {userType === 'SHIPPER' ? (
               <>
+                <div className={styles.row}>
+                  <label className={styles.label}>{locale === 'ar' ? 'إشعارات العروض الجديدة' : 'New offers notifications'}</label>
+                  <button
+                    className={styles.button}
+                    type="button"
+                    onClick={() => void enablePushNotifications()}
+                    disabled={enablingPush || pushStatus === 'enabled'}
+                  >
+                    {pushStatus === 'enabled'
+                      ? locale === 'ar'
+                        ? 'الإشعارات مفعّلة'
+                        : 'Notifications enabled'
+                      : enablingPush
+                        ? locale === 'ar'
+                          ? 'جارٍ التفعيل...'
+                          : 'Enabling...'
+                        : locale === 'ar'
+                          ? 'تفعيل الإشعارات'
+                          : 'Enable notifications'}
+                  </button>
+                </div>
+
                 <div className={styles.row}>
                   <label className={styles.label}>{tRegister('shipperCity')}</label>
                   <input className={styles.input} value={shipperCity} onChange={(e) => setShipperCity(e.target.value)} />

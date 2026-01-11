@@ -4,10 +4,17 @@ import { prisma } from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, verifySessionToken } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
-    if (!token) return NextResponse.json({ ok: true, user: null });
+    if (!token)
+      return NextResponse.json(
+        { ok: true, user: null },
+        { headers: { 'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+      );
 
     const session = await verifySessionToken(token);
 
@@ -31,7 +38,11 @@ export async function GET() {
       } as any,
     })) as any;
 
-    if (!user) return NextResponse.json({ ok: true, user: null });
+    if (!user)
+      return NextResponse.json(
+        { ok: true, user: null },
+        { headers: { 'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+      );
 
     const type = (session as any).type ?? null;
     const isAdmin = Boolean(
@@ -40,8 +51,14 @@ export async function GET() {
         (user.phone && isAdminIdentifier(String(user.phone)))
     );
 
-    return NextResponse.json({ ok: true, user: { ...user, type, isAdmin } });
+    return NextResponse.json(
+      { ok: true, user: { ...user, type, isAdmin } },
+      { headers: { 'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+    );
   } catch {
-    return NextResponse.json({ ok: true, user: null });
+    return NextResponse.json(
+      { ok: true, user: null },
+      { headers: { 'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+    );
   }
 }

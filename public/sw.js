@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'saweg-pwa-v1';
+const CACHE_NAME = 'saweg-pwa-v3';
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -27,8 +27,58 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('push', (event) => {
+  event.waitUntil(
+    (async () => {
+      let data = {};
+      try {
+        data = event.data ? event.data.json() : {};
+      } catch {
+        data = { title: 'Saweg', body: event.data ? String(event.data.text()) : '' };
+      }
+
+      const title = data.title || 'Saweg';
+      const body = data.body || '';
+      const url = data.url || '/ar';
+
+      await self.registration.showNotification(title, {
+        body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        data: { url },
+      });
+    })()
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification?.data?.url || '/ar';
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of allClients) {
+        if ('focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })()
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+
+  const url = new URL(req.url);
+
+  // Never cache API responses. This avoids issues like stale auth/session state.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
 
   // Navigation requests: network first, fallback to offline page.
   if (req.mode === 'navigate') {
