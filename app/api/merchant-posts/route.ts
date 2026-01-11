@@ -216,9 +216,16 @@ ${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
       });
 
       const locationAr = getLocationLabel(post.location, 'ar');
+      const locationEn = getLocationLabel(post.location, 'en');
+
       const destinationValue = (post as any).destination ?? null;
       const destinationAr = destinationValue ? getLocationLabel(destinationValue, 'ar') : '';
-      const body = `عرض جديد على طلبك إلى ${locationAr}${destinationAr ? ` ${destinationAr}` : ''}`;
+      const destinationEn = destinationValue ? getLocationLabel(destinationValue, 'en') : '';
+
+      const routeAr = destinationAr ? `من ${locationAr} → ${destinationAr}` : `في ${locationAr}`;
+      const routeEn = destinationEn ? `from ${locationEn} → ${destinationEn}` : `in ${locationEn}`;
+
+      const body = `تمت إضافة طلب شحن جديد، مطلوب نقل البضاعة ${routeAr}.\nA new post was added, requesting shipment ${routeEn}.`;
 
       const payload = {
         title: 'Saweg',

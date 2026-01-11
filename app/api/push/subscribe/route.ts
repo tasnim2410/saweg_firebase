@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const userType = (session.user as any).type;
-  if (userType !== 'SHIPPER' && userType !== 'ADMIN') {
+  if (userType !== 'SHIPPER') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -66,6 +66,11 @@ export async function DELETE(req: NextRequest) {
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userType = (session.user as any).type;
+  if (userType !== 'SHIPPER') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   let body: { endpoint?: string } | null = null;
