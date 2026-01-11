@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Camera } from 'lucide-react';
 import styles from './my-profile.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
-
+// Update the import statement to include new icons
+import { Camera, Bell, Loader2, Check, AlertCircle } from 'lucide-react';
 type User = {
   id: string;
   fullName: string;
@@ -444,169 +444,238 @@ export default function MyProfilePage() {
     }
   };
 
-  return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <h1 className={styles.title}>{t('title')}</h1>
-        </div>
+ // page.tsx - Updated section (replace from line 400 to 530 approximately)
 
-        {loading ? (
-          <div className={styles.loading}>{t('loading')}</div>
-        ) : (
-          <form className={styles.form} onSubmit={onSubmit}>
-            <div className={styles.avatarRow}>
-              <div className={styles.avatarWrapper}>
-                {profileImage ? (
-                  <img className={styles.avatar} src={profileImage} alt={fullName} />
-                ) : (
-                  <div className={styles.avatarPlaceholder} aria-hidden="true">
-                    {(fullName || '?').trim().slice(0, 1).toUpperCase()}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className={styles.avatarEditButton}
-                  onClick={() => profileImageInputRef.current?.click()}
-                  aria-label={t('profileImage')}
-                >
-                  <Camera size={16} />
-                </button>
-                <input
-                  ref={profileImageInputRef}
-                  className={styles.avatarInput}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onProfileImageChange(e.target.files?.[0] ?? null)}
-                />
+// ... existing imports and code ...
+
+return (
+  <div className={styles.page}>
+    <div className={styles.card}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>{t('title')}</h1>
+      </div>
+
+      {loading ? (
+        <div className={styles.loading}>{t('loading')}</div>
+      ) : (
+        <form className={styles.form} onSubmit={onSubmit}>
+          {/* User Type Badge */}
+          <div className={styles.userTypeSection}>
+            <div className={styles.row}>
+              <label className={styles.label}>{t('userType')}</label>
+              <div className={`${styles.userTypeBadge} ${
+                userType === 'SHIPPER' ? styles.shipperBadge : styles.merchantBadge
+              }`}>
+                {userType === 'SHIPPER' 
+                  ? (locale === 'ar' ? 'ناقل' : 'Shipper')
+                  : (locale === 'ar' ? 'تاجر' : 'Merchant')}
               </div>
             </div>
+          </div>
 
-            <div className={styles.row}>
-              <label className={styles.label}>{t('fullName')}</label>
-              <input className={styles.input} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          {/* Push Notifications Section - Moved to top */}
+          {userType === 'SHIPPER' && (
+            <div className={styles.pushRow}>
+              <div className={styles.pushHeader}>
+                <Bell className={styles.pushIcon} size={18} />
+                <h3 className={styles.pushTitle}>
+                  {locale === 'ar' ? 'الإشعارات' : 'Notifications'}
+                </h3>
+              </div>
+              
+              <p className={styles.pushDescription}>
+                {locale === 'ar' 
+                  ? 'احصل على إشعارات فورية عند وجود عروض جديدة تناسبك'
+                  : 'Get instant notifications when new offers match your criteria'}
+              </p>
+              
+              {pushStatus !== 'unknown' && pushStatus !== 'not_supported' && (
+                <div className={`${styles.pushStatus} ${styles[pushStatus]}`}>
+                  <span>
+                    {pushStatus === 'enabled' 
+                      ? (locale === 'ar' ? '✓ مفعل' : '✓ Enabled')
+                      : pushStatus === 'blocked'
+                      ? (locale === 'ar' ? '✗ محظور' : '✗ Blocked')
+                      : ''}
+                  </span>
+                </div>
+              )}
+              
+              <button
+                className={styles.pushButton}
+                type="button"
+                onClick={() => void enablePushNotifications()}
+                disabled={enablingPush || pushStatus === 'enabled' || pushStatus === 'blocked'}
+              >
+                {enablingPush ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {locale === 'ar' ? 'جارِ التفعيل...' : 'Enabling...'}
+                  </>
+                ) : pushStatus === 'enabled' ? (
+                  <>
+                    <Check size={16} />
+                    {locale === 'ar' ? 'مفعّل' : 'Enabled'}
+                  </>
+                ) : pushStatus === 'blocked' ? (
+                  <>
+                    <AlertCircle size={16} />
+                    {locale === 'ar' ? 'محظور - تحقق من الإعدادات' : 'Blocked - Check Settings'}
+                  </>
+                ) : (
+                  <>
+                    <Bell size={16} />
+                    {locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'}
+                  </>
+                )}
+              </button>
+              
+              {pushStatus === 'blocked' && (
+                <p className={styles.error} style={{ fontSize: '12px', marginTop: '8px' }}>
+                  {locale === 'ar' 
+                    ? 'يجب السماح بالإشعارات من إعدادات المتصفح أولاً'
+                    : 'Please allow notifications from browser settings first'}
+                </p>
+              )}
             </div>
+          )}
 
-            <div className={styles.row}>
-              <label className={styles.label}>{t('email')}</label>
-              <input className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
+          {/* Avatar Section */}
+          <div className={styles.avatarRow}>
+            <div className={styles.avatarWrapper}>
+              {profileImage ? (
+                <img className={styles.avatar} src={profileImage} alt={fullName} />
+              ) : (
+                <div className={styles.avatarPlaceholder} aria-hidden="true">
+                  {(fullName || '?').trim().slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <button
+                type="button"
+                className={styles.avatarEditButton}
+                onClick={() => profileImageInputRef.current?.click()}
+                aria-label={t('profileImage')}
+              >
+                <Camera size={16} />
+              </button>
+              <input
+                ref={profileImageInputRef}
+                className={styles.avatarInput}
+                type="file"
+                accept="image/*"
+                onChange={(e) => onProfileImageChange(e.target.files?.[0] ?? null)}
+              />
             </div>
+          </div>
 
-            <div className={styles.row}>
-              <label className={styles.label}>{t('phone')}</label>
-              <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
+          {/* Basic Information */}
+          <div className={styles.row}>
+            <label className={styles.label}>{t('fullName')}</label>
+            <input className={styles.input} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
 
-            <div className={styles.row}>
-              <label className={styles.label}>{t('callsReceived')}</label>
-              <input className={styles.input} value={String(callsReceived)} readOnly />
-            </div>
+          <div className={styles.row}>
+            <label className={styles.label}>{t('email')}</label>
+            <input className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
 
-            {userType === 'SHIPPER' ? (
-              <>
-                <div className={styles.row}>
-                  <label className={styles.label}>{locale === 'ar' ? 'إشعارات العروض الجديدة' : 'New offers notifications'}</label>
-                  <button
-                    className={styles.button}
-                    type="button"
-                    onClick={() => void enablePushNotifications()}
-                    disabled={enablingPush || pushStatus === 'enabled'}
-                  >
-                    {pushStatus === 'enabled'
-                      ? locale === 'ar'
-                        ? 'الإشعارات مفعّلة'
-                        : 'Notifications enabled'
-                      : enablingPush
-                        ? locale === 'ar'
-                          ? 'جارٍ التفعيل...'
-                          : 'Enabling...'
-                        : locale === 'ar'
-                          ? 'تفعيل الإشعارات'
-                          : 'Enable notifications'}
-                  </button>
-                </div>
+          <div className={styles.row}>
+            <label className={styles.label}>{t('phone')}</label>
+            <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
 
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('shipperCity')}</label>
-                  <input className={styles.input} value={shipperCity} onChange={(e) => setShipperCity(e.target.value)} />
-                </div>
+          <div className={styles.row}>
+            <label className={styles.label}>{t('callsReceived')}</label>
+            <input className={styles.input} value={String(callsReceived)} readOnly />
+          </div>
 
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('carKind')}</label>
-                  <input className={styles.input} value={carKind} onChange={(e) => setCarKind(e.target.value)} />
-                </div>
+          {/* Type-specific fields */}
+          {userType === 'SHIPPER' ? (
+            <>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('shipperCity')}</label>
+                <input className={styles.input} value={shipperCity} onChange={(e) => setShipperCity(e.target.value)} />
+              </div>
 
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('maxCharge')}</label>
-                  <div className={styles.inlineRow}>
-                    <input
-                      className={styles.input}
-                      value={maxCharge}
-                      onChange={(e) => setMaxCharge(e.target.value)}
-                      inputMode="decimal"
-                    />
-                    <select
-                      className={styles.select}
-                      value={maxChargeUnit}
-                      onChange={(e) => setMaxChargeUnit(e.target.value)}
-                    >
-                      <option value="kg">kg</option>
-                      <option value="ton">ton</option>
-                    </select>
-                  </div>
-                </div>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('carKind')}</label>
+                <input className={styles.input} value={carKind} onChange={(e) => setCarKind(e.target.value)} />
+              </div>
 
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('truckImage')}</label>
-                  {truckImage ? <img className={styles.truckImagePreview} src={truckImage} alt={tRegister('truckImage')} /> : null}
-                  <input
-                    className={styles.fileInput}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => onTruckImageChange(e.target.files?.[0] ?? null)}
-                  />
-                </div>
-              </>
-            ) : null}
-
-            {userType === 'MERCHANT' ? (
-              <>
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('merchantCity')}</label>
-                  <input className={styles.input} value={merchantCity} onChange={(e) => setMerchantCity(e.target.value)} />
-                </div>
-
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('placeOfBusiness')}</label>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('maxCharge')}</label>
+                <div className={styles.inlineRow}>
                   <input
                     className={styles.input}
-                    value={placeOfBusiness}
-                    onChange={(e) => setPlaceOfBusiness(e.target.value)}
+                    value={maxCharge}
+                    onChange={(e) => setMaxCharge(e.target.value)}
+                    inputMode="decimal"
                   />
+                  <select
+                    className={styles.select}
+                    value={maxChargeUnit}
+                    onChange={(e) => setMaxChargeUnit(e.target.value)}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="ton">ton</option>
+                  </select>
                 </div>
+              </div>
 
-                <div className={styles.row}>
-                  <label className={styles.label}>{tRegister('trucksNeeded')}</label>
-                  <input className={styles.input} value={trucksNeeded} onChange={(e) => setTrucksNeeded(e.target.value)} />
-                </div>
-              </>
-            ) : null}
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('truckImage')}</label>
+                {truckImage ? <img className={styles.truckImagePreview} src={truckImage} alt={tRegister('truckImage')} /> : null}
+                <input
+                  className={styles.fileInput}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => onTruckImageChange(e.target.files?.[0] ?? null)}
+                />
+              </div>
+            </>
+          ) : null}
 
-            {error ? <div className={styles.error}>{error}</div> : null}
-            {success ? <div className={styles.success}>{t('saved')}</div> : null}
+          {userType === 'MERCHANT' ? (
+            <>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('merchantCity')}</label>
+                <input className={styles.input} value={merchantCity} onChange={(e) => setMerchantCity(e.target.value)} />
+              </div>
 
-            <button className={styles.button} type="submit" disabled={saving}>
-              {saving ? t('saving') : t('save')}
-            </button>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('placeOfBusiness')}</label>
+                <input
+                  className={styles.input}
+                  value={placeOfBusiness}
+                  onChange={(e) => setPlaceOfBusiness(e.target.value)}
+                />
+              </div>
 
-            <div className={styles.footer}>
-              <Link className={styles.link} href={`/${locale}`}>
-                {t('back')}
-              </Link>
-            </div>
-          </form>
-        )}
-      </div>
+              <div className={styles.row}>
+                <label className={styles.label}>{tRegister('trucksNeeded')}</label>
+                <input className={styles.input} value={trucksNeeded} onChange={(e) => setTrucksNeeded(e.target.value)} />
+              </div>
+            </>
+          ) : null}
+
+          {/* Status Messages */}
+          {error ? <div className={styles.error}>{error}</div> : null}
+          {success ? <div className={styles.success}>{t('saved')}</div> : null}
+
+          {/* Save Button */}
+          <button className={styles.button} type="submit" disabled={saving}>
+            {saving ? t('saving') : t('save')}
+          </button>
+
+          {/* Footer Link */}
+          <div className={styles.footer}>
+            <Link className={styles.link} href={`/${locale}`}>
+              {t('back')}
+            </Link>
+          </div>
+        </form>
+      )}
     </div>
-  );
+  </div>
+);
 }

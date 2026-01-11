@@ -15,6 +15,7 @@
   padding: 20px;
 }
 
+
 .header {
   margin-bottom: 12px;
 }
@@ -185,3 +186,140 @@
   text-decoration: none;
   font-weight: 600;
 }
+
+
+
+
+
+/* Push Notification Section */
+.pushRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.pushHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pushIcon {
+  color: #4a90e2;
+}
+
+.pushTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.pushDescription {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.pushStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #e8f4fe;
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.pushStatus.enabled {
+  background: #d1fae5;
+  color: #0f8a4b;
+}
+
+.pushStatus.blocked {
+  background: #fee2e2;
+  color: #b00020;
+}
+
+.pushStatus.not_supported {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.pushButton {
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pushButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #357abd, #2c6aa8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.pushButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.pushButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* User Type Section */
+.userTypeSection {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.userTypeBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.merchantBadge {
+  background: #e8f4fe;
+  color: #4a90e2;
+}
+
+.shipperBadge {
+  background: #d1fae5;
+  color: #0f8a4b;
+}
+
+/* Updated form gap for better spacing */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+

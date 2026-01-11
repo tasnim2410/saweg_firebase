@@ -201,6 +201,7 @@
     "title": "My Profile",
     "loading": "Loading...",
     "profileImage": "Profile picture",
+    "userType": "Account type",
     "fullName": "Full name",
     "email": "Email",
     "phone": "Phone",
