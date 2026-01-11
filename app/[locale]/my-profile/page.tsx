@@ -113,11 +113,35 @@ export default function MyProfilePage() {
 
         setInitialUser(user);
 
-        if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (
+          typeof window !== 'undefined' &&
+          'Notification' in window &&
+          'serviceWorker' in navigator &&
+          'PushManager' in window
+        ) {
           const permission: NotificationPermission = Notification.permission;
-          if (permission === 'granted') setPushStatus('enabled');
-          else if (permission === 'denied') setPushStatus('blocked');
-          else setPushStatus('unknown');
+          if (permission === 'denied') {
+            setPushStatus('blocked');
+          } else if (permission === 'granted') {
+            try {
+              const reg = await navigator.serviceWorker.ready;
+              const existing = await reg.pushManager.getSubscription();
+              if (existing) {
+                setPushStatus('enabled');
+                await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(existing),
+                }).catch(() => null);
+              } else {
+                setPushStatus('unknown');
+              }
+            } catch {
+              setPushStatus('unknown');
+            }
+          } else {
+            setPushStatus('unknown');
+          }
         }
       } catch {
         if (cancelled) return;
@@ -182,6 +206,28 @@ export default function MyProfilePage() {
       }
 
       const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        const saveRes = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(existing),
+        });
+        const saveData = await saveRes.json().catch(() => null);
+        if (!saveRes.ok) {
+          setError(
+            locale === 'ar'
+              ? (typeof saveData?.error === 'string' ? saveData.error : 'فشل حفظ الاشتراك.')
+              : (typeof saveData?.error === 'string' ? saveData.error : 'Failed to save subscription.')
+          );
+          return;
+        }
+
+        setPushStatus('enabled');
+        setSuccess(true);
+        return;
+      }
+
       const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' });
       const keyData = await keyRes.json().catch(() => null);
       if (!keyRes.ok || !keyData?.publicKey) {
