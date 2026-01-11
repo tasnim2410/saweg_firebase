@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
@@ -94,6 +95,12 @@ export async function POST(req: NextRequest) {
 
     let imagePath: string | null = null;
     const file = formData.get('image') as File | null;
+    let imageAttachment:
+      | {
+          filename: string;
+          contentBase64: string;
+        }
+      | null = null;
 
     if (file && file.size > 0) {
       if (file.size > MAX_IMAGE_BYTES) {
@@ -104,6 +111,10 @@ export async function POST(req: NextRequest) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
+      imageAttachment = {
+        filename: file.name || 'merchant-post-image',
+        contentBase64: buffer.toString('base64'),
+      };
 
       if (cloudinaryEnabled()) {
         const uploaded = await uploadImageBuffer({
@@ -137,6 +148,55 @@ export async function POST(req: NextRequest) {
         lastLocationUpdateAt: new Date(),
       },
     });
+
+    try {
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const resendFrom = process.env.RESEND_FROM_EMAIL;
+      const to = process.env.CONTACT_TO_EMAIL;
+      if (!resendApiKey || !resendFrom || !to) {
+        throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
+      }
+
+      const resend = new Resend(resendApiKey);
+
+      const detailsText = [
+        `Name: ${post.name}`,
+        `Phone: ${post.phone}`,
+        `Location: ${post.location}`,
+        `Destination: ${(post as any).destination ?? '-'}`,
+        `Description: ${post.description ?? '-'}`,
+        `Active: ${post.active ? 'true' : 'false'}`,
+        `CreatedAt: ${(post as any).createdAt ? new Date((post as any).createdAt).toISOString() : '-'}`,
+        `Id: ${post.id}`,
+      ].join('\n');
+
+      const safeDetailsHtml = detailsText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      await resend.emails.send({
+        from: resendFrom,
+        to,
+        subject: `New merchant carousel post added: ${post.name}`,
+        text: `A new merchant post was added to the carousel.\n\n${detailsText}`,
+        html: `
+<p>A new merchant post was added to the carousel.</p>
+<pre style="white-space:pre-wrap">${safeDetailsHtml}</pre>
+${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
+        `,
+        attachments: imageAttachment
+          ? [
+              {
+                filename: imageAttachment.filename,
+                content: imageAttachment.contentBase64,
+              },
+            ]
+          : undefined,
+      });
+    } catch (error) {
+      console.error('POST /api/merchant-posts notify email error:', error);
+    }
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {

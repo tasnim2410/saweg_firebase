@@ -8,7 +8,7 @@ import { isAdminIdentifier } from './lib/admin';
 
 const intlMiddleware = createMiddleware({
   locales,
-  defaultLocale: 'en',
+  defaultLocale: 'ar',
   localePrefix: 'always',
 });
 
@@ -35,7 +35,7 @@ export default async function middleware(req: NextRequest) {
 
   // Extract locale (first segment after leading slash)
   const segments = pathname.split('/').filter(Boolean);
-  const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'en';
+  const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
 
   // Define protected sections
   const protectedSections = ['admin', 'dashboard'];
