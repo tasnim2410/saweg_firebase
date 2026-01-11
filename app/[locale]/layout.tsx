@@ -1,9 +1,25 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import "../globals.css";
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 const locales = ['en', 'ar'];
+
+export const metadata: Metadata = {
+  manifest: '/manifest.json',
+  themeColor: '#0070f3',
+  icons: {
+    icon: '/images/logo.png',
+    apple: '/images/logo.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Saweg',
+    statusBarStyle: 'default',
+  },
+};
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -33,6 +49,7 @@ export default async function LocaleLayout({
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
+          <ServiceWorkerRegister />
           {children}
         </NextIntlClientProvider>
       </body>
