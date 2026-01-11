@@ -21,7 +21,7 @@ export default async function middleware(req: NextRequest) {
   const segments = pathname.split('/').filter(Boolean);
   const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
 
-  // Redirect logic for domains
+  // Handle domain redirects first
   if (hostname === 'sawe.app' || hostname === 'www.sawe.app') {
     const url = req.nextUrl.clone();
     const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
@@ -32,29 +32,26 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  if (hostname === 'saweg.app' || hostname === 'www.saweg.app') {
+  // Redirect saweg.app (without www) to www.saweg.app
+  if (hostname === 'saweg.app') {
     const url = req.nextUrl.clone();
-    const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
-    
-    // Check if pathname already starts with a locale
-    const pathStartsWithLocale = locales.some(locale => 
-      normalizedPathname === `/${locale}` || normalizedPathname.startsWith(`/${locale}/`)
+    url.hostname = 'www.saweg.app';
+    url.protocol = 'https:';
+    url.port = '';
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Now we're on www.saweg.app - check if we need to add /ar
+  if (hostname === 'www.saweg.app') {
+    // Check if the path already starts with a locale
+    const hasLocale = locales.some(loc => 
+      pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
     );
 
-    // If it doesn't start with a locale, add '/ar' prefix
-    if (!pathStartsWithLocale) {
-      url.hostname = 'www.saweg.app';
-      url.protocol = 'https:';
-      url.port = '';
-      url.pathname = normalizedPathname === '/' ? '/ar' : `/ar${normalizedPathname}`;
-      return NextResponse.redirect(url, 308);
-    }
-    
-    // If it's already www.saweg.app with a locale, ensure it's HTTPS
-    if (url.protocol !== 'https:' || url.hostname !== 'www.saweg.app') {
-      url.hostname = 'www.saweg.app';
-      url.protocol = 'https:';
-      url.port = '';
+    // If no locale in path, redirect to /ar prefix
+    if (!hasLocale) {
+      const url = req.nextUrl.clone();
+      url.pathname = pathname === '/' ? '/ar' : `/ar${pathname}`;
       return NextResponse.redirect(url, 308);
     }
   }
