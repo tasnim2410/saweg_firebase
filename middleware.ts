@@ -15,9 +15,15 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(req: NextRequest) {
   const host = req.headers.get('host') ?? '';
   const hostname = host.split(':')[0];
+  const pathname = req.nextUrl.pathname;
+
+  // Extract locale from current pathname
+  const segments = pathname.split('/').filter(Boolean);
+  const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
+
+  // Redirect logic for domains
   if (hostname === 'sawe.app' || hostname === 'www.sawe.app') {
     const url = req.nextUrl.clone();
-    const pathname = url.pathname;
     const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
     url.hostname = 'www.saweg.app';
     url.protocol = 'https:';
@@ -26,19 +32,32 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  if (hostname === 'saweg.app') {
+  if (hostname === 'saweg.app' || hostname === 'www.saweg.app') {
     const url = req.nextUrl.clone();
-    url.hostname = 'www.saweg.app';
-    url.protocol = 'https:';
-    url.port = '';
-    return NextResponse.redirect(url, 308);
+    const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
+    
+    // Check if pathname already starts with a locale
+    const pathStartsWithLocale = locales.some(locale => 
+      normalizedPathname === `/${locale}` || normalizedPathname.startsWith(`/${locale}/`)
+    );
+
+    // If it doesn't start with a locale, add '/ar' prefix
+    if (!pathStartsWithLocale) {
+      url.hostname = 'www.saweg.app';
+      url.protocol = 'https:';
+      url.port = '';
+      url.pathname = normalizedPathname === '/' ? '/ar' : `/ar${normalizedPathname}`;
+      return NextResponse.redirect(url, 308);
+    }
+    
+    // If it's already www.saweg.app with a locale, ensure it's HTTPS
+    if (url.protocol !== 'https:' || url.hostname !== 'www.saweg.app') {
+      url.hostname = 'www.saweg.app';
+      url.protocol = 'https:';
+      url.port = '';
+      return NextResponse.redirect(url, 308);
+    }
   }
-
-  const pathname = req.nextUrl.pathname;
-
-  // Extract locale (first segment after leading slash)
-  const segments = pathname.split('/').filter(Boolean);
-  const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
 
   // Define protected sections
   const protectedSections = ['admin', 'dashboard'];
@@ -53,7 +72,7 @@ export default async function middleware(req: NextRequest) {
     // No token → redirect to login with callbackUrl
     if (!token) {
       const loginUrl = new URL(`/${locale}/login`, req.url);
-      loginUrl.searchParams.set('callbackUrl', pathname); // e.g., /ar/dashboard/add-provider
+      loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
