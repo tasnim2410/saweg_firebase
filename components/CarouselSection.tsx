@@ -184,7 +184,7 @@ const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
         onClick={scrollLeft}
         aria-label={t('scrollLeft')}
       >
-        ‹
+        ›
       </button>
       
       {/* Carousel */}
@@ -294,7 +294,7 @@ const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
         onClick={scrollRight}
         aria-label={t('scrollRight')}
       >
-        ›
+        ‹
       </button>
 
       {/* Remove the old carouselControls div since we now have side arrows */}
