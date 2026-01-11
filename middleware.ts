@@ -15,7 +15,7 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(req: NextRequest) {
   const host = req.headers.get('host') ?? '';
   const hostname = host.split(':')[0];
-  if (hostname === 'sawe.app' || hostname === 'www.sawe.app') {
+  if (hostname === 'saweg.app' || hostname === 'www.saweg.app') {
     const url = req.nextUrl.clone();
     const pathname = url.pathname;
     const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
