@@ -474,7 +474,7 @@ return (
           </div>
 
           {/* Push Notifications Section - Moved to top */}
-          {userType === 'SHIPPER' && (
+          {(userType === 'SHIPPER' || userType === 'ADMIN') && (
             <div className={styles.pushRow}>
               <div className={styles.pushHeader}>
                 <Bell className={styles.pushIcon} size={18} />
