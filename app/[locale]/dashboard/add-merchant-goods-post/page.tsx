@@ -21,6 +21,8 @@ export default function AddMerchantGoodsPostPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [phone, setPhone] = useState<string>('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmImageUrl, setConfirmImageUrl] = useState<string | null>(null);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -106,9 +108,31 @@ export default function AddMerchantGoodsPostPage() {
     };
   }, []);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!imageFile) {
+      setConfirmImageUrl(null);
+      return;
+    }
 
+    const url = URL.createObjectURL(imageFile);
+    setConfirmImageUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [imageFile]);
+
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [confirmOpen]);
+
+  const validateForSubmit = () => {
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone.ok) {
       if (normalizedPhone.error === 'PHONE_REQUIRED') {
@@ -130,12 +154,12 @@ export default function AddMerchantGoodsPostPage() {
           message: locale === 'ar' ? 'طول رقم الهاتف غير صحيح' : 'Invalid phone number length',
         });
       }
-      return;
+      return { ok: false as const };
     }
 
     if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
       pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(MAX_IMAGE_BYTES) });
-      return;
+      return { ok: false as const };
     }
 
     if (
@@ -151,7 +175,7 @@ export default function AddMerchantGoodsPostPage() {
         title: titleFor('form'),
         message: locale === 'ar' ? 'يرجى إدخال كل الحقول المطلوبة' : 'Please fill all required fields',
       });
-      return;
+      return { ok: false as const };
     }
 
     const weightNum = Number(goodsWeight);
@@ -161,12 +185,16 @@ export default function AddMerchantGoodsPostPage() {
         title: titleFor('form'),
         message: locale === 'ar' ? 'الوزن غير صحيح' : 'Invalid weight',
       });
-      return;
+      return { ok: false as const };
     }
 
+    return { ok: true as const, normalizedPhoneE164: normalizedPhone.e164, weightNum };
+  };
+
+  const submitNow = async (normalizedPhoneE164: string, weightNum: number) => {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
-    payload.append('phone', normalizedPhone.e164);
+    payload.append('phone', normalizedPhoneE164);
     payload.append('startingPoint', startingPoint);
     payload.append('destination', destination);
     payload.append('goodsType', goodsType);
@@ -237,8 +265,112 @@ export default function AddMerchantGoodsPostPage() {
     }
   };
 
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (submitting) return;
+    const result = validateForSubmit();
+    if (!result.ok) return;
+    setConfirmOpen(true);
+  };
+
   return (
     <div className={styles.page}>
+      {confirmOpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={locale === 'ar' ? 'تأكيد نشر الطلب' : 'Confirm publish'}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmOpen(false);
+          }}
+        >
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>{locale === 'ar' ? 'راجع بيانات الطلب قبل النشر' : 'Review before publishing'}</h2>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'الاسم' : 'Name'}</div>
+                <div className={styles.modalValue}>{name || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'رقم الهاتف' : 'Phone number'}</div>
+                <div className={styles.modalValue} dir="ltr">
+                  {phone || '-'}
+                </div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</div>
+                <div className={styles.modalValue}>{startingPoint || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</div>
+                <div className={styles.modalValue}>{destination || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع البضاعة' : 'Type of goods'}</div>
+                <div className={styles.modalValue}>{goodsType || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'وزن البضاعة' : 'Goods weight'}</div>
+                <div className={styles.modalValue}>
+                  {goodsWeight ? `${goodsWeight} ${goodsWeightUnit}` : '-'}
+                </div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'تاريخ التحميل' : 'Loading date'}</div>
+                <div className={styles.modalValue}>{loadingDate || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</div>
+                <div className={styles.modalValue}>{vehicleTypeDesired || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'الوصف' : 'Description'}</div>
+                <div className={styles.modalValue}>{description || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'الصورة' : 'Image'}</div>
+                <div className={styles.modalValue}>
+                  {confirmImageUrl ? (
+                    <img className={styles.modalImagePreview} src={confirmImageUrl} alt={locale === 'ar' ? 'الصورة' : 'Image'} />
+                  ) : (
+                    '-'
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalButtonSecondary}
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+              >
+                {locale === 'ar' ? 'تعديل' : 'Edit'}
+              </button>
+              <button
+                type="button"
+                className={styles.modalButton}
+                onClick={async () => {
+                  if (submitting) return;
+                  const result = validateForSubmit();
+                  if (!result.ok) return;
+                  setConfirmOpen(false);
+                  await submitNow(result.normalizedPhoneE164, result.weightNum);
+                }}
+                disabled={submitting}
+              >
+                {submitting ? (locale === 'ar' ? 'جاري النشر...' : 'Publishing...') : locale === 'ar' ? 'تأكيد النشر' : 'Confirm & Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {toasts.length ? (
         <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
           {toasts.map((toast) => (

@@ -35,6 +35,8 @@ export default function AddProviderPage() {
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmImageUrl, setConfirmImageUrl] = useState<string | null>(null);
 
   const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -96,16 +98,38 @@ export default function AddProviderPage() {
     };
   }, []);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!imageFile) {
+      setConfirmImageUrl(null);
+      return;
+    }
 
+    const url = URL.createObjectURL(imageFile);
+    setConfirmImageUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [imageFile]);
+
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [confirmOpen]);
+
+  const validateForSubmit = () => {
     if (imageFile && imageFile.size > MAX_PROVIDER_IMAGE_BYTES) {
       pushToast({
         variant: 'error',
         title: titleFor('image'),
         message: imageTooLargeMessage(MAX_PROVIDER_IMAGE_BYTES),
       });
-      return;
+      return { ok: false as const };
     }
 
     if (!location.trim() || !phone.trim()) {
@@ -114,7 +138,7 @@ export default function AddProviderPage() {
         title: titleFor('form'),
         message: t('errors.missingRequiredFields'),
       });
-      return;
+      return { ok: false as const };
     }
 
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -126,16 +150,20 @@ export default function AddProviderPage() {
       } else {
         pushToast({ variant: 'error', title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
       }
-      return;
+      return { ok: false as const };
     }
 
+    return { ok: true as const, normalizedPhoneE164: normalizedPhone.e164 };
+  };
+
+  const submitNow = async (normalizedPhoneE164: string) => {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('destination', destination);
     payload.append('placeOfBusiness', destination);
     payload.append('description', description);
     payload.append('location', location);
-    payload.append('phone', normalizedPhone.e164);
+    payload.append('phone', normalizedPhoneE164);
     payload.append('active', 'true');
     if (imageFile) payload.append('image', imageFile);
 
@@ -181,8 +209,90 @@ export default function AddProviderPage() {
     }
   };
 
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (submitting) return;
+    const result = validateForSubmit();
+    if (!result.ok) return;
+    setConfirmOpen(true);
+  };
+
   return (
     <div className={styles.page}>
+      {confirmOpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={locale === 'ar' ? 'تأكيد نشر العرض' : 'Confirm publish'}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmOpen(false);
+          }}
+        >
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>{locale === 'ar' ? 'راجع بيانات العرض قبل النشر' : 'Review before publishing'}</h2>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('name')}</div>
+                <div className={styles.modalValue}>{name || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('destination')}</div>
+                <div className={styles.modalValue}>{destination || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('location')}</div>
+                <div className={styles.modalValue}>{location || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('phone')}</div>
+                <div className={styles.modalValue} dir="ltr">
+                  {phone || '-'}
+                </div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('description')}</div>
+                <div className={styles.modalValue}>{description || '-'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{t('image')}</div>
+                <div className={styles.modalValue}>
+                  {confirmImageUrl ? <img className={styles.modalImagePreview} src={confirmImageUrl} alt={t('image')} /> : '-'}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalButtonSecondary}
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+              >
+                {locale === 'ar' ? 'تعديل' : 'Edit'}
+              </button>
+              <button
+                type="button"
+                className={styles.modalButton}
+                onClick={async () => {
+                  if (submitting) return;
+                  const result = validateForSubmit();
+                  if (!result.ok) return;
+                  setConfirmOpen(false);
+                  await submitNow(result.normalizedPhoneE164);
+                }}
+                disabled={submitting}
+              >
+                {submitting ? (locale === 'ar' ? 'جاري النشر...' : 'Publishing...') : locale === 'ar' ? 'تأكيد النشر' : 'Confirm & Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {toasts.length ? (
         <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
           {toasts.map((toast) => (
