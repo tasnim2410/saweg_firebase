@@ -14,6 +14,8 @@ type MerchantGoodsPostDetails = {
   goodsType: string;
   goodsWeight: number;
   goodsWeightUnit: string;
+  budget: number | null;
+  budgetCurrency: string | null;
   loadingDate: string | Date;
   vehicleTypeDesired: string;
   image: string | null;
@@ -58,6 +60,8 @@ export default async function MerchantGoodsPostDetailsPage({
       goodsType: true,
       goodsWeight: true,
       goodsWeightUnit: true,
+      budget: true,
+      budgetCurrency: true,
       loadingDate: true,
       vehicleTypeDesired: true,
       image: true,
@@ -114,6 +118,7 @@ export default async function MerchantGoodsPostDetailsPage({
     route: locale === 'ar' ? 'المسار' : 'Route',
     goods: locale === 'ar' ? 'نوع البضاعة' : 'Goods',
     weight: locale === 'ar' ? 'الوزن' : 'Weight',
+    budget: locale === 'ar' ? 'الميزانية' : 'Budget',
     loadingDate: locale === 'ar' ? 'تاريخ التحميل' : 'Loading date',
     vehicle: locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Vehicle needed',
     description: locale === 'ar' ? 'الوصف' : 'Description',
@@ -166,6 +171,13 @@ export default async function MerchantGoodsPostDetailsPage({
               <div className={styles.infoLabel}>{labels.weight}</div>
               <div className={styles.infoValue}>
                 {typeof post.goodsWeight === 'number' ? `${post.goodsWeight} ${post.goodsWeightUnit || ''}`.trim() : '-'}
+              </div>
+            </div>
+
+            <div className={styles.infoBlock}>
+              <div className={styles.infoLabel}>{labels.budget}</div>
+              <div className={styles.infoValue}>
+                {post.budget ? `${post.budget}${post.budgetCurrency ? ` ${post.budgetCurrency}` : ''}` : '-'}
               </div>
             </div>
 

@@ -39,6 +39,8 @@ export default function AddMerchantGoodsPostPage() {
   const [goodsType, setGoodsType] = useState('');
   const [goodsWeight, setGoodsWeight] = useState<string>('');
   const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('kg');
+  const [budget, setBudget] = useState<string>('');
+  const [budgetCurrency, setBudgetCurrency] = useState<string>('');
   const [loadingDate, setLoadingDate] = useState('');
   const [vehicleTypeDesired, setVehicleTypeDesired] = useState('');
   const [description, setDescription] = useState('');
@@ -188,10 +190,45 @@ export default function AddMerchantGoodsPostPage() {
       return { ok: false as const };
     }
 
-    return { ok: true as const, normalizedPhoneE164: normalizedPhone.e164, weightNum };
+    const trimmedBudget = (budget || '').trim();
+    const trimmedCurrency = (budgetCurrency || '').trim();
+    let budgetNum: number | null = null;
+    if (trimmedBudget) {
+      const parsedBudget = Number(trimmedBudget);
+      if (!Number.isFinite(parsedBudget) || parsedBudget <= 0) {
+        pushToast({
+          variant: 'error',
+          title: titleFor('form'),
+          message: locale === 'ar' ? 'الميزانية غير صحيحة' : 'Invalid budget',
+        });
+        return { ok: false as const };
+      }
+      if (!trimmedCurrency) {
+        pushToast({
+          variant: 'error',
+          title: titleFor('form'),
+          message: locale === 'ar' ? 'يرجى اختيار العملة' : 'Please choose a currency',
+        });
+        return { ok: false as const };
+      }
+      budgetNum = parsedBudget;
+    }
+
+    return {
+      ok: true as const,
+      normalizedPhoneE164: normalizedPhone.e164,
+      weightNum,
+      budgetNum,
+      budgetCurrency: trimmedBudget ? trimmedCurrency : null,
+    };
   };
 
-  const submitNow = async (normalizedPhoneE164: string, weightNum: number) => {
+  const submitNow = async (
+    normalizedPhoneE164: string,
+    weightNum: number,
+    budgetNum: number | null,
+    budgetCurrencyValue: string | null
+  ) => {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('phone', normalizedPhoneE164);
@@ -200,6 +237,10 @@ export default function AddMerchantGoodsPostPage() {
     payload.append('goodsType', goodsType);
     payload.append('goodsWeight', String(weightNum));
     payload.append('goodsWeightUnit', goodsWeightUnit);
+    if (budgetNum !== null) {
+      payload.append('budget', String(budgetNum));
+      if (budgetCurrencyValue) payload.append('budgetCurrency', budgetCurrencyValue);
+    }
     payload.append('loadingDate', loadingDate);
     payload.append('vehicleTypeDesired', vehicleTypeDesired);
     if (description.trim()) payload.append('description', description);
@@ -321,6 +362,12 @@ export default function AddMerchantGoodsPostPage() {
                 </div>
               </div>
               <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'الميزانية' : 'Budget'}</div>
+                <div className={styles.modalValue}>
+                  {budget.trim() ? `${budget.trim()}${budgetCurrency.trim() ? ` ${budgetCurrency.trim()}` : ''}` : '-'}
+                </div>
+              </div>
+              <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'تاريخ التحميل' : 'Loading date'}</div>
                 <div className={styles.modalValue}>{loadingDate || '-'}</div>
               </div>
@@ -361,7 +408,7 @@ export default function AddMerchantGoodsPostPage() {
                   const result = validateForSubmit();
                   if (!result.ok) return;
                   setConfirmOpen(false);
-                  await submitNow(result.normalizedPhoneE164, result.weightNum);
+                  await submitNow(result.normalizedPhoneE164, result.weightNum, result.budgetNum, result.budgetCurrency);
                 }}
                 disabled={submitting}
               >
@@ -491,6 +538,32 @@ export default function AddMerchantGoodsPostPage() {
               >
                 <option value="kg">kg</option>
                 <option value="ton">ton</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.row}>
+            <label className={styles.label}>{locale === 'ar' ? 'الميزانية (اختياري)' : 'Budget (optional)'}</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                className={styles.input}
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                min={0}
+                step={0.1}
+                placeholder={locale === 'ar' ? 'مثال: 500' : 'e.g. 500'}
+              />
+              <select
+                className={styles.input}
+                value={budgetCurrency}
+                onChange={(e) => setBudgetCurrency(e.target.value)}
+                aria-label={locale === 'ar' ? 'العملة' : 'Currency'}
+              >
+                <option value="">{locale === 'ar' ? 'العملة' : 'Currency'}</option>
+                <option value="TND">{locale === 'ar' ? 'تونس (TND)' : 'Tunisia (TND)'}</option>
+                <option value="LYD">{locale === 'ar' ? 'ليبيا (LYD)' : 'Libya (LYD)'}</option>
+                <option value="EGP">{locale === 'ar' ? 'مصر (EGP)' : 'Egypt (EGP)'}</option>
               </select>
             </div>
           </div>

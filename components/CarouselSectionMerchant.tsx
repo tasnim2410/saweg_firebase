@@ -17,6 +17,8 @@ type MerchantGoodsPost = {
   goodsType: string;
   goodsWeight: number;
   goodsWeightUnit: string;
+  budget?: number | null;
+  budgetCurrency?: string | null;
   loadingDate: string | Date;
   vehicleTypeDesired: string;
   image: string | null;
@@ -401,6 +403,15 @@ const CarouselSectionMerchant: React.FC = () => {
                       {post.goodsWeight} {post.goodsWeightUnit}
                     </span>
                   </p>
+                  {post.budget ? (
+                    <p className={styles.description}>
+                      {(locale === 'ar' ? 'الميزانية:' : 'Budget:')}{' '}
+                      <span className={styles.descriptionLine}>
+                        {post.budget}
+                        {post.budgetCurrency ? ` ${post.budgetCurrency}` : ''}
+                      </span>
+                    </p>
+                  ) : null}
                   <p className={styles.description}>
                     {(locale === 'ar' ? 'تاريخ التحميل:' : 'Loading date:')}{' '}
                     <span className={styles.descriptionLine}>{formatDate(post.loadingDate)}</span>

@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
     const loadingDateRaw = typeof formData.get('loadingDate') === 'string' ? String(formData.get('loadingDate')).trim() : '';
     const vehicleTypeDesired = typeof formData.get('vehicleTypeDesired') === 'string' ? String(formData.get('vehicleTypeDesired')).trim() : '';
     const description = typeof formData.get('description') === 'string' ? String(formData.get('description')).trim() : '';
+    const budgetRaw = typeof formData.get('budget') === 'string' ? String(formData.get('budget')).trim() : '';
+    const budgetCurrencyRaw = typeof formData.get('budgetCurrency') === 'string' ? String(formData.get('budgetCurrency')).trim() : '';
 
     if (!startingPoint || !destination || !goodsType || !goodsWeightRaw || !loadingDateRaw || !vehicleTypeDesired) {
       return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
@@ -110,6 +112,22 @@ export async function POST(req: NextRequest) {
     const loadingDate = new Date(loadingDateRaw);
     if (Number.isNaN(loadingDate.getTime())) {
       return NextResponse.json({ error: 'INVALID_LOADING_DATE' }, { status: 400 });
+    }
+
+    let budget: number | null = null;
+    let budgetCurrency: 'TND' | 'LYD' | 'EGP' | null = null;
+    if (budgetRaw) {
+      const parsedBudget = Number(budgetRaw);
+      if (!Number.isFinite(parsedBudget) || parsedBudget <= 0) {
+        return NextResponse.json({ error: 'INVALID_BUDGET' }, { status: 400 });
+      }
+      budget = parsedBudget;
+
+      const currency = budgetCurrencyRaw.toUpperCase();
+      if (currency !== 'TND' && currency !== 'LYD' && currency !== 'EGP') {
+        return NextResponse.json({ error: 'INVALID_BUDGET_CURRENCY' }, { status: 400 });
+      }
+      budgetCurrency = currency as any;
     }
 
     let imagePath: string | null = null;
@@ -155,6 +173,8 @@ export async function POST(req: NextRequest) {
         goodsWeightUnit: normalizedUnit,
         loadingDate,
         vehicleTypeDesired,
+        budget,
+        budgetCurrency,
         image: imagePath,
         description: description || null,
         userId,

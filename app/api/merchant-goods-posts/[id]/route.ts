@@ -115,6 +115,22 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     return Number.isFinite(n) ? n : undefined;
   };
 
+  const getNullableNum = (key: string): number | null | undefined => {
+    if (formData) {
+      if (!formData.has(key)) return undefined;
+      const v = formData.get(key);
+      if (typeof v !== 'string') return undefined;
+      const trimmed = v.trim();
+      if (!trimmed) return null;
+      const n = Number(trimmed);
+      return Number.isFinite(n) ? n : undefined;
+    }
+    if (body?.[key] === undefined) return undefined;
+    if (body?.[key] === null) return null;
+    const n = Number(body?.[key]);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
   const getBool = (key: string): boolean | undefined => {
     if (formData) {
       const v = formData.get(key);
@@ -205,9 +221,48 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     data.vehicleTypeDesired = vehicleTypeDesired;
   }
 
+  const budgetValue = getNullableNum('budget');
+  if (budgetValue !== undefined) {
+    if (budgetValue === null) {
+      data.budget = null;
+    } else {
+      if (!Number.isFinite(budgetValue) || budgetValue <= 0) {
+        return NextResponse.json({ error: 'INVALID_BUDGET' }, { status: 400 });
+      }
+      data.budget = budgetValue;
+    }
+  }
+
   const descValue = getNullableStr('description');
   if (descValue !== undefined) {
     data.description = descValue;
+  }
+
+  const budgetCurrencyValue = getNullableStr('budgetCurrency');
+  if (budgetCurrencyValue !== undefined) {
+    if (budgetCurrencyValue === null) {
+      data.budgetCurrency = null;
+    } else {
+      const currency = budgetCurrencyValue.toUpperCase();
+      if (currency !== 'TND' && currency !== 'LYD' && currency !== 'EGP') {
+        return NextResponse.json({ error: 'INVALID_BUDGET_CURRENCY' }, { status: 400 });
+      }
+      data.budgetCurrency = currency;
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'budget')) {
+    if (data.budget === null) {
+      data.budgetCurrency = null;
+    } else if (typeof data.budget === 'number') {
+      const currency = (Object.prototype.hasOwnProperty.call(data, 'budgetCurrency') ? data.budgetCurrency : undefined) as
+        | string
+        | null
+        | undefined;
+      if (!currency) {
+        return NextResponse.json({ error: 'BUDGET_CURRENCY_REQUIRED' }, { status: 400 });
+      }
+    }
   }
 
   const removeImageValue = getBool('removeImage');

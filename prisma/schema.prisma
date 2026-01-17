@@ -7,11 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
- enum UserType {
-   SHIPPER
-   MERCHANT
-   ADMIN
- }
+enum UserType {
+  SHIPPER
+  MERCHANT
+  ADMIN
+}
+
+enum BudgetCurrency {
+  TND
+  LYD
+  EGP
+}
 
 model User {
   id           String     @id @default(cuid())
@@ -83,6 +89,8 @@ model MerchantGoodsPost {
   goodsWeightUnit    String
   loadingDate        DateTime
   vehicleTypeDesired String
+  budget             Float?
+  budgetCurrency     BudgetCurrency?
   image              String?
   description        String?
   userId             String
