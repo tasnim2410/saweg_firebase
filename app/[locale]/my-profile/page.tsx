@@ -64,6 +64,50 @@ export default function MyProfilePage() {
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'blocked' | 'not_supported'>('unknown');
   const [togglingPush, setTogglingPush] = useState(false);
 
+  const getPushRegistration = async (): Promise<ServiceWorkerRegistration | null> => {
+    if (typeof window === 'undefined') return null;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+
+    const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T> => {
+      return await Promise.race([
+        p,
+        new Promise<T>((_, reject) => {
+          window.setTimeout(() => reject(new Error('SW_TIMEOUT')), ms);
+        }),
+      ]);
+    };
+
+    const waitForActive = async (reg: ServiceWorkerRegistration) => {
+      if (reg.active) return;
+      const sw = reg.installing || reg.waiting;
+      if (!sw) return;
+      await withTimeout(
+        new Promise<void>((resolve) => {
+          const onState = () => {
+            if (sw.state === 'activated' || sw.state === 'redundant') {
+              sw.removeEventListener('statechange', onState);
+              resolve();
+            }
+          };
+          sw.addEventListener('statechange', onState);
+          onState();
+        }),
+        5000
+      ).catch(() => null);
+    };
+
+    try {
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      }
+      await waitForActive(reg);
+      return reg;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (profileImagePreviewUrlRef.current) {
@@ -125,8 +169,8 @@ export default function MyProfilePage() {
             setPushStatus('blocked');
           } else if (permission === 'granted') {
             try {
-              const reg = await navigator.serviceWorker.ready;
-              const existing = await reg.pushManager.getSubscription();
+              const reg = await navigator.serviceWorker.getRegistration();
+              const existing = reg ? await reg.pushManager.getSubscription() : null;
               if (existing) {
                 setPushStatus('enabled');
                 await fetch('/api/push/subscribe', {
@@ -157,7 +201,7 @@ export default function MyProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [locale, router, t]);
+  }, [locale]);
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -206,7 +250,11 @@ export default function MyProfilePage() {
         return;
       }
 
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await getPushRegistration();
+      if (!reg) {
+        setPushStatus('not_supported');
+        return;
+      }
       const existing = await reg.pushManager.getSubscription();
       if (existing) {
         const saveRes = await fetch('/api/push/subscribe', {
@@ -276,8 +324,8 @@ export default function MyProfilePage() {
         return;
       }
 
-      const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
+      const reg = await navigator.serviceWorker.getRegistration();
+      const existing = reg ? await reg.pushManager.getSubscription() : null;
       if (!existing) {
         setPushStatus('unknown');
         return;

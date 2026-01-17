@@ -106,6 +106,50 @@ export default function Header() {
     return outputArray;
   };
 
+  const getPushRegistration = async (): Promise<ServiceWorkerRegistration | null> => {
+    if (typeof window === 'undefined') return null;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+
+    const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T> => {
+      return await Promise.race([
+        p,
+        new Promise<T>((_, reject) => {
+          window.setTimeout(() => reject(new Error('SW_TIMEOUT')), ms);
+        }),
+      ]);
+    };
+
+    const waitForActive = async (reg: ServiceWorkerRegistration) => {
+      if (reg.active) return;
+      const sw = reg.installing || reg.waiting;
+      if (!sw) return;
+      await withTimeout(
+        new Promise<void>((resolve) => {
+          const onState = () => {
+            if (sw.state === 'activated' || sw.state === 'redundant') {
+              sw.removeEventListener('statechange', onState);
+              resolve();
+            }
+          };
+          sw.addEventListener('statechange', onState);
+          onState();
+        }),
+        5000
+      ).catch(() => null);
+    };
+
+    try {
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      }
+      await waitForActive(reg);
+      return reg;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -142,7 +186,7 @@ export default function Header() {
 
       setCheckingPush(true);
       try {
-        const reg = await navigator.serviceWorker.getRegistration();
+        const reg = await getPushRegistration();
         if (!reg) {
           setShowPushBanner(false);
           return;
@@ -195,7 +239,8 @@ export default function Header() {
         return;
       }
 
-      const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.ready);
+      const reg = await getPushRegistration();
+      if (!reg) return;
       const existing = await reg.pushManager.getSubscription();
       if (existing) {
         await fetch('/api/push/subscribe', {
