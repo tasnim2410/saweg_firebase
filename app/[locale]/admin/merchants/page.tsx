@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { AUTH_COOKIE_NAME, verifySessionToken } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { isAdminIdentifier } from '@/lib/admin';
-import AdminMerchantPostsClient from '../AdminMerchantPostsClient';
+import AdminMerchantGoodsPostsClient from '../AdminMerchantGoodsPostsClient';
 
 export default async function AdminMerchantsPage() {
   const locale = await getLocale();
@@ -40,7 +40,7 @@ export default async function AdminMerchantsPage() {
       <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>{t('title')}</h1>
       <p style={{ marginTop: '0.5rem' }}>{locale === 'ar' ? 'إدارة عروض التجّار' : 'Manage merchants offers'}</p>
       <div style={{ marginTop: '1.5rem' }}>
-        <AdminMerchantPostsClient />
+        <AdminMerchantGoodsPostsClient />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'saweg-pwa-v4';
+const CACHE_NAME = 'saweg-pwa-v3';
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -73,12 +73,6 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
 
   const url = new URL(req.url);
-
-  // Never cache Next.js build assets. These change frequently and can otherwise cause stale UI.
-  if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
-    event.respondWith(fetch(req));
-    return;
-  }
 
   // Never cache API responses. This avoids issues like stale auth/session state.
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {

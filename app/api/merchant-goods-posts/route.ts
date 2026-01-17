@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
-import { getLocationLabel } from '@/lib/locations';
-import { sendPushToSubscription } from '@/lib/webPush';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -31,11 +29,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(posts, {
-      headers: {
-        'cache-control': 'no-store, max-age=0',
-      },
-    });
+    return NextResponse.json(posts);
   } catch (error) {
     console.error('GET /api/merchant-goods-posts error:', error);
     return NextResponse.json({ error: 'Failed to fetch merchant goods posts' }, { status: 500 });
@@ -57,12 +51,13 @@ export async function POST(req: NextRequest) {
   );
 
   const sessionType = (session.user as any).type;
-  const isAdmin = Boolean(sessionType === 'ADMIN' || adminOk);
 
   try {
     if (!adminOk && sessionType !== 'MERCHANT' && sessionType !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const isAdmin = Boolean(sessionType === 'ADMIN' || adminOk);
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -159,55 +154,6 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-
-    try {
-      const subs = await (prisma as any).pushSubscription.findMany({
-        where: {
-          user: {
-            type: { in: ['SHIPPER', 'ADMIN'] },
-          },
-        },
-        select: {
-          endpoint: true,
-          p256dh: true,
-          auth: true,
-          expirationTime: true,
-        },
-      });
-
-      const fromAr = getLocationLabel(post.startingPoint, 'ar');
-      const fromEn = getLocationLabel(post.startingPoint, 'en');
-      const toAr = getLocationLabel(post.destination, 'ar');
-      const toEn = getLocationLabel(post.destination, 'en');
-
-      const routeAr = `من ${fromAr} → ${toAr}`;
-      const routeEn = `from ${fromEn} → ${toEn}`;
-
-      const body = `تمت إضافة طلب تاجر جديد ${routeAr}.\nNew merchant request added ${routeEn}.`;
-
-      const payload = {
-        title: 'Saweg',
-        body,
-        url: '/ar',
-      };
-
-      for (const sub of subs) {
-        const result = await sendPushToSubscription(
-          {
-            endpoint: sub.endpoint,
-            expirationTime: sub.expirationTime,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          payload
-        );
-
-        if (!result.ok && result.gone) {
-          await (prisma as any).pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => null);
-        }
-      }
-    } catch (error) {
-      console.error('POST /api/merchant-goods-posts push notify error:', error);
-    }
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {

@@ -9,66 +9,6 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
-.pushPrompt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.pushPromptLeft {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.pushPromptIcon {
-  flex: 0 0 auto;
-  color: #111827;
-}
-
-.pushPromptText {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pushPromptRight {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.pushPromptButton {
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  background: #111827;
-  color: white;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.pushPromptButton:disabled {
-  opacity: 0.6;
-}
-
-.pushPromptClose {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  color: #111827;
-}
-
 .container {
   max-width: 72rem;
   margin-left: auto;

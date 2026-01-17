@@ -39,7 +39,21 @@ export default async function AdminPage() {
     <div style={{ padding: '2rem' }}>
       <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>{t('title')}</h1>
       <p style={{ marginTop: '0.5rem' }}>{t('welcome', { name: user.fullName })}</p>
-      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <Link
+          href={`/${locale}`}
+          style={{
+            padding: '0.75rem 1.25rem',
+            background: 'transparent',
+            color: '#111827',
+            borderRadius: '0.75rem',
+            border: '1px solid #e5e7eb',
+            textDecoration: 'none',
+            fontWeight: 700,
+          }}
+        >
+          {locale === 'ar' ? 'رجوع' : 'Back'}
+        </Link>
         <Link
           href={`/${locale}/admin/shippers`}
           style={{
@@ -49,6 +63,7 @@ export default async function AdminPage() {
             borderRadius: '0.75rem',
             textDecoration: 'none',
             fontWeight: 700,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
           }}
         >
           {locale === 'ar' ? 'إدارة عروض السوّاق' : 'Manage shippers offers'}
@@ -63,6 +78,7 @@ export default async function AdminPage() {
             border: '1px solid #e5e7eb',
             textDecoration: 'none',
             fontWeight: 700,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
           }}
         >
           {locale === 'ar' ? 'إدارة عروض التجّار' : 'Manage merchants offers'}

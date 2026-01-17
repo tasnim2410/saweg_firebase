@@ -54,7 +54,7 @@ const CarouselSection: React.FC = () => {
 
     const fetchProviders = async () => {
       try {
-        const res = await fetch(endpoint, { cache: 'no-store' });
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch');
         const data: Provider[] = await res.json();
         setProviders(data);

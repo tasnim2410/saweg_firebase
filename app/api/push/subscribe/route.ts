@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
-import { isAdminIdentifier } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
@@ -22,12 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const userType = (session.user as any).type;
-  const adminByIdentifier = Boolean(
-    (session.user.email && isAdminIdentifier(session.user.email)) ||
-      (session.user.phone && isAdminIdentifier(session.user.phone))
-  );
-
-  if (userType !== 'SHIPPER' && userType !== 'ADMIN' && !adminByIdentifier) {
+  if (userType !== 'SHIPPER' && userType !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -75,12 +69,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const userType = (session.user as any).type;
-  const adminByIdentifier = Boolean(
-    (session.user.email && isAdminIdentifier(session.user.email)) ||
-      (session.user.phone && isAdminIdentifier(session.user.phone))
-  );
-
-  if (userType !== 'SHIPPER' && userType !== 'ADMIN' && !adminByIdentifier) {
+  if (userType !== 'SHIPPER' && userType !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

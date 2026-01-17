@@ -8,7 +8,7 @@ import { getLocationLabel } from '@/lib/locations';
 
 type MerchantGoodsPost = {
   id: number;
-  name: string;
+  name?: string;
   startingPoint: string;
   destination: string;
   goodsType: string;
@@ -34,9 +34,6 @@ const CarouselSectionMerchant: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [nameEdits, setNameEdits] = useState<Record<number, string>>({});
-  const [savingNameId, setSavingNameId] = useState<number | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
@@ -51,19 +48,17 @@ const CarouselSectionMerchant: React.FC = () => {
         const data = await res.json().catch(() => null);
         if (cancelled) return;
         const type = data?.user?.type;
-        const admin = Boolean(data?.user?.isAdmin);
-        setIsAdmin(admin);
-        setCanAdd(admin || type === 'MERCHANT' || type === 'ADMIN');
+        const isAdmin = Boolean(data?.user?.isAdmin);
+        setCanAdd(isAdmin || type === 'MERCHANT' || type === 'ADMIN');
       } catch {
         if (cancelled) return;
-        setIsAdmin(false);
         setCanAdd(false);
       }
     };
 
     const fetchPosts = async () => {
       try {
-        const res = await fetch(endpoint, { cache: 'no-store' });
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch');
         const data: MerchantGoodsPost[] = await res.json();
         setPosts(data);
@@ -102,42 +97,6 @@ const CarouselSectionMerchant: React.FC = () => {
       return date.toLocaleDateString(locale === 'ar' ? 'ar' : 'en');
     } catch {
       return date.toISOString().slice(0, 10);
-    }
-  };
-
-  const displayNameFor = (post: MerchantGoodsPost) => {
-    const fromPost = (post.name || '').trim();
-    if (fromPost) return fromPost;
-    const fromUser = (post.user?.fullName || '').trim();
-    return fromUser || (locale === 'ar' ? 'تاجر' : 'Merchant');
-  };
-
-  const saveName = async (postId: number) => {
-    if (!isAdmin) return;
-
-    const nextName = (nameEdits[postId] ?? '').trim();
-    const existing = posts.find((p) => p.id === postId);
-    const existingName = existing ? (existing.name || '').trim() : '';
-    if (!existing) return;
-    if (!nextName || nextName === existingName) return;
-
-    setSavingNameId(postId);
-    try {
-      const res = await fetch(`/api/merchant-goods-posts/${postId}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: nextName }),
-      });
-
-      if (!res.ok) {
-        return;
-      }
-
-      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, name: nextName } : p)));
-    } catch {
-      return;
-    } finally {
-      setSavingNameId(null);
     }
   };
 
@@ -196,9 +155,10 @@ const CarouselSectionMerchant: React.FC = () => {
 
       <div className={styles.carousel} ref={carouselRef}>
         {posts.map((post) => {
-          const displayName = displayNameFor(post);
-          const effectiveName = nameEdits[post.id] ?? displayName;
-          const showLogoPlaceholder = !post.image;
+          const merchantName =
+            (typeof post.name === 'string' && post.name.trim()) ||
+            post.user?.fullName ||
+            (locale === 'ar' ? 'تاجر' : 'Merchant');
           return (
             <div key={post.id} className={styles.carouselItem}>
               <div
@@ -209,44 +169,21 @@ const CarouselSectionMerchant: React.FC = () => {
               >
                 <img
                   src={post.image || '/images/logo.png'}
-                  alt={displayName}
+                  alt={merchantName}
                   className={styles.productImage}
-                  style={
-                    showLogoPlaceholder
-                      ? {
-                          filter: 'grayscale(1) contrast(1.2)',
-                        }
-                      : undefined
-                  }
+                  style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/images/logo.png';
+                    (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
                   }}
                 />
               </div>
 
               <div className={styles.contentWrapper}>
                 <div className={styles.titleWrapper}>
-                  {isAdmin ? (
-                    <input
-                      className={styles.productTitle}
-                      value={effectiveName}
-                      disabled={savingNameId === post.id}
-                      onChange={(e) => setNameEdits((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                      onBlur={() => void saveName(post.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: 0,
-                        width: '100%',
-                        textAlign: 'center',
-                        outline: 'none',
-                      }}
-                    />
-                  ) : (
-                    <Link className={styles.productTitleLink} href={`/${locale}/users/${post.userId}`}>
-                      <h3 className={styles.productTitle}>{displayName}</h3>
-                    </Link>
-                  )}
+                  <Link className={styles.productTitleLink} href={`/${locale}/users/${post.userId}`}>
+                    <h3 className={styles.productTitle}>{merchantName}</h3>
+                  </Link>
                 </div>
 
                 <div className={styles.placeOfBusinessContainer}>

@@ -18,6 +18,7 @@ export default function AddMerchantGoodsPostPage() {
   const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [submitting, setSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -28,6 +29,7 @@ export default function AddMerchantGoodsPostPage() {
     }>
   >([]);
 
+  const [name, setName] = useState('');
   const [startingPoint, setStartingPoint] = useState('');
   const [destination, setDestination] = useState('');
   const [goodsType, setGoodsType] = useState('');
@@ -77,12 +79,16 @@ export default function AddMerchantGoodsPostPage() {
 
         const type = data?.user?.type;
         const admin = Boolean(data?.user?.isAdmin);
+        setIsAdmin(admin);
 
         if (!admin && type !== 'MERCHANT' && type !== 'ADMIN') {
           router.push(`/${locale}`);
           router.refresh();
           return;
         }
+
+        const fullName = data?.user?.fullName;
+        if (typeof fullName === 'string') setName(fullName);
       } catch {
         if (cancelled) return;
       }
@@ -128,6 +134,7 @@ export default function AddMerchantGoodsPostPage() {
     }
 
     const payload = new FormData();
+    if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('startingPoint', startingPoint);
     payload.append('destination', destination);
     payload.append('goodsType', goodsType);
@@ -219,6 +226,17 @@ export default function AddMerchantGoodsPostPage() {
         </div>
 
         <form className={styles.form} onSubmit={onSubmit}>
+          <div className={styles.row}>
+            <label className={styles.label}>{locale === 'ar' ? 'الاسم' : 'Name'}</label>
+            <input
+              className={styles.input}
+              value={name}
+              disabled={!isAdmin}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</label>
             <select
