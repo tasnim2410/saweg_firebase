@@ -6,6 +6,7 @@ import Link from 'next/link';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { Share2 } from 'lucide-react';
 
 type MerchantGoodsPost = {
   id: number;
@@ -37,10 +38,90 @@ const CarouselSectionMerchant: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
+  const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+  const [copiedForId, setCopiedForId] = useState<number | null>(null);
+  const sharePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
   const title = locale === 'ar' ? 'طلبات التجّار' : 'Merchants requests';
+
+  const buildShareUrlForPost = (postId: number) => {
+    if (typeof window === 'undefined') return `/${locale}/merchant-goods-posts/${postId}`;
+    return `${window.location.origin}/${locale}/merchant-goods-posts/${postId}`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.setAttribute('readonly', '');
+      el.style.position = 'fixed';
+      el.style.left = '-9999px';
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(el);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleShare = async (post: MerchantGoodsPost) => {
+    const shareUrl = buildShareUrlForPost(post.id);
+    const shareTitle =
+      (typeof post.name === 'string' && post.name.trim()) ||
+      post.user?.fullName ||
+      (locale === 'ar' ? 'تاجر' : 'Merchant');
+
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: post.description || undefined,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // fall back to popover
+      }
+    }
+
+    setOpenShareForId((prev) => (prev === post.id ? null : post.id));
+  };
+
+  useEffect(() => {
+    if (openShareForId === null) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (sharePopoverRef.current && !sharePopoverRef.current.contains(target)) {
+        setOpenShareForId(null);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenShareForId(null);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openShareForId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,16 +273,106 @@ const CarouselSectionMerchant: React.FC = () => {
                   backgroundImage: post.image ? `url(${post.image})` : undefined,
                 }}
               >
-                <img
-                  src={post.image || '/images/logo.png'}
-                  alt={merchantName}
-                  className={styles.productImage}
-                  style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/logo.png';
-                    (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
-                  }}
-                />
+                <div className={styles.shareWrapper} ref={openShareForId === post.id ? sharePopoverRef : undefined}>
+                  <button
+                    type="button"
+                    className={styles.shareButton}
+                    onClick={() => void handleShare(post)}
+                    aria-label={t('share') || 'Share'}
+                    title={t('share') || 'Share'}
+                  >
+                    <Share2 size={18} aria-hidden="true" />
+                  </button>
+
+                  {openShareForId === post.id ? (
+                    <div className={styles.shareMenu} role="menu" aria-label={t('share') || 'Share'}>
+                      {(() => {
+                        const shareUrl = buildShareUrlForPost(post.id);
+                        const shareTitle = merchantName;
+                        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+                        const xUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
+                        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${shareUrl}`)}`;
+                        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+
+                        return (
+                          <>
+                            <a
+                              className={styles.shareMenuItem}
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              role="menuitem"
+                              onClick={() => setOpenShareForId(null)}
+                            >
+                              {t('shareFacebook') || 'Facebook'}
+                            </a>
+                            <a
+                              className={styles.shareMenuItem}
+                              href={xUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              role="menuitem"
+                              onClick={() => setOpenShareForId(null)}
+                            >
+                              {t('shareX') || 'X'}
+                            </a>
+                            <a
+                              className={styles.shareMenuItem}
+                              href={whatsappUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              role="menuitem"
+                              onClick={() => setOpenShareForId(null)}
+                            >
+                              {t('shareWhatsApp') || 'WhatsApp'}
+                            </a>
+                            <a
+                              className={styles.shareMenuItem}
+                              href={linkedInUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              role="menuitem"
+                              onClick={() => setOpenShareForId(null)}
+                            >
+                              {t('shareLinkedIn') || 'LinkedIn'}
+                            </a>
+                            <button
+                              type="button"
+                              className={styles.shareMenuItemButton}
+                              role="menuitem"
+                              onClick={async () => {
+                                const ok = await copyToClipboard(shareUrl);
+                                if (ok) {
+                                  setCopiedForId(post.id);
+                                  window.setTimeout(() => setCopiedForId(null), 1200);
+                                }
+                              }}
+                            >
+                              {copiedForId === post.id ? (t('copied') || 'Copied!') : (t('copyLink') || 'Copy link')}
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ) : null}
+                </div>
+
+                <Link
+                  href={`/${locale}/merchant-goods-posts/${post.id}`}
+                  aria-label={merchantName}
+                  style={{ display: 'block' }}
+                >
+                  <img
+                    src={post.image || '/images/logo.png'}
+                    alt={merchantName}
+                    className={styles.productImage}
+                    style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/images/logo.png';
+                      (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
+                    }}
+                  />
+                </Link>
               </div>
 
               <div className={styles.contentWrapper}>

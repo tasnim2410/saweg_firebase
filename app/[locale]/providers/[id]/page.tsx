@@ -23,8 +23,6 @@ type ProviderDetails = {
     carKind: string | null;
     maxCharge: string | null;
     maxChargeUnit: string | null;
-    trucksNeeded: string | null;
-    placeOfBusiness: string | null;
   };
 };
 
@@ -74,8 +72,6 @@ export default async function ProviderDetailsPage({
           carKind: true,
           maxCharge: true,
           maxChargeUnit: true,
-          trucksNeeded: true,
-          placeOfBusiness: true,
         },
       },
     },
@@ -168,16 +164,6 @@ export default async function ProviderDetailsPage({
                   ? `${provider.user.maxCharge}${provider.user.maxChargeUnit ? ` ${provider.user.maxChargeUnit}` : ''}`
                   : '-'}
               </div>
-            </div>
-
-            <div className={styles.infoBlock}>
-              <div className={styles.infoLabel}>{tRegister('trucksNeeded')}</div>
-              <div className={styles.infoValue}>{provider.user.trucksNeeded || '-'}</div>
-            </div>
-
-            <div className={styles.infoBlock}>
-              <div className={styles.infoLabel}>{tRegister('placeOfBusiness')}</div>
-              <div className={styles.infoValue}>{provider.user.placeOfBusiness || '-'}</div>
             </div>
 
             <div className={styles.infoBlockFull}>

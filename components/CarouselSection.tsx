@@ -267,8 +267,7 @@ const CarouselSection: React.FC = () => {
                 </button>
 
                 {openShareForId === provider.id ? (
-                  <div className={styles.shareMenu} role="menu" aria-label={t('share') || 'Share'}
-                  >
+                  <div className={styles.shareMenu} role="menu" aria-label={t('share') || 'Share'}>
                     {(() => {
                       const shareUrl = buildShareUrlForProvider(provider.id);
                       const shareTitle = provider.name;
@@ -340,15 +339,17 @@ const CarouselSection: React.FC = () => {
                 ) : null}
               </div>
 
-              <img
-                src={provider.image || 'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck'}
-                alt={provider.name}
-                className={styles.productImage}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck';
-                }}
-              />
+              <Link href={`/${locale}/providers/${provider.id}`} aria-label={provider.name} style={{ display: 'block' }}>
+                <img
+                  src={provider.image || 'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck'}
+                  alt={provider.name}
+                  className={styles.productImage}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck';
+                  }}
+                />
+              </Link>
             </div>
 
             <div className={styles.contentWrapper}>
@@ -378,7 +379,10 @@ const CarouselSection: React.FC = () => {
                   <p className={styles.placeOfBusiness}>
                     {t('destinationPrefix')}{' '}
                     <span className={styles.placeOfBusinessText}>
-                      {getLocationLabel((provider.destination ?? provider.placeOfBusiness) ?? '', locale === 'ar' ? 'ar' : 'en')}
+                      {getLocationLabel(
+                        (provider.destination ?? provider.placeOfBusiness) ?? '',
+                        locale === 'ar' ? 'ar' : 'en'
+                      )}
                     </span>
                   </p>
                 </div>
@@ -411,7 +415,7 @@ const CarouselSection: React.FC = () => {
                       <a
                         className={`${styles.phoneButton} ${isStale ? styles.phoneButtonStale : ''}`}
                         href={toTelHref(provider.phone)}
-                        onClick={(e) => {
+                        onClick={() => {
                           trackCall(provider.id);
                         }}
                         aria-label={`Call: ${provider.phone}`}
