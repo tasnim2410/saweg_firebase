@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from '../add-provider/add-provider.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -19,6 +20,7 @@ export default function AddMerchantGoodsPostPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [phone, setPhone] = useState<string>('');
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -48,9 +50,10 @@ export default function AddMerchantGoodsPostPage() {
     }, 5000);
   };
 
-  const titleFor = (kind: 'image' | 'form' | 'server' | 'network' | 'success') => {
+  const titleFor = (kind: 'image' | 'phone' | 'form' | 'server' | 'network' | 'success') => {
     if (locale === 'ar') {
       if (kind === 'image') return 'خطأ في الصورة';
+      if (kind === 'phone') return 'خطأ في الهاتف';
       if (kind === 'form') return 'خطأ في النموذج';
       if (kind === 'network') return 'خطأ في الاتصال';
       if (kind === 'success') return 'تم بنجاح';
@@ -58,6 +61,7 @@ export default function AddMerchantGoodsPostPage() {
     }
 
     if (kind === 'image') return 'Image error';
+    if (kind === 'phone') return 'Phone error';
     if (kind === 'form') return 'Form error';
     if (kind === 'network') return 'Network error';
     if (kind === 'success') return 'Success';
@@ -81,6 +85,9 @@ export default function AddMerchantGoodsPostPage() {
         const admin = Boolean(data?.user?.isAdmin);
         setIsAdmin(admin);
 
+        const phoneValue = typeof data?.user?.phone === 'string' ? data.user.phone : '';
+        setPhone(phoneValue);
+
         if (!admin && type !== 'MERCHANT' && type !== 'ADMIN') {
           router.push(`/${locale}`);
           router.refresh();
@@ -101,6 +108,30 @@ export default function AddMerchantGoodsPostPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone.ok) {
+      if (normalizedPhone.error === 'PHONE_REQUIRED') {
+        pushToast({
+          variant: 'error',
+          title: titleFor('phone'),
+          message: locale === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Phone number is required',
+        });
+      } else if (normalizedPhone.error === 'PHONE_INVALID_CHARACTERS') {
+        pushToast({
+          variant: 'error',
+          title: titleFor('phone'),
+          message: locale === 'ar' ? 'رقم الهاتف يحتوي على رموز غير صالحة' : 'Phone number contains invalid characters',
+        });
+      } else {
+        pushToast({
+          variant: 'error',
+          title: titleFor('phone'),
+          message: locale === 'ar' ? 'طول رقم الهاتف غير صحيح' : 'Invalid phone number length',
+        });
+      }
+      return;
+    }
 
     if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
       pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(MAX_IMAGE_BYTES) });
@@ -135,6 +166,7 @@ export default function AddMerchantGoodsPostPage() {
 
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
+    payload.append('phone', normalizedPhone.e164);
     payload.append('startingPoint', startingPoint);
     payload.append('destination', destination);
     payload.append('goodsType', goodsType);
@@ -159,6 +191,24 @@ export default function AddMerchantGoodsPostPage() {
         if (code === 'IMAGE_TOO_LARGE') {
           const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_IMAGE_BYTES;
           pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(maxBytes) });
+        } else if (code === 'PHONE_REQUIRED') {
+          pushToast({
+            variant: 'error',
+            title: titleFor('phone'),
+            message: locale === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Phone number is required',
+          });
+        } else if (code === 'PHONE_INVALID_CHARACTERS') {
+          pushToast({
+            variant: 'error',
+            title: titleFor('phone'),
+            message: locale === 'ar' ? 'رقم الهاتف يحتوي على رموز غير صالحة' : 'Phone number contains invalid characters',
+          });
+        } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+          pushToast({
+            variant: 'error',
+            title: titleFor('phone'),
+            message: locale === 'ar' ? 'طول رقم الهاتف غير صحيح' : 'Invalid phone number length',
+          });
         } else {
           pushToast({
             variant: 'error',
@@ -233,6 +283,17 @@ export default function AddMerchantGoodsPostPage() {
               value={name}
               disabled={!isAdmin}
               onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.row}>
+            <label className={styles.label}>{locale === 'ar' ? 'رقم الهاتف' : 'Phone number'}</label>
+            <input
+              className={styles.input}
+              value={phone}
+              dir="ltr"
+              onChange={(e) => setPhone(e.target.value)}
               required
             />
           </div>

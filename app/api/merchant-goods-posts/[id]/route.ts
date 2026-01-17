@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -134,6 +135,18 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
       if (!name) return NextResponse.json({ error: 'Missing name' }, { status: 400 });
       data.name = name;
     }
+  }
+
+  const phoneRaw = getStr('phone');
+  if (typeof phoneRaw === 'string') {
+    const phone = phoneRaw.trim();
+    if (!phone) return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 });
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone.ok) {
+      return NextResponse.json({ error: normalizedPhone.error }, { status: 400 });
+    }
+    data.phone = normalizedPhone.e164;
   }
 
   const startingPointRaw = getStr('startingPoint');

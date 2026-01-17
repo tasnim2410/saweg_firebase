@@ -74,6 +74,12 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
+  // Never cache Next.js internal assets. Caching these can cause stale JS/CSS and hydration mismatches.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   // Never cache API responses. This avoids issues like stale auth/session state.
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(req));

@@ -5,10 +5,12 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 type MerchantGoodsPost = {
   id: number;
   name?: string;
+  phone?: string;
   startingPoint: string;
   destination: string;
   goodsType: string;
@@ -21,6 +23,7 @@ type MerchantGoodsPost = {
   userId: string;
   user?: {
     fullName?: string;
+    phone?: string | null;
   };
   createdAt?: string | Date;
 };
@@ -100,6 +103,19 @@ const CarouselSectionMerchant: React.FC = () => {
     }
   };
 
+  const toTelHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^+\d]/g, '');
+    return `tel:${normalized}`;
+  };
+
+  const formatPhoneForDisplay = (phoneNumber: string) => {
+    const trimmed = (phoneNumber || '').trim();
+    if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
+      return `+${trimmed.slice(0, -1)}`;
+    }
+    return trimmed;
+  };
+
   if (loading) {
     return (
       <section className={styles.carouselContainer}>
@@ -159,6 +175,15 @@ const CarouselSectionMerchant: React.FC = () => {
             (typeof post.name === 'string' && post.name.trim()) ||
             post.user?.fullName ||
             (locale === 'ar' ? 'تاجر' : 'Merchant');
+
+          const phoneCandidate =
+            (typeof post.phone === 'string' && post.phone.trim()) ||
+            (typeof post.user?.phone === 'string' && post.user.phone.trim()) ||
+            '';
+
+          const normalizedPhone = phoneCandidate ? normalizePhoneNumber(phoneCandidate) : null;
+          const phoneNumber = normalizedPhone && normalizedPhone.ok ? normalizedPhone.e164 : phoneCandidate;
+
           return (
             <div key={post.id} className={styles.carouselItem}>
               <div
@@ -226,6 +251,25 @@ const CarouselSectionMerchant: React.FC = () => {
                     </p>
                   </div>
                 ) : null}
+
+                <div className={styles.phoneContainer}>
+                  {phoneNumber ? (
+                    <a
+                      className={styles.phoneButton}
+                      href={toTelHref(phoneNumber)}
+                      aria-label={`Call: ${phoneNumber}`}
+                      title={t('call') || 'Call'}
+                    >
+                      <span className={styles.phoneNumberIcon}>📞</span>
+                      <span dir="ltr" className={`${styles.phoneNumberText} ${styles.phoneNumberLtr}`}>
+                        {formatPhoneForDisplay(phoneNumber)}
+                      </span>
+                    </a>
+                  ) : (
+                    <span className={`${styles.phoneButton} ${styles.phoneButtonDisabled}`}>-
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );

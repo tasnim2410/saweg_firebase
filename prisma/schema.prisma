@@ -75,6 +75,7 @@ model MerchantPost {
 model MerchantGoodsPost {
   id                 Int      @id @default(autoincrement())
   name               String   @default("")
+  phone              String   @default("")
   startingPoint      String
   destination        String
   goodsType          String

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -24,6 +25,7 @@ export async function GET() {
         user: {
           select: {
             fullName: true,
+            phone: true,
           },
         },
       },
@@ -71,6 +73,16 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     const nameFromForm = typeof formData.get('name') === 'string' ? String(formData.get('name')).trim() : '';
+
+    const phoneFromForm = typeof formData.get('phone') === 'string' ? String(formData.get('phone')).trim() : '';
+    if (!phoneFromForm) {
+      return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phoneFromForm);
+    if (!normalizedPhone.ok) {
+      return NextResponse.json({ error: normalizedPhone.error }, { status: 400 });
+    }
 
     const startingPoint = typeof formData.get('startingPoint') === 'string' ? String(formData.get('startingPoint')).trim() : '';
     const destination = typeof formData.get('destination') === 'string' ? String(formData.get('destination')).trim() : '';
@@ -135,6 +147,7 @@ export async function POST(req: NextRequest) {
     const post = await (prisma as any).merchantGoodsPost.create({
       data: {
         name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
+        phone: normalizedPhone.e164,
         startingPoint,
         destination,
         goodsType,
@@ -150,6 +163,7 @@ export async function POST(req: NextRequest) {
         user: {
           select: {
             fullName: true,
+            phone: true,
           },
         },
       },
