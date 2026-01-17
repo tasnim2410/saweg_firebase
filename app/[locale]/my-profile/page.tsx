@@ -62,6 +62,7 @@ export default function MyProfilePage() {
 
   const [enablingPush, setEnablingPush] = useState(false);
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'blocked' | 'not_supported'>('unknown');
+  const [togglingPush, setTogglingPush] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -264,6 +265,39 @@ export default function MyProfilePage() {
     }
   };
 
+  const disablePushNotifications = async () => {
+    if (togglingPush) return;
+    setTogglingPush(true);
+    setError(null);
+
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setPushStatus('not_supported');
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (!existing) {
+        setPushStatus('unknown');
+        return;
+      }
+
+      await fetch('/api/push/subscribe', {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ endpoint: existing.endpoint }),
+      }).catch(() => null);
+
+      await existing.unsubscribe().catch(() => null);
+      setPushStatus('unknown');
+    } catch {
+      setError(locale === 'ar' ? 'فشل إلغاء تفعيل الإشعارات.' : 'Failed to disable notifications.');
+    } finally {
+      setTogglingPush(false);
+    }
+  };
+
   const onProfileImageChange = (file: File | null) => {
     setProfileImageFile(file);
 
@@ -459,84 +493,62 @@ return (
         <div className={styles.loading}>{t('loading')}</div>
       ) : (
         <form className={styles.form} onSubmit={onSubmit}>
-          {/* User Type Badge */}
-          <div className={styles.userTypeSection}>
-            <div className={styles.row}>
-              <label className={styles.label}>{t('userType')}</label>
-              <div className={`${styles.userTypeBadge} ${
-                userType === 'SHIPPER' ? styles.shipperBadge : styles.merchantBadge
-              }`}>
-                {userType === 'SHIPPER' 
-                  ? (locale === 'ar' ? 'ناقل' : 'Shipper')
-                  : (locale === 'ar' ? 'تاجر' : 'Merchant')}
-              </div>
-            </div>
-          </div>
-
-          {/* Push Notifications Section - Moved to top */}
           {(userType === 'SHIPPER' || userType === 'ADMIN') && (
             <div className={styles.pushRow}>
               <div className={styles.pushHeader}>
                 <Bell className={styles.pushIcon} size={18} />
-                <h3 className={styles.pushTitle}>
-                  {locale === 'ar' ? 'الإشعارات' : 'Notifications'}
-                </h3>
+                <h3 className={styles.pushTitle}>{locale === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
               </div>
-              
+
               <p className={styles.pushDescription}>
-                {locale === 'ar' 
+                {locale === 'ar'
                   ? 'احصل على إشعارات فورية عند وجود عروض جديدة تناسبك'
                   : 'Get instant notifications when new offers match your criteria'}
               </p>
-              
-              {pushStatus !== 'unknown' && pushStatus !== 'not_supported' && (
-                <div className={`${styles.pushStatus} ${styles[pushStatus]}`}>
-                  <span>
-                    {pushStatus === 'enabled' 
-                      ? (locale === 'ar' ? '✓ مفعل' : '✓ Enabled')
-                      : pushStatus === 'blocked'
-                      ? (locale === 'ar' ? '✗ محظور' : '✗ Blocked')
-                      : ''}
-                  </span>
-                </div>
-              )}
-              
-              <button
-                className={styles.pushButton}
-                type="button"
-                onClick={() => void enablePushNotifications()}
-                disabled={enablingPush || pushStatus === 'enabled' || pushStatus === 'blocked'}
-              >
-                {enablingPush ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    {locale === 'ar' ? 'جارِ التفعيل...' : 'Enabling...'}
-                  </>
-                ) : pushStatus === 'enabled' ? (
-                  <>
-                    <Check size={16} />
-                    {locale === 'ar' ? 'مفعّل' : 'Enabled'}
-                  </>
-                ) : pushStatus === 'blocked' ? (
-                  <>
-                    <AlertCircle size={16} />
-                    {locale === 'ar' ? 'محظور - تحقق من الإعدادات' : 'Blocked - Check Settings'}
-                  </>
-                ) : (
-                  <>
-                    <Bell size={16} />
-                    {locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'}
-                  </>
-                )}
-              </button>
-              
-              {pushStatus === 'blocked' && (
+
+              {pushStatus === 'blocked' ? (
                 <p className={styles.error} style={{ fontSize: '12px', marginTop: '8px' }}>
-                  {locale === 'ar' 
+                  {locale === 'ar'
                     ? 'يجب السماح بالإشعارات من إعدادات المتصفح أولاً'
                     : 'Please allow notifications from browser settings first'}
                 </p>
-              )}
+              ) : null}
+
+              <div className={styles.pushToggleRow}>
+                <label className={styles.pushToggleLabel}>
+                  <span>{locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable notifications'}</span>
+                  <input
+                    className={styles.pushToggleInput}
+                    type="checkbox"
+                    checked={pushStatus === 'enabled'}
+                    disabled={enablingPush || togglingPush || pushStatus === 'blocked' || pushStatus === 'not_supported'}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      if (next) {
+                        void enablePushNotifications();
+                      } else {
+                        void disablePushNotifications();
+                      }
+                    }}
+                  />
+                  <span className={styles.pushToggleSwitch} aria-hidden="true" />
+                </label>
+
+                {(enablingPush || togglingPush) && (
+                  <div className={styles.pushToggleLoading}>
+                    <Loader2 size={16} className="animate-spin" />
+                    {locale === 'ar' ? 'جارِ التحديث...' : 'Updating...'}
+                  </div>
+                )}
+              </div>
+
+              {pushStatus === 'enabled' ? (
+                <div className={`${styles.pushStatus} ${styles.enabled}`}>
+                  <span>
+                    <Check size={14} /> {locale === 'ar' ? 'مفعّل' : 'Enabled'}
+                  </span>
+                </div>
+              ) : null}
             </div>
           )}
 

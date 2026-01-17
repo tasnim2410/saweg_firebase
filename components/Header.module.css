@@ -7,6 +7,103 @@
   backdrop-filter: blur(4px);
   z-index: 50;
   border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+}
+
+.pushBanner {
+  width: 100%;
+  background: #111827;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pushBannerInner {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .pushBannerInner {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.pushBannerText {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pushBannerIcon {
+  color: #FFB81C;
+}
+
+.pushBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pushBannerButton {
+  border: none;
+  border-radius: 9999px;
+  background: #FFB81C;
+  color: #111827;
+  padding: 0.35rem 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pushBannerButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pushBannerButtonInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pushBannerDismiss {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pushBannerDismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .container {

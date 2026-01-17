@@ -287,6 +287,75 @@
   cursor: not-allowed;
 }
 
+.pushToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pushToggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pushToggleInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.pushToggleSwitch {
+  width: 46px;
+  height: 26px;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  position: relative;
+  transition: background 0.2s ease;
+  flex: 0 0 auto;
+}
+
+.pushToggleSwitch::after {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.pushToggleInput:checked + .pushToggleSwitch {
+  background: #4a90e2;
+}
+
+.pushToggleInput:checked + .pushToggleSwitch::after {
+  transform: translateX(20px);
+}
+
+.pushToggleInput:disabled + .pushToggleSwitch {
+  opacity: 0.6;
+}
+
+.pushToggleLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
 /* User Type Section */
 .userTypeSection {
   padding: 16px;

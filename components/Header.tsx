@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Globe, ChevronDown, Menu, X } from 'lucide-react';
+import { Globe, ChevronDown, Menu, X, Bell, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -20,7 +20,17 @@ export default function Header() {
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [authUser, setAuthUser] = useState<null | { isAdmin?: boolean; fullName?: string | null; profileImage?: string | null }>(null);
+  const [authUser, setAuthUser] = useState<null | {
+    id?: string;
+    type?: string | null;
+    isAdmin?: boolean;
+    fullName?: string | null;
+    profileImage?: string | null;
+  }>(null);
+
+  const [showPushBanner, setShowPushBanner] = useState(false);
+  const [checkingPush, setCheckingPush] = useState(false);
+  const [enablingPush, setEnablingPush] = useState(false);
 
   const isRTL = locale === 'ar';
 
@@ -85,6 +95,144 @@ export default function Header() {
     };
   }, []);
 
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const check = async () => {
+      if (typeof window === 'undefined') return;
+      if (!authUser?.id) return;
+
+      const userType = authUser.type ?? (authUser.isAdmin ? 'ADMIN' : null);
+      const canUsePush = userType === 'SHIPPER' || userType === 'ADMIN';
+      if (!canUsePush) {
+        setShowPushBanner(false);
+        return;
+      }
+
+      const dismissedKey = `push_banner_dismissed:${authUser.id}`;
+      try {
+        if (sessionStorage.getItem(dismissedKey) === '1') {
+          setShowPushBanner(false);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setShowPushBanner(false);
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        setShowPushBanner(false);
+        return;
+      }
+
+      setCheckingPush(true);
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) {
+          setShowPushBanner(false);
+          return;
+        }
+        const existing = await reg.pushManager.getSubscription();
+        if (cancelled) return;
+        setShowPushBanner(!existing);
+      } catch {
+        if (cancelled) return;
+        setShowPushBanner(false);
+      } finally {
+        if (cancelled) return;
+        setCheckingPush(false);
+      }
+    };
+
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser?.id, authUser?.type, authUser?.isAdmin]);
+
+  const dismissPushBanner = () => {
+    if (!authUser?.id) {
+      setShowPushBanner(false);
+      return;
+    }
+    try {
+      sessionStorage.setItem(`push_banner_dismissed:${authUser.id}`, '1');
+    } catch {
+      // ignore
+    }
+    setShowPushBanner(false);
+  };
+
+  const enablePushFromBanner = async () => {
+    if (enablingPush) return;
+    setEnablingPush(true);
+
+    try {
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+      }
+
+      let permission: NotificationPermission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      if (permission !== 'granted') {
+        return;
+      }
+
+      const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.ready);
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(existing),
+        }).catch(() => null);
+        setShowPushBanner(false);
+        return;
+      }
+
+      const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' });
+      const keyData = await keyRes.json().catch(() => null);
+      if (!keyRes.ok || !keyData?.publicKey) {
+        return;
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
+      });
+
+      const saveRes = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(sub),
+      });
+      if (!saveRes.ok) {
+        return;
+      }
+
+      setShowPushBanner(false);
+    } finally {
+      setEnablingPush(false);
+    }
+  };
+
   useEffect(() => {
     if (!isUserMenuOpen) return;
 
@@ -123,6 +271,48 @@ export default function Header() {
 
   return (
     <header ref={headerRef} className={styles.header}>
+      {authUser ? (
+        showPushBanner ? (
+          <div className={styles.pushBanner} role="region" aria-label={locale === 'ar' ? 'تنبيه الإشعارات' : 'Notifications banner'}>
+            <div className={styles.pushBannerInner}>
+              <div className={styles.pushBannerText}>
+                <Bell className={styles.pushBannerIcon} size={16} />
+                <span>
+                  {locale === 'ar'
+                    ? 'فعّل الإشعارات لتصلك العروض الجديدة فوراً.'
+                    : 'Enable notifications to get new offers instantly.'}
+                </span>
+              </div>
+
+              <div className={styles.pushBannerActions}>
+                <button
+                  type="button"
+                  className={styles.pushBannerButton}
+                  onClick={() => void enablePushFromBanner()}
+                  disabled={enablingPush || checkingPush}
+                >
+                  {enablingPush ? (
+                    <span className={styles.pushBannerButtonInner}>
+                      <Loader2 size={14} className={styles.spin} />
+                      {locale === 'ar' ? 'جارِ التفعيل...' : 'Enabling...'}
+                    </span>
+                  ) : (
+                    locale === 'ar' ? 'تفعيل' : 'Activate'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className={styles.pushBannerDismiss}
+                  onClick={dismissPushBanner}
+                  aria-label={locale === 'ar' ? 'إغلاق' : 'Dismiss'}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null
+      ) : null}
       <div className={styles.container}>
         <div
           className={`${styles.flexContainer} ${
