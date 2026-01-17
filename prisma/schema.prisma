@@ -34,6 +34,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   providers    Provider[]
   merchantPosts MerchantPost[]
+  merchantGoodsPosts MerchantGoodsPost[]
   pushSubscriptions PushSubscription[]
 }
 
@@ -67,6 +68,25 @@ model MerchantPost {
   lastLocationUpdateAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MerchantGoodsPost {
+  id                 Int      @id @default(autoincrement())
+  name               String   @default("")
+  startingPoint      String
+  destination        String
+  goodsType          String
+  goodsWeight        Float
+  goodsWeightUnit    String
+  loadingDate        DateTime
+  vehicleTypeDesired String
+  image              String?
+  description        String?
+  userId             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

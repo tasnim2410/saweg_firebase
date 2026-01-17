@@ -62,6 +62,7 @@ export default function MyProfilePage() {
 
   const [enablingPush, setEnablingPush] = useState(false);
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'blocked' | 'not_supported'>('unknown');
+  const [pushToggleMode, setPushToggleMode] = useState<'enable' | 'disable' | null>(null);
 
   useEffect(() => {
     return () => {
@@ -171,6 +172,7 @@ export default function MyProfilePage() {
 
   const enablePushNotifications = async () => {
     setEnablingPush(true);
+    setPushToggleMode('enable');
     setError(null);
 
     try {
@@ -261,6 +263,41 @@ export default function MyProfilePage() {
       setError(locale === 'ar' ? 'فشل تفعيل الإشعارات.' : 'Failed to enable notifications.');
     } finally {
       setEnablingPush(false);
+      setPushToggleMode(null);
+    }
+  };
+
+  const disablePushNotifications = async () => {
+    setEnablingPush(true);
+    setPushToggleMode('disable');
+    setError(null);
+
+    try {
+      if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setPushStatus('not_supported');
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (!existing) {
+        setPushStatus(Notification.permission === 'denied' ? 'blocked' : 'unknown');
+        return;
+      }
+
+      await fetch('/api/push/subscribe', {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ endpoint: existing.endpoint }),
+      }).catch(() => null);
+
+      await existing.unsubscribe().catch(() => null);
+      setPushStatus(Notification.permission === 'denied' ? 'blocked' : 'unknown');
+    } catch {
+      setError(locale === 'ar' ? 'فشل إلغاء الإشعارات.' : 'Failed to disable notifications.');
+    } finally {
+      setEnablingPush(false);
+      setPushToggleMode(null);
     }
   };
 
@@ -459,86 +496,76 @@ return (
         <div className={styles.loading}>{t('loading')}</div>
       ) : (
         <form className={styles.form} onSubmit={onSubmit}>
-          {/* User Type Badge */}
-          <div className={styles.userTypeSection}>
-            <div className={styles.row}>
-              <label className={styles.label}>{t('userType')}</label>
-              <div className={`${styles.userTypeBadge} ${
-                userType === 'SHIPPER' ? styles.shipperBadge : styles.merchantBadge
-              }`}>
-                {userType === 'SHIPPER' 
-                  ? (locale === 'ar' ? 'ناقل' : 'Shipper')
-                  : (locale === 'ar' ? 'تاجر' : 'Merchant')}
-              </div>
-            </div>
-          </div>
-
           {/* Push Notifications Section - Moved to top */}
-          {(userType === 'SHIPPER' || userType === 'ADMIN') && (
-            <div className={styles.pushRow}>
-              <div className={styles.pushHeader}>
-                <Bell className={styles.pushIcon} size={18} />
-                <h3 className={styles.pushTitle}>
-                  {locale === 'ar' ? 'الإشعارات' : 'Notifications'}
-                </h3>
-              </div>
-              
-              <p className={styles.pushDescription}>
-                {locale === 'ar' 
-                  ? 'احصل على إشعارات فورية عند وجود عروض جديدة تناسبك'
-                  : 'Get instant notifications when new offers match your criteria'}
-              </p>
-              
-              {pushStatus !== 'unknown' && pushStatus !== 'not_supported' && (
-                <div className={`${styles.pushStatus} ${styles[pushStatus]}`}>
-                  <span>
-                    {pushStatus === 'enabled' 
-                      ? (locale === 'ar' ? '✓ مفعل' : '✓ Enabled')
-                      : pushStatus === 'blocked'
-                      ? (locale === 'ar' ? '✗ محظور' : '✗ Blocked')
-                      : ''}
-                  </span>
-                </div>
-              )}
-              
-              <button
-                className={styles.pushButton}
-                type="button"
-                onClick={() => void enablePushNotifications()}
-                disabled={enablingPush || pushStatus === 'enabled' || pushStatus === 'blocked'}
-              >
-                {enablingPush ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    {locale === 'ar' ? 'جارِ التفعيل...' : 'Enabling...'}
-                  </>
-                ) : pushStatus === 'enabled' ? (
-                  <>
-                    <Check size={16} />
-                    {locale === 'ar' ? 'مفعّل' : 'Enabled'}
-                  </>
-                ) : pushStatus === 'blocked' ? (
-                  <>
-                    <AlertCircle size={16} />
-                    {locale === 'ar' ? 'محظور - تحقق من الإعدادات' : 'Blocked - Check Settings'}
-                  </>
-                ) : (
-                  <>
-                    <Bell size={16} />
-                    {locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'}
-                  </>
-                )}
-              </button>
-              
-              {pushStatus === 'blocked' && (
-                <p className={styles.error} style={{ fontSize: '12px', marginTop: '8px' }}>
-                  {locale === 'ar' 
-                    ? 'يجب السماح بالإشعارات من إعدادات المتصفح أولاً'
-                    : 'Please allow notifications from browser settings first'}
-                </p>
-              )}
+          <div className={styles.pushRow}>
+            <div className={styles.pushHeader}>
+              <Bell className={styles.pushIcon} size={18} />
+              <h3 className={styles.pushTitle}>
+                {locale === 'ar' ? 'الإشعارات' : 'Notifications'}
+              </h3>
             </div>
-          )}
+            
+            <p className={styles.pushDescription}>
+              {locale === 'ar' 
+                ? 'احصل على إشعارات فورية عند وجود عروض جديدة تناسبك'
+                : 'Get instant notifications when new offers match your criteria'}
+            </p>
+            
+            {pushStatus !== 'unknown' && pushStatus !== 'not_supported' && (
+              <div className={`${styles.pushStatus} ${styles[pushStatus]}`}>
+                <span>
+                  {pushStatus === 'enabled' 
+                    ? (locale === 'ar' ? '✓ مفعل' : '✓ Enabled')
+                    : pushStatus === 'blocked'
+                    ? (locale === 'ar' ? '✗ محظور' : '✗ Blocked')
+                    : ''}
+                </span>
+              </div>
+            )}
+            
+            <button
+              className={styles.pushButton}
+              type="button"
+              onClick={() => void (pushStatus === 'enabled' ? disablePushNotifications() : enablePushNotifications())}
+              disabled={enablingPush || pushStatus === 'blocked'}
+            >
+              {enablingPush ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  {pushToggleMode === 'disable'
+                    ? locale === 'ar'
+                      ? 'جارِ الإيقاف...'
+                      : 'Deactivating...'
+                    : locale === 'ar'
+                      ? 'جارِ التفعيل...'
+                      : 'Activating...'}
+                </>
+              ) : pushStatus === 'enabled' ? (
+                <>
+                  <Check size={16} />
+                  {locale === 'ar' ? 'إيقاف الإشعارات' : 'Deactivate Notifications'}
+                </>
+              ) : pushStatus === 'blocked' ? (
+                <>
+                  <AlertCircle size={16} />
+                  {locale === 'ar' ? 'محظور - تحقق من الإعدادات' : 'Blocked - Check Settings'}
+                </>
+              ) : (
+                <>
+                  <Bell size={16} />
+                  {locale === 'ar' ? 'تفعيل الإشعارات' : 'Activate Notifications'}
+                </>
+              )}
+            </button>
+            
+            {pushStatus === 'blocked' && (
+              <p className={styles.error} style={{ fontSize: '12px', marginTop: '8px' }}>
+                {locale === 'ar' 
+                  ? 'يجب السماح بالإشعارات من إعدادات المتصفح أولاً'
+                  : 'Please allow notifications from browser settings first'}
+              </p>
+            )}
+          </div>
 
           {/* Avatar Section */}
           <div className={styles.avatarRow}>

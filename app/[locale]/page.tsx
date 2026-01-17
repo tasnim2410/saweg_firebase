@@ -7,14 +7,15 @@ import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import styles from './home.module.css';
 import CarouselSection from '@/components/CarouselSection';
+import CarouselSectionMerchant from '@/components/CarouselSectionMerchant';
 
 export default function HomePage() {
   return (
     <main className={styles.main}>
       <Header />
       <HeroSection />
-      <CarouselSection variant="shippers" />
-      <CarouselSection variant="merchants" />
+      <CarouselSection />
+      <CarouselSectionMerchant />
       <FeaturesSection />
       <section id="about">
         <HowToUseSection />

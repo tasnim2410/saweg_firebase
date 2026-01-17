@@ -20,13 +20,7 @@ interface Provider {
   placeOfBusiness?: string | null;
 }
 
-type CarouselVariant = 'shippers' | 'merchants';
-
-type Props = {
-  variant?: CarouselVariant;
-};
-
-const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
+const CarouselSection: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
@@ -35,20 +29,10 @@ const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
 
-  const isMerchants = variant === 'merchants';
-  const endpoint = isMerchants ? '/api/merchant-posts' : '/api/providers';
-  const addHref = isMerchants
-    ? `/${locale}/dashboard/add-merchant-post`
-    : `/${locale}/dashboard/add-provider`;
-  const callsEndpointFor = (id: number) =>
-    isMerchants ? `/api/merchant-posts/${id}/calls` : `/api/providers/${id}/calls`;
-  const title = isMerchants
-    ? locale === 'ar'
-      ? 'عروض التجّار'
-      : 'Merchants offers'
-    : locale === 'ar'
-      ? 'عروض السوّاق'
-      : 'Shippers offers';
+  const endpoint = '/api/providers';
+  const addHref = `/${locale}/dashboard/add-provider`;
+  const callsEndpointFor = (id: number) => `/api/providers/${id}/calls`;
+  const title = locale === 'ar' ? 'عروض السوّاق' : 'Shippers offers';
 
   // Fetch providers on mount
   useEffect(() => {
@@ -61,11 +45,7 @@ const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
         if (cancelled) return;
         const type = data?.user?.type;
         const isAdmin = Boolean(data?.user?.isAdmin);
-        if (isMerchants) {
-          setCanAdd(isAdmin || type === 'MERCHANT' || type === 'ADMIN');
-        } else {
-          setCanAdd(isAdmin || type === 'SHIPPER' || type === 'ADMIN');
-        }
+        setCanAdd(isAdmin || type === 'SHIPPER' || type === 'ADMIN');
       } catch {
         if (cancelled) return;
         setCanAdd(false);
@@ -74,7 +54,7 @@ const CarouselSection: React.FC<Props> = ({ variant = 'shippers' }) => {
 
     const fetchProviders = async () => {
       try {
-        const res = await fetch(endpoint);
+        const res = await fetch(endpoint, { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch');
         const data: Provider[] = await res.json();
         setProviders(data);

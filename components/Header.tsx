@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Globe, ChevronDown, Menu, X } from 'lucide-react';
+import { Globe, ChevronDown, Menu, X, Bell } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -21,6 +21,10 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [authUser, setAuthUser] = useState<null | { isAdmin?: boolean; fullName?: string | null; profileImage?: string | null }>(null);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [enablingPush, setEnablingPush] = useState(false);
+
+  const pushPromptDismissKey = 'saweg_push_prompt_dismissed';
 
   const isRTL = locale === 'ar';
 
@@ -86,6 +90,131 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const check = async () => {
+      try {
+        if (!authUser) {
+          if (cancelled) return;
+          setShowPushPrompt(false);
+          return;
+        }
+
+        if (
+          typeof window === 'undefined' ||
+          !('Notification' in window) ||
+          !('serviceWorker' in navigator) ||
+          !('PushManager' in window)
+        ) {
+          if (cancelled) return;
+          setShowPushPrompt(false);
+          return;
+        }
+
+        if (Notification.permission === 'denied') {
+          if (cancelled) return;
+          setShowPushPrompt(false);
+          return;
+        }
+
+        let dismissed = false;
+        try {
+          dismissed = sessionStorage.getItem(pushPromptDismissKey) === '1';
+        } catch {
+          dismissed = false;
+        }
+
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (cancelled) return;
+
+        setShowPushPrompt(!dismissed && !existing);
+      } catch {
+        if (cancelled) return;
+        setShowPushPrompt(false);
+      }
+    };
+
+    check();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser]);
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const activateNotifications = async () => {
+    if (enablingPush) return;
+    setEnablingPush(true);
+    try {
+      if (
+        typeof window === 'undefined' ||
+        !('Notification' in window) ||
+        !('serviceWorker' in navigator) ||
+        !('PushManager' in window)
+      ) {
+        return;
+      }
+
+      let permission: NotificationPermission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission !== 'granted') {
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(existing),
+        }).catch(() => null);
+        setShowPushPrompt(false);
+        return;
+      }
+
+      const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' });
+      const keyData = await keyRes.json().catch(() => null);
+      if (!keyRes.ok || !keyData?.publicKey) {
+        return;
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
+      });
+
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(sub),
+      }).catch(() => null);
+
+      try {
+        sessionStorage.removeItem(pushPromptDismissKey);
+      } catch {
+        // ignore
+      }
+      setShowPushPrompt(false);
+    } finally {
+      setEnablingPush(false);
+    }
+  };
+
+  useEffect(() => {
     if (!isUserMenuOpen) return;
 
     const onDocMouseDown = (e: MouseEvent) => {
@@ -123,6 +252,43 @@ export default function Header() {
 
   return (
     <header ref={headerRef} className={styles.header}>
+      {showPushPrompt ? (
+        <div className={styles.pushPrompt}>
+          <div className={styles.pushPromptLeft}>
+            <Bell className={styles.pushPromptIcon} size={16} />
+            <span className={styles.pushPromptText}>
+              {locale === 'ar'
+                ? 'فعّل الإشعارات لتصلك الطلبات الجديدة فوراً'
+                : 'Enable notifications to get new posts instantly'}
+            </span>
+          </div>
+          <div className={styles.pushPromptRight}>
+            <button
+              type="button"
+              className={styles.pushPromptButton}
+              onClick={() => void activateNotifications()}
+              disabled={enablingPush}
+            >
+              {locale === 'ar' ? 'تفعيل' : 'Activate'}
+            </button>
+            <button
+              type="button"
+              className={styles.pushPromptClose}
+              onClick={() => {
+                try {
+                  sessionStorage.setItem(pushPromptDismissKey, '1');
+                } catch {
+                  // ignore
+                }
+                setShowPushPrompt(false);
+              }}
+              aria-label="Dismiss"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className={styles.container}>
         <div
           className={`${styles.flexContainer} ${

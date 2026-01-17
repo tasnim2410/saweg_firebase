@@ -47,7 +47,11 @@ export async function GET() {
       destination: p.destination ?? p.placeOfBusiness ?? null,
     }));
 
-    return NextResponse.json(normalized);
+    return NextResponse.json(normalized, {
+      headers: {
+        'cache-control': 'no-store, max-age=0',
+      },
+    });
   } catch (error) {
     console.error('GET /api/providers error:', error);
     return NextResponse.json({ error: 'Failed to fetch providers' }, { status: 500 });
