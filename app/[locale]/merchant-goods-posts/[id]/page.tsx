@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
+import { isAdminIdentifier } from '@/lib/admin';
 import { getTranslations } from 'next-intl/server';
 import styles from './merchant-goods-posts.module.css';
 
@@ -23,6 +24,8 @@ type MerchantGoodsPostDetails = {
   createdAt: string | Date;
   user: {
     fullName: string;
+    email?: string | null;
+    phone?: string | null;
     profileImage: string | null;
   };
 };
@@ -70,6 +73,8 @@ export default async function MerchantGoodsPostDetailsPage({
       user: {
         select: {
           fullName: true,
+          email: true,
+          phone: true,
           profileImage: true,
         },
       },
@@ -129,6 +134,10 @@ export default async function MerchantGoodsPostDetailsPage({
   const destLabel = getLocationLabel(post.destination, locale === 'ar' ? 'ar' : 'en');
 
   const merchantName = (post.name || post.user.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
+  const isAdminPost = Boolean(
+    (post.user.email && isAdminIdentifier(String(post.user.email))) ||
+      (post.user.phone && isAdminIdentifier(String(post.user.phone)))
+  );
 
   return (
     <main className={styles.main}>
@@ -150,7 +159,6 @@ export default async function MerchantGoodsPostDetailsPage({
 
             <div className={styles.headerText}>
               <h1 className={styles.title}>{merchantName}</h1>
-              <div className={styles.subtitle}>{post.user.fullName}</div>
             </div>
           </div>
 

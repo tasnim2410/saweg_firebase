@@ -24,6 +24,7 @@ type MerchantGoodsPost = {
   image: string | null;
   description: string | null;
   userId: string;
+  publishedByAdmin?: boolean;
   user?: {
     fullName?: string;
     phone?: string | null;
@@ -379,9 +380,13 @@ const CarouselSectionMerchant: React.FC = () => {
 
               <div className={styles.contentWrapper}>
                 <div className={styles.titleWrapper}>
-                  <Link className={styles.productTitleLink} href={`/${locale}/users/${post.userId}`}>
+                  {post.publishedByAdmin ? (
                     <h3 className={styles.productTitle}>{merchantName}</h3>
-                  </Link>
+                  ) : (
+                    <Link className={styles.productTitleLink} href={`/${locale}/users/${post.userId}`}>
+                      <h3 className={styles.productTitle}>{merchantName}</h3>
+                    </Link>
+                  )}
                 </div>
 
                 <div className={styles.placeOfBusinessContainer}>

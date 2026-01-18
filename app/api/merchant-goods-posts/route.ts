@@ -26,12 +26,31 @@ export async function GET() {
           select: {
             fullName: true,
             phone: true,
+            email: true,
           },
         },
       },
     });
 
-    return NextResponse.json(posts);
+    const normalized = (posts as any[]).map((p) => {
+      const publishedByAdmin = Boolean(
+        (p?.user?.email && isAdminIdentifier(String(p.user.email))) ||
+          (p?.user?.phone && isAdminIdentifier(String(p.user.phone)))
+      );
+
+      return {
+        ...p,
+        publishedByAdmin,
+        user: p.user
+          ? {
+              fullName: p.user.fullName,
+              phone: p.user.phone ?? null,
+            }
+          : null,
+      };
+    });
+
+    return NextResponse.json(normalized);
   } catch (error) {
     console.error('GET /api/merchant-goods-posts error:', error);
     return NextResponse.json({ error: 'Failed to fetch merchant goods posts' }, { status: 500 });

@@ -134,7 +134,7 @@ export default async function ProviderDetailsPage({
 
             <div className={styles.headerText}>
               <h1 className={styles.title}>{provider.name}</h1>
-              <div className={styles.subtitle}>{provider.user.fullName}</div>
+             
               <div className={styles.badge} data-active={provider.active ? 'true' : 'false'}>
                 {provider.active ? tDash('available') : tDash('notAvailable')}
               </div>

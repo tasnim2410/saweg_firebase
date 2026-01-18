@@ -19,6 +19,7 @@ interface Provider {
   description?: string | null;
   destination?: string | null;
   placeOfBusiness?: string | null;
+  publishedByAdmin?: boolean;
 }
 
 const CarouselSection: React.FC = () => {
@@ -354,12 +355,16 @@ const CarouselSection: React.FC = () => {
 
             <div className={styles.contentWrapper}>
               <div className={styles.titleWrapper}>
-                <Link
-                  className={styles.productTitleLink}
-                  href={provider.userId ? `/${locale}/users/${provider.userId}` : `/${locale}`}
-                >
+                {provider.publishedByAdmin ? (
                   <h3 className={styles.productTitle}>{provider.name}</h3>
-                </Link>
+                ) : (
+                  <Link
+                    className={styles.productTitleLink}
+                    href={provider.userId ? `/${locale}/users/${provider.userId}` : `/${locale}`}
+                  >
+                    <h3 className={styles.productTitle}>{provider.name}</h3>
+                  </Link>
+                )}
               </div>
 
               {provider.description && (

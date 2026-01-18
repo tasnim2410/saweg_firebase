@@ -36,16 +36,25 @@ export async function GET() {
     const providers = await prisma.provider.findMany({
       include: {
         user: {
-          select: { fullName: true },
+          select: { fullName: true, email: true, phone: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    const normalized = providers.map((p: any) => ({
-      ...p,
-      destination: p.destination ?? p.placeOfBusiness ?? null,
-    }));
+    const normalized = providers.map((p: any) => {
+      const publishedByAdmin = Boolean(
+        (p?.user?.email && isAdminIdentifier(String(p.user.email))) ||
+          (p?.user?.phone && isAdminIdentifier(String(p.user.phone)))
+      );
+
+      return {
+        ...p,
+        destination: p.destination ?? p.placeOfBusiness ?? null,
+        publishedByAdmin,
+        user: p.user ? { fullName: p.user.fullName } : null,
+      };
+    });
 
     return NextResponse.json(normalized);
   } catch (error) {
