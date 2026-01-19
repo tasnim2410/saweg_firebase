@@ -13,47 +13,19 @@ const intlMiddleware = createMiddleware({
 });
 
 export default async function middleware(req: NextRequest) {
-  const host = req.headers.get('host') ?? '';
-  const hostname = host.split(':')[0];
   const pathname = req.nextUrl.pathname;
 
   // Extract locale from current pathname
   const segments = pathname.split('/').filter(Boolean);
   const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
 
-  // Handle domain redirects first
-  if (hostname === 'sawe.app' || hostname === 'www.sawe.app') {
-    const url = req.nextUrl.clone();
-    const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
-    url.hostname = 'www.saweg.app';
-    url.protocol = 'https:';
-    url.port = '';
-    url.pathname = normalizedPathname === '/' ? '/ar' : `/ar${normalizedPathname}`;
-    return NextResponse.redirect(url, 308);
-  }
-
-  // Redirect saweg.app (without www) to www.saweg.app
-  if (hostname === 'saweg.app') {
-    const url = req.nextUrl.clone();
-    url.hostname = 'www.saweg.app';
-    url.protocol = 'https:';
-    url.port = '';
-    return NextResponse.redirect(url, 308);
-  }
-
   // Now we're on www.saweg.app - check if we need to add /ar
-  if (hostname === 'www.saweg.app') {
-    // Check if the path already starts with a locale
-    const hasLocale = locales.some(loc => 
-      pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
-    );
-
-    // If no locale in path, redirect to /ar prefix
-    if (!hasLocale) {
-      const url = req.nextUrl.clone();
-      url.pathname = pathname === '/' ? '/ar' : `/ar${pathname}`;
-      return NextResponse.redirect(url, 308);
-    }
+  if (!locales.some(loc => 
+    pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
+  )) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname === '/' ? '/ar' : `/ar${pathname}`;
+    return NextResponse.redirect(url, 308);
   }
 
   // Define protected sections

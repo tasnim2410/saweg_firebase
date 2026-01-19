@@ -252,9 +252,6 @@ const CarouselSection: React.FC = () => {
           <div key={provider.id} className={styles.carouselItem}>
             <div
               className={styles.imageContainer}
-              style={{
-                backgroundImage: provider.image ? `url(${provider.image})` : undefined,
-              }}
             >
               <div className={styles.shareWrapper} ref={openShareForId === provider.id ? sharePopoverRef : undefined}>
                 <button

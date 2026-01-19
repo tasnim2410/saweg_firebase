@@ -272,9 +272,6 @@ const CarouselSectionMerchant: React.FC = () => {
             <div key={post.id} className={styles.carouselItem}>
               <div
                 className={styles.imageContainer}
-                style={{
-                  backgroundImage: post.image ? `url(${post.image})` : undefined,
-                }}
               >
                 <div className={styles.shareWrapper} ref={openShareForId === post.id ? sharePopoverRef : undefined}>
                   <button
