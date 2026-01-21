@@ -10,7 +10,6 @@ type ProviderListItem = {
   name: string;
   location: string;
   destination: string | null;
-  placeOfBusiness: string | null;
   description: string | null;
   image: string | null;
   createdAt: string | Date;
@@ -29,7 +28,6 @@ export default async function ProvidersPage({
       name: true,
       location: true,
       destination: true,
-      placeOfBusiness: true,
       description: true,
       image: true,
       createdAt: true,
@@ -52,7 +50,7 @@ export default async function ProvidersPage({
         <div className={styles.verticalList}>
           {providers.map((p) => {
             const lang = locale === 'ar' ? 'ar' : 'en';
-            const dest = p.destination ?? p.placeOfBusiness ?? null;
+            const dest = p.destination ?? null;
             const locLabel = getLocationLabel(p.location || '-', lang);
             const destLabel = dest ? getLocationLabel(dest, lang) : '';
 
