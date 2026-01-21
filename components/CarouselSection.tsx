@@ -1,11 +1,39 @@
 'use client';
 
+//   id: number;
+//   userId?: string;
+//   name: string;           // used as title
+//   location: string;       // used as current location
+//   phone: string;          // phoneNumber
+//   image: string | null;   // path to uploaded image
+//   active: boolean;
+//   lastLocationUpdateAt?: string | Date;
+//   description?: string | null;
+//   destination?: string | null;
+//   placeOfBusiness?: string | null;
+//   publishedByAdmin?: boolean;
+// }
+
+// const CarouselSection: React.FC = () => {
+//   const carouselRef = useRef<HTMLDivElement>(null);
+//   const t = useTranslations('carousel');
+//   const locale = useLocale();
+//   const [providers, setProviders] = useState<Provider[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(false);
+//   const [canAdd, setCanAdd] = useState(false);
+//   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+//   const [copiedForId, setCopiedForId] = useState<number | null>(null);
+//   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
+
+//   const endpoint = '/api/providers';
+//   const addHref = `/${locale}/dashboard/add-provider`;
 import React, { useRef, useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
-import { Share2 } from 'lucide-react';
+import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
 
 interface Provider {
   id: number;
@@ -31,7 +59,6 @@ const CarouselSection: React.FC = () => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
-  const [copiedForId, setCopiedForId] = useState<number | null>(null);
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/providers';
@@ -152,6 +179,12 @@ const CarouselSection: React.FC = () => {
     };
   }, []);
 
+  const MAX_ITEMS = 10;
+  const hasMore = providers.length > MAX_ITEMS;
+  const visibleProviders = hasMore ? providers.slice(0, MAX_ITEMS) : providers;
+  const seeMoreHref = `/${locale}/providers`;
+  const seeMoreLabel = locale === 'ar' ? 'عرض المزيد من العروض' : 'See more offers';
+
   const scrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -300, behavior: 'smooth' });
@@ -167,14 +200,6 @@ const CarouselSection: React.FC = () => {
   const toTelHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
-  };
-
-  const formatPhoneForDisplay = (phoneNumber: string) => {
-    const trimmed = (phoneNumber || '').trim();
-    if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
-      return `+${trimmed.slice(0, -1)}`;
-    }
-    return trimmed;
   };
 
   const trackCall = (providerId: number) => {
@@ -237,216 +262,140 @@ const CarouselSection: React.FC = () => {
         ) : null}
       </div>
 
-      {/* Left Arrow */}
-      <button
-        className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
-        onClick={scrollLeft}
-        aria-label={t('scrollLeft')}
-      >
-        ›
-      </button>
-      
-      {/* Carousel */}
-      <div className={styles.carousel} ref={carouselRef}>
-        {providers.map((provider) => (
-          <div key={provider.id} className={styles.carouselItem}>
-            <div
-              className={styles.imageContainer}
-            >
-              <div className={styles.shareWrapper} ref={openShareForId === provider.id ? sharePopoverRef : undefined}>
-                <button
-                  type="button"
-                  className={styles.shareButton}
-                  onClick={() => void handleShare(provider)}
-                  aria-label={t('share') || 'Share'}
-                  title={t('share') || 'Share'}
-                >
-                  <Share2 size={18} aria-hidden="true" />
-                </button>
+      <div className={styles.carouselWrapper}>
+        {/* Left Arrow */}
+        <button
+          className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
+          onClick={scrollLeft}
+          aria-label={t('scrollLeft')}
+        >
+          ›
+        </button>
+        
+        {/* Carousel */}
+        <div className={styles.carousel} ref={carouselRef}>
+          {visibleProviders.map((provider) => {
+            const lastUpdateMs = provider.lastLocationUpdateAt
+              ? new Date(provider.lastLocationUpdateAt as any).getTime()
+              : NaN;
+            const isStale = Number.isFinite(lastUpdateMs)
+              ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000
+              : false;
+            const isActive = provider.active && !isStale;
+            const statusClass = isActive ? styles.statusActive : styles.statusInactive;
 
-                {openShareForId === provider.id ? (
-                  <div className={styles.shareMenu} role="menu" aria-label={t('share') || 'Share'}>
-                    {(() => {
-                      const shareUrl = buildShareUrlForProvider(provider.id);
-                      const shareTitle = provider.name;
-                      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-                      const xUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
-                      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${shareUrl}`)}`;
-                      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-
-                      return (
-                        <>
-                          <a
-                            className={styles.shareMenuItem}
-                            href={facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            role="menuitem"
-                            onClick={() => setOpenShareForId(null)}
-                          >
-                            {t('shareFacebook') || 'Facebook'}
-                          </a>
-                          <a
-                            className={styles.shareMenuItem}
-                            href={xUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            role="menuitem"
-                            onClick={() => setOpenShareForId(null)}
-                          >
-                            {t('shareX') || 'X'}
-                          </a>
-                          <a
-                            className={styles.shareMenuItem}
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            role="menuitem"
-                            onClick={() => setOpenShareForId(null)}
-                          >
-                            {t('shareWhatsApp') || 'WhatsApp'}
-                          </a>
-                          <a
-                            className={styles.shareMenuItem}
-                            href={linkedInUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            role="menuitem"
-                            onClick={() => setOpenShareForId(null)}
-                          >
-                            {t('shareLinkedIn') || 'LinkedIn'}
-                          </a>
-                          <button
-                            type="button"
-                            className={styles.shareMenuItemButton}
-                            role="menuitem"
-                            onClick={async () => {
-                              const ok = await copyToClipboard(shareUrl);
-                              if (ok) {
-                                setCopiedForId(provider.id);
-                                window.setTimeout(() => setCopiedForId(null), 1200);
-                              }
-                            }}
-                          >
-                            {copiedForId === provider.id ? (t('copied') || 'Copied!') : (t('copyLink') || 'Copy link')}
-                          </button>
-                        </>
-                      );
-                    })()}
-                  </div>
-                ) : null}
-              </div>
-
-              <Link href={`/${locale}/providers/${provider.id}`} aria-label={provider.name} style={{ display: 'block' }}>
-                <img
-                  src={provider.image || 'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck'}
-                  alt={provider.name}
-                  className={styles.productImage}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://via.placeholder.com/330x380/F3F3F3/666666?text=Truck';
-                  }}
-                />
-              </Link>
-            </div>
-
-            <div className={styles.contentWrapper}>
-              <div className={styles.titleWrapper}>
-                {provider.publishedByAdmin ? (
-                  <h3 className={styles.productTitle}>{provider.name}</h3>
-                ) : (
-                  <Link
-                    className={styles.productTitleLink}
-                    href={provider.userId ? `/${locale}/users/${provider.userId}` : `/${locale}`}
+            return (
+              <div key={provider.id} className={styles.carouselItem}>
+                <div className={styles.imageContainer}>
+                  <Link 
+                    href={`/${locale}/providers/${provider.id}`} 
+                    aria-label={provider.name}
+                    className={styles.imageLink}
                   >
-                    <h3 className={styles.productTitle}>{provider.name}</h3>
+                    <img
+                      src={provider.image || 'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck'}
+                      alt={provider.name}
+                      className={styles.productImage}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck';
+                      }}
+                    />
                   </Link>
-                )}
-              </div>
-
-              {provider.description && (
-                <div className={styles.descriptionContainer}>
-                  <p className={styles.description}>
-                    {provider.description.split('\n').map((line, index) => (
-                      <span key={index} className={styles.descriptionLine}>
-                        {line}
-                      </span>
-                    ))}
-                  </p>
                 </div>
-              )}
 
-              {(provider.destination ?? provider.placeOfBusiness) && (
-                <div className={styles.placeOfBusinessContainer}>
-                  <p className={styles.placeOfBusiness}>
-                    {t('destinationPrefix')}{' '}
-                    <span className={styles.placeOfBusinessText}>
-                      {getLocationLabel(
-                        (provider.destination ?? provider.placeOfBusiness) ?? '',
-                        locale === 'ar' ? 'ar' : 'en'
-                      )}
-                    </span>
-                  </p>
-                </div>
-              )}
+                <div className={styles.contentWrapper}>
+                  <div className={styles.titleContainer}>
+                    <Link 
+                      href={`/${locale}/providers/${provider.id}`}
+                      className={styles.productTitleLink}
+                    >
+                      <h3 className={styles.productTitle}>{provider.name}</h3>
+                    </Link>
+                    <button
+                      type="button"
+                      className={styles.shareButton}
+                      onClick={() => void handleShare(provider)}
+                      aria-label={t('share') || 'Share'}
+                      title={t('share') || 'Share'}
+                    >
+                      <Share2 size={16} aria-hidden="true" />
+                    </button>
+                  </div>
 
-              {(() => {
-                const lastUpdateMs = provider.lastLocationUpdateAt
-                  ? new Date(provider.lastLocationUpdateAt as any).getTime()
-                  : NaN;
-                const isStale = Number.isFinite(lastUpdateMs)
-                  ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000
-                  : false;
-                const dotClass = isStale
-                  ? styles.statusDotStale
-                  : provider.active
-                    ? styles.statusDotActive
-                    : styles.statusDotInactive;
-
-                return (
-                  <>
-                    <div className={styles.currentLocationContainer}>
-                      <span className={`${styles.currentLocationIcon} ${dotClass}`} aria-hidden="true" />
-                      <p className={styles.currentLocation}>
-                        {t('currentLocationPrefix')}{' '}
-                        {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
+                  {provider.description && (
+                    <div className={styles.descriptionContainer}>
+                      <p className={styles.description}>
+                        {provider.description.length > 100 
+                          ? `${provider.description.substring(0, 100)}...` 
+                          : provider.description}
                       </p>
                     </div>
+                  )}
 
-                    <div className={styles.phoneContainer}>
-                      <a
-                        className={`${styles.phoneButton} ${isStale ? styles.phoneButtonStale : ''}`}
-                        href={toTelHref(provider.phone)}
-                        onClick={() => {
-                          trackCall(provider.id);
-                        }}
-                        aria-label={`Call: ${provider.phone}`}
-                        title={t('call') || 'Call'}
-                      >
-                        <span className={styles.phoneNumberIcon}>📞</span>
-                        <span dir="ltr" className={`${styles.phoneNumberText} ${styles.phoneNumberLtr}`}>
-                          {formatPhoneForDisplay(provider.phone)}
-                        </span>
-                      </a>
+                  <div className={styles.locationContainer}>
+                    <MapPin size={14} className={styles.locationIcon} />
+                    <span className={styles.locationText}>
+                      {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
+                    </span>
+                    <span className={`${styles.statusDot} ${statusClass}`} />
+                  </div>
+
+                  {(provider.destination ?? provider.placeOfBusiness) && (
+                    <div className={styles.destinationContainer}>
+                      <Truck size={14} className={styles.destinationIcon} />
+                      <span className={styles.destinationText}>
+                        {t('destinationPrefix')}{' '}
+                        {getLocationLabel(
+                          (provider.destination ?? provider.placeOfBusiness) ?? '',
+                          locale === 'ar' ? 'ar' : 'en'
+                        )}
+                      </span>
                     </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Right Arrow */}
-      <button
-        className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
-        onClick={scrollRight}
-        aria-label={t('scrollRight')}
-      >
-        ‹
-      </button>
+                  )}
 
-      {/* Remove the old carouselControls div since we now have side arrows */}
+                  <div className={styles.actionContainer}>
+                    <a
+                      className={`${styles.callButton} ${statusClass}`}
+                      href={toTelHref(provider.phone)}
+                      onClick={() => trackCall(provider.id)}
+                      aria-label={t('call') || 'Call'}
+                      title={t('call') || 'Call'}
+                    >
+                      <Phone size={16} className={styles.callIcon} />
+                      <span className={styles.callText}>{t('call') || 'Call'}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {hasMore ? (
+            <Link
+              href={seeMoreHref}
+              className={`${styles.carouselItem} ${styles.seeMoreCard}`}
+              aria-label={seeMoreLabel}
+            >
+              <div className={styles.seeMoreInner}>
+                <div className={styles.seeMoreIconWrap} aria-hidden="true">
+                  <Plus size={28} />
+                </div>
+                <div className={styles.seeMoreText}>{seeMoreLabel}</div>
+              </div>
+            </Link>
+          ) : null}
+        </div>
+        
+        {/* Right Arrow */}
+        <button
+          className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
+          onClick={scrollRight}
+          aria-label={t('scrollRight')}
+        >
+          ‹
+        </button>
+      </div>
     </section>
   );
 };

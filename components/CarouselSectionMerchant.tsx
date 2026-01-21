@@ -6,7 +6,7 @@ import Link from 'next/link';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
-import { Share2 } from 'lucide-react';
+import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
 
 type MerchantGoodsPost = {
   id: number;
@@ -42,8 +42,7 @@ const CarouselSectionMerchant: React.FC = () => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
-  const [copiedForId, setCopiedForId] = useState<number | null>(null);
-  const sharePopoverRef = useRef<HTMLDivElement | null>(null);
+  const sharePopoverRef = useRef<HTMLButtonElement | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
@@ -165,6 +164,12 @@ const CarouselSectionMerchant: React.FC = () => {
     };
   }, []);
 
+  const MAX_ITEMS = 10;
+  const hasMore = posts.length > MAX_ITEMS;
+  const visiblePosts = hasMore ? posts.slice(0, MAX_ITEMS) : posts;
+  const seeMoreHref = `/${locale}/merchant-goods-posts`;
+  const seeMoreLabel = locale === 'ar' ? 'عرض المزيد من الطلبات' : 'See more requests';
+
   const scrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -300, behavior: 'smooth' });
@@ -190,14 +195,6 @@ const CarouselSectionMerchant: React.FC = () => {
   const toTelHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
-  };
-
-  const formatPhoneForDisplay = (phoneNumber: string) => {
-    const trimmed = (phoneNumber || '').trim();
-    if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
-      return `+${trimmed.slice(0, -1)}`;
-    }
-    return trimmed;
   };
 
   if (loading) {
@@ -245,228 +242,154 @@ const CarouselSectionMerchant: React.FC = () => {
         ) : null}
       </div>
 
-      <button
-        className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
-        onClick={scrollLeft}
-        aria-label={t('scrollLeft')}
-      >
-        ›
-      </button>
+      <div className={styles.carouselWrapper}>
+        <button
+          className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
+          onClick={scrollLeft}
+          aria-label={t('scrollLeft')}
+        >
+         ›
+        </button>
 
-      <div className={styles.carousel} ref={carouselRef}>
-        {posts.map((post) => {
-          const merchantName =
-            (typeof post.name === 'string' && post.name.trim()) ||
-            post.user?.fullName ||
-            (locale === 'ar' ? 'تاجر' : 'Merchant');
+        <div className={styles.carousel} ref={carouselRef}>
+          {visiblePosts.map((post) => {
+            const merchantName =
+              (typeof post.name === 'string' && post.name.trim()) ||
+              post.user?.fullName ||
+              (locale === 'ar' ? 'تاجر' : 'Merchant');
 
-          const phoneCandidate =
-            (typeof post.phone === 'string' && post.phone.trim()) ||
-            (typeof post.user?.phone === 'string' && post.user.phone.trim()) ||
-            '';
+            const phoneCandidate =
+              (typeof post.phone === 'string' && post.phone.trim()) ||
+              (typeof post.user?.phone === 'string' && post.user.phone.trim()) ||
+              '';
 
-          const normalizedPhone = phoneCandidate ? normalizePhoneNumber(phoneCandidate) : null;
-          const phoneNumber = normalizedPhone && normalizedPhone.ok ? normalizedPhone.e164 : phoneCandidate;
+            const normalizedPhone = phoneCandidate ? normalizePhoneNumber(phoneCandidate) : null;
+            const phoneNumber = normalizedPhone && normalizedPhone.ok ? normalizedPhone.e164 : phoneCandidate;
 
-          return (
-            <div key={post.id} className={styles.carouselItem}>
-              <div
-                className={styles.imageContainer}
-              >
-                <div className={styles.shareWrapper} ref={openShareForId === post.id ? sharePopoverRef : undefined}>
-                  <button
-                    type="button"
-                    className={styles.shareButton}
-                    onClick={() => void handleShare(post)}
-                    aria-label={t('share') || 'Share'}
-                    title={t('share') || 'Share'}
+            const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
+            const isRecent = Number.isFinite(createdAtMs)
+              ? Date.now() - createdAtMs <= 24 * 60 * 60 * 1000
+              : false;
+
+            const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
+
+            const summaryParts: string[] = [];
+            if (post.goodsType) summaryParts.push(post.goodsType);
+            if (Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit) {
+              summaryParts.push(`${post.goodsWeight} ${post.goodsWeightUnit}`);
+            }
+            if (post.loadingDate) {
+              const dateLabel = formatDate(post.loadingDate);
+              if (dateLabel) summaryParts.push(dateLabel);
+            }
+            const summary = summaryParts.filter(Boolean).join(' • ');
+
+            return (
+              <div key={post.id} className={styles.carouselItem}>
+                <div className={styles.imageContainer}>
+                  <Link
+                    href={`/${locale}/merchant-goods-posts/${post.id}`}
+                    aria-label={merchantName}
+                    className={styles.imageLink}
                   >
-                    <Share2 size={18} aria-hidden="true" />
-                  </button>
-
-                  {openShareForId === post.id ? (
-                    <div className={styles.shareMenu} role="menu" aria-label={t('share') || 'Share'}>
-                      {(() => {
-                        const shareUrl = buildShareUrlForPost(post.id);
-                        const shareTitle = merchantName;
-                        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-                        const xUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
-                        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${shareUrl}`)}`;
-                        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-
-                        return (
-                          <>
-                            <a
-                              className={styles.shareMenuItem}
-                              href={facebookUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              role="menuitem"
-                              onClick={() => setOpenShareForId(null)}
-                            >
-                              {t('shareFacebook') || 'Facebook'}
-                            </a>
-                            <a
-                              className={styles.shareMenuItem}
-                              href={xUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              role="menuitem"
-                              onClick={() => setOpenShareForId(null)}
-                            >
-                              {t('shareX') || 'X'}
-                            </a>
-                            <a
-                              className={styles.shareMenuItem}
-                              href={whatsappUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              role="menuitem"
-                              onClick={() => setOpenShareForId(null)}
-                            >
-                              {t('shareWhatsApp') || 'WhatsApp'}
-                            </a>
-                            <a
-                              className={styles.shareMenuItem}
-                              href={linkedInUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              role="menuitem"
-                              onClick={() => setOpenShareForId(null)}
-                            >
-                              {t('shareLinkedIn') || 'LinkedIn'}
-                            </a>
-                            <button
-                              type="button"
-                              className={styles.shareMenuItemButton}
-                              role="menuitem"
-                              onClick={async () => {
-                                const ok = await copyToClipboard(shareUrl);
-                                if (ok) {
-                                  setCopiedForId(post.id);
-                                  window.setTimeout(() => setCopiedForId(null), 1200);
-                                }
-                              }}
-                            >
-                              {copiedForId === post.id ? (t('copied') || 'Copied!') : (t('copyLink') || 'Copy link')}
-                            </button>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  ) : null}
+                    <img
+                      src={post.image || '/images/logo.png'}
+                      alt={merchantName}
+                      className={styles.productImage}
+                      style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/images/logo.png';
+                        (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
+                      }}
+                    />
+                  </Link>
                 </div>
 
-                <Link
-                  href={`/${locale}/merchant-goods-posts/${post.id}`}
-                  aria-label={merchantName}
-                  style={{ display: 'block' }}
-                >
-                  <img
-                    src={post.image || '/images/logo.png'}
-                    alt={merchantName}
-                    className={styles.productImage}
-                    style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/images/logo.png';
-                      (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
-                    }}
-                  />
-                </Link>
-              </div>
-
-              <div className={styles.contentWrapper}>
-                <div className={styles.titleWrapper}>
-                  {post.publishedByAdmin ? (
-                    <h3 className={styles.productTitle}>{merchantName}</h3>
-                  ) : (
-                    <Link className={styles.productTitleLink} href={`/${locale}/users/${post.userId}`}>
+                <div className={styles.contentWrapper}>
+                  <div className={styles.titleContainer}>
+                    <Link
+                      href={`/${locale}/merchant-goods-posts/${post.id}`}
+                      className={styles.productTitleLink}
+                    >
                       <h3 className={styles.productTitle}>{merchantName}</h3>
                     </Link>
-                  )}
-                </div>
-
-                <div className={styles.placeOfBusinessContainer}>
-                  <p className={styles.placeOfBusiness}>
-                    {(locale === 'ar' ? 'المسار:' : 'Route:')}{' '}
-                    {getLocationLabel(post.startingPoint, locale === 'ar' ? 'ar' : 'en')} →{' '}
-                    {getLocationLabel(post.destination, locale === 'ar' ? 'ar' : 'en')}
-                  </p>
-                </div>
-
-                <div className={styles.descriptionContainer}>
-                  <p className={styles.description}>
-                    {(locale === 'ar' ? 'نوع البضاعة:' : 'Goods:')}{' '}
-                    <span className={styles.descriptionLine}>{post.goodsType}</span>
-                  </p>
-                  <p className={styles.description}>
-                    {(locale === 'ar' ? 'الوزن:' : 'Weight:')}{' '}
-                    <span className={styles.descriptionLine}>
-                      {post.goodsWeight} {post.goodsWeightUnit}
-                    </span>
-                  </p>
-                  {post.budget ? (
-                    <p className={styles.description}>
-                      {(locale === 'ar' ? 'الميزانية:' : 'Budget:')}{' '}
-                      <span className={styles.descriptionLine}>
-                        {post.budget}
-                        {post.budgetCurrency ? ` ${post.budgetCurrency}` : ''}
-                      </span>
-                    </p>
-                  ) : null}
-                  <p className={styles.description}>
-                    {(locale === 'ar' ? 'تاريخ التحميل:' : 'Loading date:')}{' '}
-                    <span className={styles.descriptionLine}>{formatDate(post.loadingDate)}</span>
-                  </p>
-                  <p className={styles.description}>
-                    {(locale === 'ar' ? 'نوع المركبة المطلوبة:' : 'Vehicle needed:')}{' '}
-                    <span className={styles.descriptionLine}>{post.vehicleTypeDesired}</span>
-                  </p>
-                </div>
-
-                {post.description ? (
-                  <div className={styles.descriptionContainer}>
-                    <p className={styles.description}>
-                      {post.description.split('\n').map((line, index) => (
-                        <span key={index} className={styles.descriptionLine}>
-                          {line}
-                        </span>
-                      ))}
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className={styles.phoneContainer}>
-                  {phoneNumber ? (
-                    <a
-                      className={styles.phoneButton}
-                      href={toTelHref(phoneNumber)}
-                      aria-label={`Call: ${phoneNumber}`}
-                      title={t('call') || 'Call'}
+                    <button
+                      type="button"
+                      className={styles.shareButton}
+                      onClick={() => void handleShare(post)}
+                      aria-label={t('share') || 'Share'}
+                      title={t('share') || 'Share'}
+                      ref={openShareForId === post.id ? sharePopoverRef : undefined}
                     >
-                      <span className={styles.phoneNumberIcon}>📞</span>
-                      <span dir="ltr" className={`${styles.phoneNumberText} ${styles.phoneNumberLtr}`}>
-                        {formatPhoneForDisplay(phoneNumber)}
-                      </span>
-                    </a>
-                  ) : (
-                    <span className={`${styles.phoneButton} ${styles.phoneButtonDisabled}`}>-
+                      <Share2 size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+
+                  {summary ? (
+                    <div className={styles.descriptionContainer}>
+                      <p className={styles.description}>{summary}</p>
+                    </div>
+                  ) : null}
+
+                  <div className={styles.locationContainer}>
+                    <MapPin size={14} className={styles.locationIcon} />
+                    <span className={styles.locationText}>
+                      {getLocationLabel(post.startingPoint || '-', locale === 'ar' ? 'ar' : 'en')}
                     </span>
-                  )}
+                    <span className={`${styles.statusDot} ${statusClass}`} />
+                  </div>
+
+                  <div className={styles.destinationContainer}>
+                    <Truck size={14} className={styles.destinationIcon} />
+                    <span className={styles.destinationText}>
+                      {getLocationLabel(post.destination || '-', locale === 'ar' ? 'ar' : 'en')}
+                    </span>
+                  </div>
+
+                  <div className={styles.actionContainer}>
+                    {phoneNumber ? (
+                      <a
+                        className={`${styles.callButton} ${statusClass}`}
+                        href={toTelHref(phoneNumber)}
+                        aria-label={t('call') || 'Call'}
+                        title={t('call') || 'Call'}
+                      >
+                        <Phone size={16} className={styles.callIcon} />
+                        <span className={styles.callText}>{t('call') || 'Call'}</span>
+                      </a>
+                    ) : (
+                      <span className={`${styles.callButton} ${styles.statusInactive}`}>-</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
 
-      <button
-        className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
-        onClick={scrollRight}
-        aria-label={t('scrollRight')}
-      >
-        ‹
-      </button>
+          {hasMore ? (
+            <Link
+              href={seeMoreHref}
+              className={`${styles.carouselItem} ${styles.seeMoreCard}`}
+              aria-label={seeMoreLabel}
+            >
+              <div className={styles.seeMoreInner}>
+                <div className={styles.seeMoreIconWrap} aria-hidden="true">
+                  <Plus size={28} />
+                </div>
+                <div className={styles.seeMoreText}>{seeMoreLabel}</div>
+              </div>
+            </Link>
+          ) : null}
+        </div>
+
+        <button
+          className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
+          onClick={scrollRight}
+          aria-label={t('scrollRight')}
+        >
+          ‹ 
+        </button>
+      </div>
     </section>
   );
 };
