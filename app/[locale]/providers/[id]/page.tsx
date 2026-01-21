@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import styles from './providers.module.css';
 
@@ -25,6 +26,99 @@ type ProviderDetails = {
     maxChargeUnit: string | null;
   };
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const providerId = Number(id);
+
+  const defaultTitle = locale === 'ar' ? 'Saweg - عرض سوّاق' : 'Saweg - Shipper offer';
+  const defaultDescription =
+    locale === 'ar'
+      ? 'اطّلع على عروض السوّاق على ساوج'
+      : 'See shippers offers on Saweg';
+
+  if (!Number.isFinite(providerId)) {
+    return {
+      title: defaultTitle,
+      description: defaultDescription,
+      openGraph: {
+        title: defaultTitle,
+        description: defaultDescription,
+        images: [{ url: '/images/logo.png' }],
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: defaultTitle,
+        description: defaultDescription,
+        images: ['/images/logo.png'],
+      },
+    };
+  }
+
+  const provider = await (prisma as any).provider.findUnique({
+    where: { id: providerId },
+    select: {
+      id: true,
+      name: true,
+      location: true,
+      destination: true,
+      description: true,
+      image: true,
+      user: {
+        select: {
+          truckImage: true,
+        },
+      },
+    },
+  });
+
+  if (!provider) {
+    return {
+      title: defaultTitle,
+      description: defaultDescription,
+      openGraph: {
+        title: defaultTitle,
+        description: defaultDescription,
+        images: [{ url: '/images/logo.png' }],
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: defaultTitle,
+        description: defaultDescription,
+        images: ['/images/logo.png'],
+      },
+    };
+  }
+
+  const title = locale === 'ar' ? `Saweg - ${provider.name}` : `Saweg - ${provider.name}`;
+  const rawDescription = String(provider.description || '').trim();
+  const routePart = [provider.location, provider.destination].filter(Boolean).join(' → ');
+  const description = (rawDescription || routePart || defaultDescription).slice(0, 200);
+  const imageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: imageUrl }],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default async function ProviderDetailsPage({
   params,

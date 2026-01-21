@@ -3,6 +3,7 @@ import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
 import { isAdminIdentifier } from '@/lib/admin';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import styles from './merchant-goods-posts.module.css';
 
@@ -29,6 +30,100 @@ type MerchantGoodsPostDetails = {
     profileImage: string | null;
   };
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const postId = Number(id);
+
+  const defaultTitle = locale === 'ar' ? 'Saweg - طلب تاجر' : 'Saweg - Merchant request';
+  const defaultDescription =
+    locale === 'ar'
+      ? 'اطّلع على طلبات التجّار على ساوج'
+      : 'See merchant requests on Saweg';
+
+  if (!Number.isFinite(postId)) {
+    return {
+      title: defaultTitle,
+      description: defaultDescription,
+      openGraph: {
+        title: defaultTitle,
+        description: defaultDescription,
+        images: [{ url: '/images/logo.png' }],
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: defaultTitle,
+        description: defaultDescription,
+        images: ['/images/logo.png'],
+      },
+    };
+  }
+
+  const post = await (prisma as any).merchantGoodsPost.findUnique({
+    where: { id: postId },
+    select: {
+      id: true,
+      name: true,
+      startingPoint: true,
+      destination: true,
+      goodsType: true,
+      image: true,
+      description: true,
+      user: { select: { fullName: true } },
+    },
+  });
+
+  if (!post) {
+    return {
+      title: defaultTitle,
+      description: defaultDescription,
+      openGraph: {
+        title: defaultTitle,
+        description: defaultDescription,
+        images: [{ url: '/images/logo.png' }],
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: defaultTitle,
+        description: defaultDescription,
+        images: ['/images/logo.png'],
+      },
+    };
+  }
+
+  const merchantName = (post.name || post.user?.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
+  const title = locale === 'ar' ? `Saweg - ${merchantName}` : `Saweg - ${merchantName}`;
+
+  const rawDescription = String(post.description || '').trim();
+  const routePart = `${post.startingPoint || ''} → ${post.destination || ''}`.trim();
+  const fallbackDesc = [post.goodsType, routePart].filter(Boolean).join(' • ');
+  const description = (rawDescription || fallbackDesc || defaultDescription).slice(0, 200);
+
+  const imageUrl = post.image || '/images/logo.png';
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: imageUrl }],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default async function MerchantGoodsPostDetailsPage({
   params,
