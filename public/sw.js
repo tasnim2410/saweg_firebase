@@ -1,11 +1,13 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'saweg-pwa-v3';
+const CACHE_NAME = 'saweg-pwa-v4';
 
 const PRECACHE_URLS = [
   '/offline.html',
   '/manifest.json',
   '/images/logo.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -43,8 +45,8 @@ self.addEventListener('push', (event) => {
 
       await self.registration.showNotification(title, {
         body,
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-192x192.png',
+        icon: '/icons/icon-192x192.png?v=2',
+        badge: '/icons/icon-192x192.png?v=2',
         data: { url },
       });
     })()
