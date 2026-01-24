@@ -116,8 +116,16 @@ export default function MyPostsPage() {
       }
     };
     load();
+
+    const onOnline = () => {
+      if (cancelled) return;
+      void refresh();
+    };
+
+    window.addEventListener('online', onOnline);
     return () => {
       cancelled = true;
+      window.removeEventListener('online', onOnline);
     };
   }, []);
 

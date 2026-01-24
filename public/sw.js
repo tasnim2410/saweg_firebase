@@ -17,7 +17,12 @@ const PRECACHE_URLS = [
   '/idb.js',
 ];
 
-const DYNAMIC_API_PATHS = ['/api/providers', '/api/merchant-goods-posts'];
+const DYNAMIC_API_PATHS = [
+  '/api/providers',
+  '/api/merchant-goods-posts',
+  '/api/auth/me',
+  '/api/providers/mine',
+];
 
 const makeApiKey = (url) => `api:${url.pathname}${url.search}`;
 
@@ -38,6 +43,12 @@ self.addEventListener('activate', (event) => {
       await self.clients.claim();
     })()
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting());
+  }
 });
 
 self.addEventListener('push', (event) => {

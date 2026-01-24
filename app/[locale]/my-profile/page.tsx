@@ -198,8 +198,16 @@ export default function MyProfilePage() {
     };
 
     load();
+
+    const onOnline = () => {
+      if (cancelled) return;
+      void load();
+    };
+
+    window.addEventListener('online', onOnline);
     return () => {
       cancelled = true;
+      window.removeEventListener('online', onOnline);
     };
   }, [locale]);
 

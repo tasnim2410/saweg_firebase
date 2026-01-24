@@ -51,6 +51,15 @@ export default function MyProvidersPage() {
 
   useEffect(() => {
     refresh();
+
+    const onOnline = () => {
+      void refresh();
+    };
+
+    window.addEventListener('online', onOnline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+    };
   }, []);
 
   const updateLocation = async (id: number, newLocation: string) => {

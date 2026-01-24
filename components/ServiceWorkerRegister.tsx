@@ -46,17 +46,114 @@ export default function ServiceWorkerRegister() {
       return;
     }
 
-    if (process.env.NODE_ENV !== 'production') return;
-
     const register = async () => {
       try {
-        await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const reg = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none',
+        });
+
+        const warmup = async () => {
+          const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+          const pages = [
+            `/${lang}`,
+            `/${lang}/my-profile`,
+            `/${lang}/dashboard/my-posts`,
+            `/${lang}/dashboard/my-providers`,
+          ];
+
+          const apis = [
+            '/api/providers',
+            '/api/merchant-goods-posts',
+            '/api/auth/me',
+            '/api/providers/mine',
+          ];
+
+          const baseOpts: RequestInit = {
+            credentials: 'include',
+            cache: 'reload',
+          };
+
+          const assetUrls = new Set<string>();
+
+          const fetchPageAndAssets = async (path: string) => {
+            try {
+              const res = await fetch(path, baseOpts);
+              if (!res.ok) return;
+              const html = await res.text();
+
+              // Extract Next.js static assets so the page can render offline even if user never visited it.
+              const re = /\"(\/_next\/static\/[^\"\\]+)\"|\'(\/_next\/static\/[^\'\\]+)\'/g;
+              let m: RegExpExecArray | null;
+              while ((m = re.exec(html))) {
+                const u = m[1] || m[2];
+                if (u) assetUrls.add(u);
+              }
+            } catch {
+              // ignore
+            }
+          };
+
+          await Promise.allSettled(pages.map((p) => fetchPageAndAssets(p)));
+          await Promise.allSettled(apis.map((u) => fetch(u, baseOpts).catch(() => null)));
+          await Promise.allSettled(Array.from(assetUrls).map((u) => fetch(u, baseOpts).catch(() => null)));
+        };
+
+        const reloadOnceOnControllerChange = () => {
+          let reloaded = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (reloaded) return;
+            reloaded = true;
+            window.location.reload();
+          });
+        };
+
+        const tryActivateWaitingWorker = async () => {
+          const waiting = reg.waiting;
+          if (!waiting) return;
+          waiting.postMessage({ type: 'SKIP_WAITING' });
+        };
+
+        reloadOnceOnControllerChange();
+
+        // If there's already a waiting SW (e.g. after returning to the app), activate it.
+        await tryActivateWaitingWorker();
+
+        // Warm caches on app start so offline pages work even if user didn't open them explicitly.
+        void warmup();
+
+        // When a new worker is found, and it reaches "installed", trigger activation.
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              void tryActivateWaitingWorker();
+            }
+          });
+        });
+
+        // Proactively check for updates.
+        const onUpdateCheck = () => {
+          void reg.update().catch(() => null);
+          void warmup();
+        };
+
+        window.addEventListener('focus', onUpdateCheck);
+        window.addEventListener('online', onUpdateCheck);
+        const intervalId = window.setInterval(onUpdateCheck, 60 * 60 * 1000);
+
+        return () => {
+          window.removeEventListener('focus', onUpdateCheck);
+          window.removeEventListener('online', onUpdateCheck);
+          window.clearInterval(intervalId);
+        };
       } catch (err) {
         // ignore
       }
     };
 
-    register();
+    void register();
   }, []);
 
   return null;
