@@ -144,23 +144,38 @@ const CarouselSectionMerchant: React.FC = () => {
 
     const fetchPosts = async () => {
       try {
+        if (cancelled) return;
+        setError(false);
         const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch');
         const data: MerchantGoodsPost[] = await res.json();
+        if (cancelled) return;
         setPosts(data);
       } catch (err) {
         console.error('Error loading merchant goods posts:', err);
+        if (cancelled) return;
         setError(true);
       } finally {
+        if (cancelled) return;
         setLoading(false);
       }
+    };
+
+    const onOnline = () => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(false);
+      void fetchPosts();
     };
 
     loadAuth();
     fetchPosts();
 
+    window.addEventListener('online', onOnline);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('online', onOnline);
     };
   }, []);
 

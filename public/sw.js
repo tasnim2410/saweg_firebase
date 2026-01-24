@@ -1,5 +1,11 @@
 /* eslint-disable no-restricted-globals */
 
+try {
+  importScripts('/idb.js');
+} catch {
+  // ignore
+}
+
 const CACHE_NAME = 'saweg-pwa-v4';
 
 const PRECACHE_URLS = [
@@ -8,7 +14,12 @@ const PRECACHE_URLS = [
   '/images/logo.png',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
+  '/idb.js',
 ];
+
+const DYNAMIC_API_PATHS = ['/api/providers', '/api/merchant-goods-posts'];
+
+const makeApiKey = (url) => `api:${url.pathname}${url.search}`;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -77,8 +88,63 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   // Never cache Next.js internal assets. Caching these can cause stale JS/CSS and hydration mismatches.
-  if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
+  if (
+    url.origin === self.location.origin &&
+    url.pathname.startsWith('/_next/') &&
+    !url.pathname.startsWith('/_next/static/')
+  ) {
     event.respondWith(fetch(req));
+    return;
+  }
+
+  // Dynamic data: network-first; persist last successful payload in IndexedDB; serve it when offline.
+  if (
+    url.origin === self.location.origin &&
+    req.method === 'GET' &&
+    DYNAMIC_API_PATHS.includes(url.pathname)
+  ) {
+    const key = makeApiKey(url);
+    event.respondWith(
+      (async () => {
+        try {
+          const res = await fetch(req);
+          if (res && res.ok) {
+            const clone = res.clone();
+            event.waitUntil(
+              (async () => {
+                try {
+                  const data = await clone.json();
+                  await self.sawegIdb?.setJson(key, data);
+                } catch {
+                  // ignore
+                }
+              })()
+            );
+          }
+          return res;
+        } catch {
+          try {
+            const entry = await self.sawegIdb?.getJson(key);
+            if (entry && entry.data) {
+              return new Response(JSON.stringify(entry.data), {
+                status: 200,
+                headers: {
+                  'content-type': 'application/json; charset=utf-8',
+                  'x-offline-cache': '1',
+                  'x-offline-updated-at': String(entry.updatedAt || ''),
+                },
+              });
+            }
+          } catch {
+            // ignore
+          }
+          return new Response(JSON.stringify({ error: 'OFFLINE_NO_CACHE' }), {
+            status: 503,
+            headers: { 'content-type': 'application/json; charset=utf-8' },
+          });
+        }
+      })()
+    );
     return;
   }
 
@@ -94,9 +160,19 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const fresh = await fetch(req);
+          try {
+            if (fresh && fresh.ok) {
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(req, fresh.clone());
+            }
+          } catch {
+            // ignore
+          }
           return fresh;
         } catch {
           const cache = await caches.open(CACHE_NAME);
+          const cachedNav = await cache.match(req);
+          if (cachedNav) return cachedNav;
           const cached = await cache.match('/offline.html');
           return cached || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
         }

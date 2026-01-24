@@ -160,22 +160,36 @@ const CarouselSection: React.FC = () => {
 
     const fetchProviders = async () => {
       try {
+        if (cancelled) return;
+        setError(false);
         const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch');
         const data: Provider[] = await res.json();
+        if (cancelled) return;
         setProviders(data);
       } catch (err) {
         console.error('Error loading providers:', err);
+        if (cancelled) return;
         setError(true);
       } finally {
+        if (cancelled) return;
         setLoading(false);
       }
     };
 
+    const onOnline = () => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(false);
+      void fetchProviders();
+    };
+
     loadAuth();
     fetchProviders();
+    window.addEventListener('online', onOnline);
     return () => {
       cancelled = true;
+      window.removeEventListener('online', onOnline);
     };
   }, []);
 

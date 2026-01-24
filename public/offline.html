@@ -11,6 +11,14 @@
       h1 { margin: 0 0 12px 0; font-size: 22px; }
       p { margin: 0 0 10px 0; line-height: 1.6; }
       a { color: #2563eb; text-decoration: none; font-weight: 600; }
+      .section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+      .meta { font-size: 12px; color: #6b7280; }
+      ul { padding: 0; margin: 10px 0 0 0; list-style: none; }
+      li { padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+      li:last-child { border-bottom: 0; }
+      .title { font-weight: 700; }
+      .sub { font-size: 13px; color: #374151; margin-top: 2px; }
+      .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; margin-inline-start: 6px; }
     </style>
   </head>
   <body>
@@ -19,6 +27,110 @@
       <p>لا يمكن تحميل الصفحة حالياً. تحقق من اتصالك ثم حاول مرة أخرى.</p>
       <p dir="ltr"><strong>You are offline.</strong> Please reconnect and retry.</p>
       <p><a href="/ar">العودة إلى الرئيسية</a> | <a href="/en" dir="ltr">Back to home</a></p>
+
+      <div class="section" id="cached">
+        <div class="title">آخر بيانات محفوظة</div>
+        <div class="meta" id="updatedAt">...</div>
+
+        <div class="section">
+          <div class="title">عروض السوّاق <span class="badge" dir="ltr">/api/providers</span></div>
+          <ul id="providersList"></ul>
+        </div>
+
+        <div class="section">
+          <div class="title">طلبات التجّار <span class="badge" dir="ltr">/api/merchant-goods-posts</span></div>
+          <ul id="goodsList"></ul>
+        </div>
+      </div>
     </div>
+
+    <script src="/idb.js"></script>
+    <script>
+      const fmt = (ms) => {
+        if (!ms) return '';
+        try {
+          return new Date(ms).toLocaleString();
+        } catch {
+          return String(ms);
+        }
+      };
+
+      const safeText = (v) => (v === null || v === undefined ? '' : String(v));
+
+      const renderList = (el, items, mapItem) => {
+        el.innerHTML = '';
+        if (!Array.isArray(items) || items.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = 'لا توجد بيانات محفوظة.';
+          el.appendChild(li);
+          return;
+        }
+        items.slice(0, 8).forEach((it) => {
+          const li = document.createElement('li');
+          const { title, sub, href } = mapItem(it);
+          const a = document.createElement('a');
+          a.href = href;
+          a.textContent = title;
+          a.style.display = 'block';
+          a.style.fontWeight = '700';
+          const d = document.createElement('div');
+          d.className = 'sub';
+          d.textContent = sub;
+          li.appendChild(a);
+          li.appendChild(d);
+          el.appendChild(li);
+        });
+      };
+
+      async function loadCached() {
+        const updatedAtEl = document.getElementById('updatedAt');
+        const providersList = document.getElementById('providersList');
+        const goodsList = document.getElementById('goodsList');
+
+        let latest = 0;
+
+        try {
+          const p = await self.sawegIdb.getJson('api:/api/providers');
+          if (p && p.updatedAt) latest = Math.max(latest, p.updatedAt);
+          renderList(providersList, p ? p.data : [], (it) => {
+            const name = safeText(it.name || '');
+            const loc = safeText(it.location || '-');
+            const dest = safeText(it.destination || '');
+            const sub = dest ? `${loc} → ${dest}` : loc;
+            const locale = document.documentElement.lang === 'en' ? 'en' : 'ar';
+            const href = `/${locale}/providers/${encodeURIComponent(it.id)}`;
+            return { title: name || 'عرض', sub, href };
+          });
+        } catch {
+          renderList(providersList, [], () => ({ title: '', sub: '', href: '#' }));
+        }
+
+        try {
+          const g = await self.sawegIdb.getJson('api:/api/merchant-goods-posts');
+          if (g && g.updatedAt) latest = Math.max(latest, g.updatedAt);
+          renderList(goodsList, g ? g.data : [], (it) => {
+            const merchantName = safeText(it.name || (it.user && it.user.fullName) || '');
+            const from = safeText(it.startingPoint || '-');
+            const to = safeText(it.destination || '-');
+            const goods = safeText(it.goodsType || '');
+            const sub = [goods, `${from} → ${to}`].filter(Boolean).join(' • ');
+            const locale = document.documentElement.lang === 'en' ? 'en' : 'ar';
+            const href = `/${locale}/merchant-goods-posts/${encodeURIComponent(it.id)}`;
+            return { title: merchantName || 'طلب', sub, href };
+          });
+        } catch {
+          renderList(goodsList, [], () => ({ title: '', sub: '', href: '#' }));
+        }
+
+        updatedAtEl.textContent = latest ? `آخر تحديث: ${fmt(latest)}` : 'لا يوجد تحديث محفوظ.';
+      }
+
+      loadCached();
+
+      window.addEventListener('online', () => {
+        // Try to go back to app when connection is restored.
+        window.location.reload();
+      });
+    </script>
   </body>
 </html>
