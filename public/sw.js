@@ -6,7 +6,7 @@ try {
   // ignore
 }
 
-const CACHE_NAME = 'saweg-pwa-v5';
+const CACHE_NAME = 'saweg-pwa-v6';
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -107,7 +107,10 @@ self.addEventListener('message', (event) => {
 
       const fetchAndCacheAsset = async (u) => {
         try {
-          if (String(u || '').startsWith('/_next/')) return;
+          // Only cache Next.js hashed static assets. These are safe because their filenames are content-hashed.
+          // Avoid caching other /_next/* endpoints.
+          const url = String(u || '');
+          if (url.startsWith('/_next/') && !url.startsWith('/_next/static/')) return;
           const cached = await cache.match(u);
           if (cached) return;
           const res = await fetch(u, baseInit);
@@ -187,6 +190,28 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
+  // Cache Next.js static assets (JS/CSS) so offline/poor network doesn't render unstyled HTML.
+  // These are content-hashed, so serving them from cache is safe.
+  if (url.origin === self.location.origin && req.method === 'GET' && url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.match(req);
+        if (cached) return cached;
+        const res = await fetch(req);
+        if (res && res.ok) {
+          try {
+            await cache.put(req, res.clone());
+          } catch {
+            // ignore
+          }
+        }
+        return res;
+      })()
+    );
+    return;
+  }
+
   // Never cache Next.js internal assets (including /_next/static). Caching these can cause stale JS/CSS and hydration mismatches.
   if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
     event.respondWith(fetch(req));
@@ -260,6 +285,41 @@ self.addEventListener('fetch', (event) => {
             if (fresh && fresh.ok) {
               const cache = await caches.open(CACHE_NAME);
               await cache.put(req, fresh.clone());
+
+              // Also cache Next.js static assets referenced by this HTML so the page can render offline
+              // without missing CSS/JS.
+              event.waitUntil(
+                (async () => {
+                  try {
+                    const html = await fresh.clone().text();
+                    const re = /\"(\/_next\/static\/[^\"\\]+)\"|\'(\/_next\/static\/[^\'\\]+)\'/g;
+                    const assetUrls = new Set();
+                    let m;
+                    while ((m = re.exec(html))) {
+                      const u = m[1] || m[2];
+                      if (u) assetUrls.add(u);
+                    }
+
+                    await Promise.allSettled(
+                      Array.from(assetUrls).map(async (u) => {
+                        try {
+                          const assetReq = new Request(u, { credentials: 'same-origin' });
+                          const already = await cache.match(assetReq);
+                          if (already) return;
+                          const res = await fetch(assetReq);
+                          if (res && res.ok) {
+                            await cache.put(assetReq, res.clone());
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      })
+                    );
+                  } catch {
+                    // ignore
+                  }
+                })()
+              );
             }
           } catch {
             // ignore
