@@ -131,7 +131,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  flex-direction: row-reverse;
+  flex-direction: row;
 }
 
 :global(html[dir="rtl"]) .flexContainer {
@@ -188,7 +188,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex-direction: row-reverse;
+    flex-direction: row;
   }
 }
 
