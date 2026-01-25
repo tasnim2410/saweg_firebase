@@ -378,13 +378,17 @@
   }
   
   .carouselItem {
-    flex: 0 0 260px;
+    flex: 0 0 250px;
     height: 350px;
   }
   
   .imageContainer {
-    flex: 0 0 60%;
-  }
+  flex: 0 0 60%;
+  width: 100%;
+  background-color: #f8f9fa;
+  position: relative;
+  overflow: hidden;
+}
   
   .contentWrapper {
     padding: 12px;
@@ -416,13 +420,17 @@
   }
   
   .carouselItem {
-    flex: 0 0 230px;
+    flex: 0 0 210px;
     height: 300px;
   }
   
   .imageContainer {
-    flex: 0 0 120px;
-  }
+  flex: 0 0 55%;
+  width: 100%;
+  background-color: #f8f9fa;
+  position: relative;
+  overflow: hidden;
+}
   
   .contentWrapper {
     gap: 4px;
