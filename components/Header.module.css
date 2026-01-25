@@ -107,7 +107,8 @@
 }
 
 .container {
-  max-width: 72rem;
+  max-width: none;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1rem;
@@ -130,13 +131,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.flexRowReverse {
   flex-direction: row-reverse;
 }
 
-.flexRow {
+:global(html[dir="rtl"]) .flexContainer {
   flex-direction: row;
 }
 
@@ -153,6 +151,8 @@
   .nav {
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex: 1;
     gap: 2rem;
   }
 }
@@ -188,7 +188,12 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-direction: row-reverse;
   }
+}
+
+:global(html[dir="rtl"]) .desktopActions {
+  flex-direction: row;
 }
 
 .userMenuWrapper {
@@ -247,6 +252,11 @@
   z-index: 60;
 }
 
+:global(html[dir="rtl"]) .userDropdown {
+  right: auto;
+  left: 0;
+}
+
 .userDropdownItem {
   display: block;
   width: 100%;
@@ -257,6 +267,10 @@
   color: #111827;
   text-decoration: none;
   background: transparent;
+}
+
+:global(html[dir="rtl"]) .userDropdownItem {
+  text-align: right;
 }
 
 .userDropdownItem:hover {
@@ -274,6 +288,10 @@
   background: transparent;
   border: none;
   cursor: pointer;
+}
+
+:global(html[dir="rtl"]) .userDropdownItemButton {
+  text-align: right;
 }
 
 .userDropdownItemButton:hover {
@@ -389,6 +407,11 @@
   overflow: hidden;
   min-width: 150px;
   right: 0;
+}
+
+:global(html[dir="rtl"]) .langDropdown {
+  right: auto;
+  left: 0;
 }
 
 .langOption {

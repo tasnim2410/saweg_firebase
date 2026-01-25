@@ -6,7 +6,7 @@ try {
   // ignore
 }
 
-const CACHE_NAME = 'saweg-pwa-v4';
+const CACHE_NAME = 'saweg-pwa-v5';
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -107,6 +107,7 @@ self.addEventListener('message', (event) => {
 
       const fetchAndCacheAsset = async (u) => {
         try {
+          if (String(u || '').startsWith('/_next/')) return;
           const cached = await cache.match(u);
           if (cached) return;
           const res = await fetch(u, baseInit);
@@ -186,12 +187,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Never cache Next.js internal assets. Caching these can cause stale JS/CSS and hydration mismatches.
-  if (
-    url.origin === self.location.origin &&
-    url.pathname.startsWith('/_next/') &&
-    !url.pathname.startsWith('/_next/static/')
-  ) {
+  // Never cache Next.js internal assets (including /_next/static). Caching these can cause stale JS/CSS and hydration mismatches.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
     event.respondWith(fetch(req));
     return;
   }

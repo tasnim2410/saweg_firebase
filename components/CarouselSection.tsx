@@ -1,33 +1,5 @@
 'use client';
 
-//   id: number;
-//   userId?: string;
-//   name: string;           // used as title
-//   location: string;       // used as current location
-//   phone: string;          // phoneNumber
-//   image: string | null;   // path to uploaded image
-//   active: boolean;
-//   lastLocationUpdateAt?: string | Date;
-//   description?: string | null;
-//   destination?: string | null;
-//   placeOfBusiness?: string | null;
-//   publishedByAdmin?: boolean;
-// }
-
-// const CarouselSection: React.FC = () => {
-//   const carouselRef = useRef<HTMLDivElement>(null);
-//   const t = useTranslations('carousel');
-//   const locale = useLocale();
-//   const [providers, setProviders] = useState<Provider[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(false);
-//   const [canAdd, setCanAdd] = useState(false);
-//   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
-//   const [copiedForId, setCopiedForId] = useState<number | null>(null);
-//   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
-
-//   const endpoint = '/api/providers';
-//   const addHref = `/${locale}/dashboard/add-provider`;
 import React, { useRef, useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -54,6 +26,7 @@ const CarouselSection: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
+
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -194,10 +167,11 @@ const CarouselSection: React.FC = () => {
   }, []);
 
   const MAX_ITEMS = 10;
+  const MAX_DESCRIPTION_CHARS = 55;
   const hasMore = providers.length > MAX_ITEMS;
   const visibleProviders = hasMore ? providers.slice(0, MAX_ITEMS) : providers;
-  const seeMoreHref = `/${locale}/providers`;
-  const seeMoreLabel = locale === 'ar' ? 'عرض المزيد من العروض' : 'See more offers';
+  const seeMoreOffersHref = `/${locale}/providers`;
+  const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد من العروض' : 'See more offers';
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -296,6 +270,12 @@ const CarouselSection: React.FC = () => {
             const isActive = provider.active && !isStale;
             const statusClass = isActive ? styles.statusActive : styles.statusInactive;
 
+            const description = (provider.description ?? '').trim();
+            const descriptionShort =
+              description.length > MAX_DESCRIPTION_CHARS
+                ? `${description.slice(0, MAX_DESCRIPTION_CHARS)}...`
+                : description;
+
             return (
               <div key={provider.id} className={styles.carouselItem}>
                 <div className={styles.imageContainer}>
@@ -338,15 +318,19 @@ const CarouselSection: React.FC = () => {
                 </div>
 
                 <div className={styles.contentWrapper}>
-                  {provider.description && (
+                  {description ? (
                     <div className={styles.descriptionContainer}>
-                      <p className={styles.description}>
-                        {provider.description.length > 140
-                          ? `${provider.description.substring(0, 140)}...`
-                          : provider.description}
-                      </p>
+                      <Link
+                        href={`/${locale}/providers/${provider.id}`}
+                        className={styles.descriptionLink}
+                        aria-label={provider.name}
+                      >
+                        <p className={`${styles.description} ${styles.descriptionClickable}`}>
+                          {descriptionShort}
+                        </p>
+                      </Link>
                     </div>
-                  )}
+                  ) : null}
 
                   <div className={styles.locationContainer}>
                     <MapPin size={14} className={styles.locationIcon} />
@@ -399,15 +383,15 @@ const CarouselSection: React.FC = () => {
 
           {hasMore ? (
             <Link
-              href={seeMoreHref}
+              href={seeMoreOffersHref}
               className={`${styles.carouselItem} ${styles.seeMoreCard}`}
-              aria-label={seeMoreLabel}
+              aria-label={seeMoreOffersLabel}
             >
               <div className={styles.seeMoreInner}>
                 <div className={styles.seeMoreIconWrap} aria-hidden="true">
                   <Plus size={28} />
                 </div>
-                <div className={styles.seeMoreText}>{seeMoreLabel}</div>
+                <div className={styles.seeMoreText}>{seeMoreOffersLabel}</div>
               </div>
             </Link>
           ) : null}
