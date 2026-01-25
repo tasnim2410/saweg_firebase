@@ -120,6 +120,13 @@
   overflow: hidden;
 }
 
+.metaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 70px;
+}
+
 .titleContainer,
 .productTitleLink,
 .productTitle {
@@ -430,7 +437,6 @@
   }
   
   .actionContainer {
-    margin-top: 0;
     padding-top: 2px;
     padding-bottom: 0;
   }

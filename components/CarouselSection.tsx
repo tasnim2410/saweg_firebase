@@ -318,51 +318,55 @@ const CarouselSection: React.FC = () => {
                 </div>
 
                 <div className={styles.contentWrapper}>
-                  {description ? (
-                    <div className={styles.descriptionContainer}>
-                      <Link
-                        href={`/${locale}/providers/${provider.id}`}
-                        className={styles.descriptionLink}
-                        aria-label={provider.name}
-                      >
-                        <p className={`${styles.description} ${styles.descriptionClickable}`}>
-                          {descriptionShort}
-                        </p>
-                      </Link>
-                    </div>
-                  ) : null}
+                  <div className={styles.metaContainer}>
+                    {description ? (
+                      <div className={styles.descriptionContainer}>
+                        <Link
+                          href={`/${locale}/providers/${provider.id}`}
+                          className={styles.descriptionLink}
+                          aria-label={provider.name}
+                        >
+                          <p className={`${styles.description} ${styles.descriptionClickable}`}>
+                            {descriptionShort}
+                          </p>
+                        </Link>
+                      </div>
+                    ) : null}
 
-                  <div className={styles.locationContainer}>
-                    <MapPin size={14} className={styles.locationIcon} />
-                    <span className={styles.locationText}>
-                      {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
-                    </span>
-                    <span
-                      className={`${styles.statusDot} ${statusClass}`}
-                      title={
-                        isActive
-                          ? locale === 'ar'
-                            ? 'نشط'
-                            : 'Active'
-                          : locale === 'ar'
-                            ? 'غير نشط'
-                            : 'Inactive'
-                      }
-                    />
+                    {provider.location ? (
+                      <div className={styles.locationContainer}>
+                        <MapPin size={14} className={styles.locationIcon} />
+                        <span className={styles.locationText}>
+                          {getLocationLabel(provider.location, locale === 'ar' ? 'ar' : 'en')}
+                        </span>
+                        <span
+                          className={`${styles.statusDot} ${statusClass}`}
+                          title={
+                            isActive
+                              ? locale === 'ar'
+                                ? 'نشط'
+                                : 'Active'
+                              : locale === 'ar'
+                                ? 'غير نشط'
+                                : 'Inactive'
+                          }
+                        />
+                      </div>
+                    ) : null}
+
+                    {(provider.destination ?? provider.placeOfBusiness) ? (
+                      <div className={styles.destinationContainer}>
+                        <Truck size={14} className={styles.destinationIcon} />
+                        <span className={styles.destinationText}>
+                          {t('destinationPrefix')}{' '}
+                          {getLocationLabel(
+                            (provider.destination ?? provider.placeOfBusiness) ?? '',
+                            locale === 'ar' ? 'ar' : 'en'
+                          )}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
-
-                  {(provider.destination ?? provider.placeOfBusiness) && (
-                    <div className={styles.destinationContainer}>
-                      <Truck size={14} className={styles.destinationIcon} />
-                      <span className={styles.destinationText}>
-                        {t('destinationPrefix')}{' '}
-                        {getLocationLabel(
-                          (provider.destination ?? provider.placeOfBusiness) ?? '',
-                          locale === 'ar' ? 'ar' : 'en'
-                        )}
-                      </span>
-                    </div>
-                  )}
 
                   <div className={styles.actionContainer}>
                     <a
