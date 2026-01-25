@@ -42,7 +42,7 @@ const CarouselSectionMerchant: React.FC = () => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
-  const sharePopoverRef = useRef<HTMLButtonElement | null>(null);
+  const sharePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
@@ -124,6 +124,8 @@ const CarouselSectionMerchant: React.FC = () => {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [openShareForId]);
+
+  const MAX_DESCRIPTION_CHARS = 55;
 
   useEffect(() => {
     let cancelled = false;
@@ -288,16 +290,11 @@ const CarouselSectionMerchant: React.FC = () => {
 
             const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
 
-            const summaryParts: string[] = [];
-            if (post.goodsType) summaryParts.push(post.goodsType);
-            if (Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit) {
-              summaryParts.push(`${post.goodsWeight} ${post.goodsWeightUnit}`);
-            }
-            if (post.loadingDate) {
-              const dateLabel = formatDate(post.loadingDate);
-              if (dateLabel) summaryParts.push(dateLabel);
-            }
-            const summary = summaryParts.filter(Boolean).join(' • ');
+            const description = (post.description ?? '').trim();
+            const descriptionShort =
+              description.length > MAX_DESCRIPTION_CHARS
+                ? `${description.slice(0, MAX_DESCRIPTION_CHARS)}...`
+                : description;
 
             return (
               <div key={post.id} className={styles.carouselItem}>
@@ -318,47 +315,59 @@ const CarouselSectionMerchant: React.FC = () => {
                       }}
                     />
                   </Link>
+
+                  <button
+                    type="button"
+                    className={styles.shareButton}
+                    onClick={() => void handleShare(post)}
+                    aria-label={t('share') || 'Share'}
+                    title={t('share') || 'Share'}
+                  >
+                    <Share2 size={16} aria-hidden="true" />
+                  </button>
+
+                  {openShareForId === post.id && (
+                    <div
+                      ref={sharePopoverRef}
+                      className={styles.shareMenu}
+                      role="menu"
+                      aria-label="Share options"
+                    >
+                      {/* Share menu items */}
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.contentWrapper}>
-                  <div className={styles.titleContainer}>
-                    <Link
-                      href={`/${locale}/merchant-goods-posts/${post.id}`}
-                      className={styles.productTitleLink}
-                    >
-                      <h3 className={styles.productTitle}>{merchantName}</h3>
-                    </Link>
-                    <button
-                      type="button"
-                      className={styles.shareButton}
-                      onClick={() => void handleShare(post)}
-                      aria-label={t('share') || 'Share'}
-                      title={t('share') || 'Share'}
-                      ref={openShareForId === post.id ? sharePopoverRef : undefined}
-                    >
-                      <Share2 size={16} aria-hidden="true" />
-                    </button>
-                  </div>
+                  <div className={styles.metaContainer}>
+                    {description ? (
+                      <div className={styles.descriptionContainer}>
+                        <Link
+                          href={`/${locale}/merchant-goods-posts/${post.id}`}
+                          className={styles.descriptionLink}
+                          aria-label={merchantName}
+                        >
+                          <p className={`${styles.description} ${styles.descriptionClickable}`}>
+                            {descriptionShort}
+                          </p>
+                        </Link>
+                      </div>
+                    ) : null}
 
-                  {summary ? (
-                    <div className={styles.descriptionContainer}>
-                      <p className={styles.description}>{summary}</p>
+                    <div className={styles.locationContainer}>
+                      <MapPin size={14} className={styles.locationIcon} />
+                      <span className={styles.locationText}>
+                        {getLocationLabel(post.startingPoint || '-', locale === 'ar' ? 'ar' : 'en')}
+                      </span>
+                      <span className={`${styles.statusDot} ${statusClass}`} />
                     </div>
-                  ) : null}
 
-                  <div className={styles.locationContainer}>
-                    <MapPin size={14} className={styles.locationIcon} />
-                    <span className={styles.locationText}>
-                      {getLocationLabel(post.startingPoint || '-', locale === 'ar' ? 'ar' : 'en')}
-                    </span>
-                    <span className={`${styles.statusDot} ${statusClass}`} />
-                  </div>
-
-                  <div className={styles.destinationContainer}>
-                    <Truck size={14} className={styles.destinationIcon} />
-                    <span className={styles.destinationText}>
-                      {getLocationLabel(post.destination || '-', locale === 'ar' ? 'ar' : 'en')}
-                    </span>
+                    <div className={styles.destinationContainer}>
+                      <Truck size={14} className={styles.destinationIcon} />
+                      <span className={styles.destinationText}>
+                        {getLocationLabel(post.destination || '-', locale === 'ar' ? 'ar' : 'en')}
+                      </span>
+                    </div>
                   </div>
 
                   <div className={styles.actionContainer}>
