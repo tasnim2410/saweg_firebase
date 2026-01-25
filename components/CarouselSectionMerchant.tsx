@@ -140,13 +140,13 @@ const CarouselSectionMerchant: React.FC = () => {
     const isAr = locale === 'ar';
 
     if (minutes < 1) return isAr ? 'الآن' : 'now';
-    if (minutes < 60) return isAr ? `منذ ${minutes}د` : `${minutes}m ago`;
-    if (hours < 24) return isAr ? `منذ ${hours}س` : `${hours}h ago`;
-    if (days < 7) return isAr ? `منذ ${days}ي` : `${days}d ago`;
+    if (minutes < 60) return isAr ? `منذ ${minutes} دقيقة` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
     const weeks = Math.floor(days / 7);
-    if (weeks < 5) return isAr ? `منذ ${weeks}أ` : `${weeks}w ago`;
+    if (weeks < 5) return isAr ? `منذ ${weeks} أسبوع` : `${weeks}w ago`;
     const months = Math.floor(days / 30);
-    return isAr ? `منذ ${months}ش` : `${months}mo ago`;
+    return isAr ? `منذ ${months} شهر` : `${months}mo ago`;
   };
 
   useEffect(() => {
