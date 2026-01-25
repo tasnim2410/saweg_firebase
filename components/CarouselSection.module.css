@@ -136,7 +136,7 @@
 .shareButton {
   position: absolute;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -149,6 +149,23 @@
   cursor: pointer;
   z-index: 10;
   transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.timeBadge {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 10;
+  pointer-events: none;
   backdrop-filter: blur(4px);
 }
 

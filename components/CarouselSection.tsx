@@ -16,6 +16,7 @@ interface Provider {
   image: string | null;   // path to uploaded image
   active: boolean;
   lastLocationUpdateAt?: string | Date;
+  createdAt?: string | Date;
   description?: string | null;
   destination?: string | null;
   placeOfBusiness?: string | null;
@@ -201,6 +202,28 @@ const CarouselSection: React.FC = () => {
     }
   };
 
+  const timeAgoLabelFromMs = (ms: number) => {
+    if (!Number.isFinite(ms)) return '';
+    const diffMs = Date.now() - ms;
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    const isAr = locale === 'ar';
+
+    if (minutes < 1) return isAr ? 'الآن' : 'now';
+    if (minutes < 60) return isAr ? `منذ ${minutes}د` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours}س` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days}ي` : `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return isAr ? `منذ ${weeks}أ` : `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    return isAr ? `منذ ${months}ش` : `${months}mo ago`;
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -264,11 +287,14 @@ const CarouselSection: React.FC = () => {
             const lastUpdateMs = provider.lastLocationUpdateAt
               ? new Date(provider.lastLocationUpdateAt as any).getTime()
               : NaN;
+            const createdAtMs = provider.createdAt ? new Date(provider.createdAt as any).getTime() : NaN;
             const isStale = Number.isFinite(lastUpdateMs)
               ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000
               : false;
             const isActive = provider.active && !isStale;
             const statusClass = isActive ? styles.statusActive : styles.statusInactive;
+
+            const timeAgo = timeAgoLabelFromMs(createdAtMs);
 
             const description = (provider.description ?? '').trim();
             const descriptionShort =
@@ -294,6 +320,8 @@ const CarouselSection: React.FC = () => {
                       }}
                     />
                   </Link>
+
+                  {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
 
                   <button
                     type="button"

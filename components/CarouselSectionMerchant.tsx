@@ -127,6 +127,28 @@ const CarouselSectionMerchant: React.FC = () => {
 
   const MAX_DESCRIPTION_CHARS = 55;
 
+  const timeAgoLabelFromMs = (ms: number) => {
+    if (!Number.isFinite(ms)) return '';
+    const diffMs = Date.now() - ms;
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    const isAr = locale === 'ar';
+
+    if (minutes < 1) return isAr ? 'الآن' : 'now';
+    if (minutes < 60) return isAr ? `منذ ${minutes}د` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours}س` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days}ي` : `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return isAr ? `منذ ${weeks}أ` : `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    return isAr ? `منذ ${months}ش` : `${months}mo ago`;
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -290,6 +312,8 @@ const CarouselSectionMerchant: React.FC = () => {
 
             const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
 
+            const timeAgo = timeAgoLabelFromMs(createdAtMs);
+
             const description = (post.description ?? '').trim();
             const descriptionShort =
               description.length > MAX_DESCRIPTION_CHARS
@@ -315,6 +339,8 @@ const CarouselSectionMerchant: React.FC = () => {
                       }}
                     />
                   </Link>
+
+                  {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
 
                   <button
                     type="button"
