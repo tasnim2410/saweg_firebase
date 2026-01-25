@@ -46,6 +46,8 @@ export default function ServiceWorkerRegister() {
       return;
     }
 
+    let dispose: null | (() => void) = null;
+
     const register = async () => {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js', {
@@ -133,6 +135,10 @@ export default function ServiceWorkerRegister() {
           });
         });
 
+        const onWarmup = () => {
+          void warmup();
+        };
+
         // Proactively check for updates.
         const onUpdateCheck = () => {
           void reg.update().catch(() => null);
@@ -141,11 +147,13 @@ export default function ServiceWorkerRegister() {
 
         window.addEventListener('focus', onUpdateCheck);
         window.addEventListener('online', onUpdateCheck);
+        window.addEventListener('saweg:warmup', onWarmup as EventListener);
         const intervalId = window.setInterval(onUpdateCheck, 60 * 60 * 1000);
 
         return () => {
           window.removeEventListener('focus', onUpdateCheck);
           window.removeEventListener('online', onUpdateCheck);
+          window.removeEventListener('saweg:warmup', onWarmup as EventListener);
           window.clearInterval(intervalId);
         };
       } catch (err) {
@@ -153,7 +161,13 @@ export default function ServiceWorkerRegister() {
       }
     };
 
-    void register();
+    void register().then((d) => {
+      dispose = typeof d === 'function' ? d : null;
+    });
+
+    return () => {
+      dispose?.();
+    };
   }, []);
 
   return null;

@@ -200,6 +200,14 @@ export default function AddProviderPage() {
       }
 
       pushToast({ variant: 'success', title: titleFor('success'), message: t('success') });
+
+      try {
+        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
+
       router.push(`/${locale}`);
       router.refresh();
     } catch {

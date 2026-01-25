@@ -293,6 +293,14 @@ export default function AddMerchantGoodsPostPage() {
         title: titleFor('success'),
         message: locale === 'ar' ? 'تم نشر الطلب بنجاح' : 'Post published successfully',
       });
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
+
       router.push(`/${locale}`);
       router.refresh();
     } catch {
