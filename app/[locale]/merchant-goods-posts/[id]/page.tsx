@@ -196,6 +196,28 @@ export default async function MerchantGoodsPostDetailsPage({
     return `tel:${normalized}`;
   };
 
+  const timeAgoLabelFromMs = (ms: number) => {
+    if (!Number.isFinite(ms)) return '';
+    const diffMs = Date.now() - ms;
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    const isAr = locale === 'ar';
+
+    if (minutes < 1) return isAr ? 'الآن' : 'now';
+    if (minutes < 60) return isAr ? `منذ ${minutes} دقيقة` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return isAr ? `منذ ${weeks} أسبوع` : `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    return isAr ? `منذ ${months} شهر` : `${months}mo ago`;
+  };
+
   const formatPhoneForDisplay = (phoneNumber: string) => {
     const trimmed = (phoneNumber || '').trim();
     if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
@@ -234,6 +256,9 @@ export default async function MerchantGoodsPostDetailsPage({
       (post.user.phone && isAdminIdentifier(String(post.user.phone)))
   );
 
+  const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
+  const timeAgo = timeAgoLabelFromMs(createdAtMs);
+
   return (
     <main className={styles.main}>
       <Header />
@@ -254,10 +279,16 @@ export default async function MerchantGoodsPostDetailsPage({
 
             <div className={styles.headerText}>
               <h1 className={styles.title}>{merchantName}</h1>
+              {timeAgo ? <div className={styles.subtitle}>{timeAgo}</div> : null}
             </div>
           </div>
 
           <div className={styles.grid}>
+            <div className={styles.infoBlockFull}>
+              <div className={styles.infoLabel}>{labels.description}</div>
+              <div className={styles.infoValue}>{post.description || '-'}</div>
+            </div>
+
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{labels.route}</div>
               <div className={styles.infoValue}>
@@ -292,11 +323,6 @@ export default async function MerchantGoodsPostDetailsPage({
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.vehicle}</div>
               <div className={styles.infoValue}>{post.vehicleTypeDesired || '-'}</div>
-            </div>
-
-            <div className={styles.infoBlockFull}>
-              <div className={styles.infoLabel}>{labels.description}</div>
-              <div className={styles.infoValue}>{post.description || '-'}</div>
             </div>
 
             <div className={styles.infoBlockFull}>

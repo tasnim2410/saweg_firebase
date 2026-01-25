@@ -191,6 +191,28 @@ export default async function ProviderDetailsPage({
     return `tel:${normalized}`;
   };
 
+  const timeAgoLabelFromMs = (ms: number) => {
+    if (!Number.isFinite(ms)) return '';
+    const diffMs = Date.now() - ms;
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    const isAr = locale === 'ar';
+
+    if (minutes < 1) return isAr ? 'الآن' : 'now';
+    if (minutes < 60) return isAr ? `منذ ${minutes} دقيقة` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return isAr ? `منذ ${weeks} أسبوع` : `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    return isAr ? `منذ ${months} شهر` : `${months}mo ago`;
+  };
+
   const formatPhoneForDisplay = (phoneNumber: string) => {
     const trimmed = (phoneNumber || '').trim();
     if (trimmed.endsWith('+') && !trimmed.startsWith('+')) {
@@ -203,6 +225,9 @@ export default async function ProviderDetailsPage({
   const destLabel = provider.destination
     ? getLocationLabel(provider.destination, locale === 'ar' ? 'ar' : 'en')
     : '';
+
+  const createdAtMs = provider.createdAt ? new Date(provider.createdAt as any).getTime() : NaN;
+  const timeAgo = timeAgoLabelFromMs(createdAtMs);
 
   const lastUpdateMs = new Date(provider.lastLocationUpdateAt as any).getTime();
   const isStale = Number.isFinite(lastUpdateMs) ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000 : false;
@@ -228,7 +253,9 @@ export default async function ProviderDetailsPage({
 
             <div className={styles.headerText}>
               <h1 className={styles.title}>{provider.name}</h1>
-             
+
+              {timeAgo ? <div className={styles.subtitle}>{timeAgo}</div> : null}
+
               <div className={styles.badge} data-active={provider.active ? 'true' : 'false'}>
                 {provider.active ? tDash('available') : tDash('notAvailable')}
               </div>
@@ -236,14 +263,16 @@ export default async function ProviderDetailsPage({
           </div>
 
           <div className={styles.grid}>
-            <div className={styles.infoBlock}>
-              <div className={styles.infoLabel}>{tForm('location')}</div>
-              <div className={styles.infoValue}>{locLabel || '-'}</div>
+            <div className={styles.infoBlockFull}>
+              <div className={styles.infoLabel}>{tForm('description')}</div>
+              <div className={styles.infoValue}>{provider.description || '-'}</div>
             </div>
 
-            <div className={styles.infoBlock}>
-              <div className={styles.infoLabel}>{tForm('destination')}</div>
-              <div className={styles.infoValue}>{destLabel || '-'}</div>
+            <div className={styles.infoBlockFull}>
+              <div className={styles.infoLabel}>{locale === 'ar' ? 'المسار' : 'Route'}</div>
+              <div className={styles.infoValue}>
+                {locLabel || '-'} → {destLabel || '-'}
+              </div>
             </div>
 
             <div className={styles.infoBlock}>
@@ -258,11 +287,6 @@ export default async function ProviderDetailsPage({
                   ? `${provider.user.maxCharge}${provider.user.maxChargeUnit ? ` ${provider.user.maxChargeUnit}` : ''}`
                   : '-'}
               </div>
-            </div>
-
-            <div className={styles.infoBlockFull}>
-              <div className={styles.infoLabel}>{tForm('description')}</div>
-              <div className={styles.infoValue}>{provider.description || '-'}</div>
             </div>
 
             <div className={styles.infoBlockFull}>
