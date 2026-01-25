@@ -114,11 +114,11 @@
 
 .contentWrapper {
   flex: 1;
-  padding: 16px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  height: 40%; /* Takes 40% of card height */
+  gap: 5px;
+  height: 30%; /* Takes 30% of card height */
 }
 
 .titleContainer,
@@ -126,7 +126,6 @@
 .productTitle {
   display: none;
 }
-
 
 .shareButton {
   position: absolute;
@@ -153,18 +152,22 @@
 }
 
 .descriptionContainer {
-  margin-bottom: 8px;
+  margin: 0;
 }
 
 .description {
   font-size: 14px;
-  color: #374151;
-  line-height: 1.5;
+  color: #111827;
+  line-height: 1.45;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  padding: 6px 8px;
+  border-radius: 10px;
   display: -webkit-box;
-  line-clamp: 3; /* Show up to 3 lines */
-  -webkit-line-clamp: 3; /* Show up to 3 lines */
+  line-clamp: 2; /* Show up to 2 lines */
+  -webkit-line-clamp: 2; /* Show up to 2 lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -174,10 +177,10 @@
 .destinationContainer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12.5px;
   color: #4b5563;
-  padding: 4px 0;
+  padding: 2px 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -221,7 +224,8 @@
 
 .actionContainer {
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 3px;
+  padding-bottom: 5px;
 }
 
 .callButton {
@@ -229,7 +233,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -346,7 +350,7 @@
   
    .carouselItem {
     flex: 0 0 260px;
-    height: 360px;
+    height: 350px;
   }
   
    .imageContainer {
@@ -356,7 +360,7 @@
   .contentWrapper {
     height: 40%; /* Maintain 40% on mobile */
     padding: 12px;
-    gap: 10px;
+    gap: 5px;
   }
   .productTitle {
     font-size: 15px;

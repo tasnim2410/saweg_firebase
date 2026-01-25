@@ -57,6 +57,14 @@ export default function ServiceWorkerRegister() {
 
         const warmup = async () => {
           const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+
+          try {
+            const ctrl = navigator.serviceWorker.controller;
+            ctrl?.postMessage({ type: 'WARMUP', lang });
+          } catch {
+            // ignore
+          }
+
           const pages = [
             `/${lang}`,
             `/${lang}/my-profile`,

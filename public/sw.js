@@ -48,6 +48,94 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   if (event?.data?.type === 'SKIP_WAITING') {
     event.waitUntil(self.skipWaiting());
+    return;
+  }
+
+  if (event?.data?.type === 'WARMUP') {
+    const lang = event?.data?.lang === 'en' ? 'en' : 'ar';
+
+    const pages = [
+      `/${lang}`,
+      `/${lang}/my-profile`,
+      `/${lang}/dashboard/my-posts`,
+      `/${lang}/dashboard/my-providers`,
+    ];
+
+    const apis = [
+      '/api/providers',
+      '/api/merchant-goods-posts',
+      '/api/auth/me',
+      '/api/providers/mine',
+    ];
+
+    const baseInit = {
+      credentials: 'include',
+      cache: 'reload',
+    };
+
+    const warmup = async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const assetUrls = new Set();
+
+      const fetchAndCachePage = async (path) => {
+        try {
+          const res = await fetch(path, baseInit);
+          if (!res || !res.ok) return;
+
+          const clone = res.clone();
+          try {
+            await cache.put(path, clone);
+          } catch {
+            // ignore
+          }
+
+          try {
+            const html = await res.text();
+            const re = /\"(\/_next\/static\/[^\"\\]+)\"|\'(\/_next\/static\/[^\'\\]+)\'/g;
+            let m;
+            while ((m = re.exec(html))) {
+              const u = m[1] || m[2];
+              if (u) assetUrls.add(u);
+            }
+          } catch {
+            // ignore
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      const fetchAndCacheAsset = async (u) => {
+        try {
+          const cached = await cache.match(u);
+          if (cached) return;
+          const res = await fetch(u, baseInit);
+          if (res && res.ok) {
+            await cache.put(u, res.clone());
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      const refreshApiJson = async (path) => {
+        try {
+          const res = await fetch(path, baseInit);
+          if (!res || !res.ok) return;
+          const data = await res.json();
+          const key = makeApiKey(new URL(path, self.location.origin));
+          await self.sawegIdb?.setJson(key, data);
+        } catch {
+          // ignore
+        }
+      };
+
+      await Promise.allSettled(pages.map((p) => fetchAndCachePage(p)));
+      await Promise.allSettled(Array.from(assetUrls).map((u) => fetchAndCacheAsset(u)));
+      await Promise.allSettled(apis.map((u) => refreshApiJson(u)));
+    };
+
+    event.waitUntil(warmup());
   }
 });
 
@@ -184,6 +272,19 @@ self.addEventListener('fetch', (event) => {
           const cache = await caches.open(CACHE_NAME);
           const cachedNav = await cache.match(req);
           if (cachedNav) return cachedNav;
+          try {
+            const byUrl = await cache.match(url.pathname + url.search);
+            if (byUrl) return byUrl;
+          } catch {
+            // ignore
+          }
+
+          try {
+            const byPath = await cache.match(url.pathname);
+            if (byPath) return byPath;
+          } catch {
+            // ignore
+          }
           const cached = await cache.match('/offline.html');
           return cached || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
         }

@@ -80,7 +80,7 @@ export default function MyPostsPage() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/providers/mine');
+      const res = await fetch('/api/providers/mine', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) {
         pushToast({
@@ -251,7 +251,21 @@ export default function MyPostsPage() {
       await refresh();
 
       try {
-        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        void fetch('/api/providers/mine', { credentials: 'include', cache: 'reload', keepalive: true }).catch(() => null);
+        const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+        try {
+          navigator.serviceWorker?.controller?.postMessage({ type: 'WARMUP', lang });
+        } catch {
+          // ignore
+        }
+
+        try {
+          void navigator.serviceWorker?.ready
+            ?.then((reg) => reg.active?.postMessage({ type: 'WARMUP', lang }))
+            .catch(() => null);
+        } catch {
+          // ignore
+        }
         window.dispatchEvent(new Event('saweg:warmup'));
       } catch {
         // ignore
@@ -289,7 +303,22 @@ export default function MyPostsPage() {
       await refresh();
 
       try {
-        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        void fetch('/api/providers/mine', { credentials: 'include', cache: 'reload', keepalive: true }).catch(() => null);
+        const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+
+        try {
+          navigator.serviceWorker?.controller?.postMessage({ type: 'WARMUP', lang });
+        } catch {
+          // ignore
+        }
+
+        try {
+          void navigator.serviceWorker?.ready
+            ?.then((reg) => reg.active?.postMessage({ type: 'WARMUP', lang }))
+            .catch(() => null);
+        } catch {
+          // ignore
+        }
         window.dispatchEvent(new Event('saweg:warmup'));
       } catch {
         // ignore

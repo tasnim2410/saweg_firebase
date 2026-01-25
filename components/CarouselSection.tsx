@@ -277,7 +277,6 @@ const CarouselSection: React.FC = () => {
       </div>
 
       <div className={styles.carouselWrapper}>
-        {/* Left Arrow */}
         <button
           className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
           onClick={scrollLeft}
@@ -285,8 +284,7 @@ const CarouselSection: React.FC = () => {
         >
           ›
         </button>
-        
-        {/* Carousel */}
+
         <div className={styles.carousel} ref={carouselRef}>
           {visibleProviders.map((provider) => {
             const lastUpdateMs = provider.lastLocationUpdateAt
@@ -299,102 +297,105 @@ const CarouselSection: React.FC = () => {
             const statusClass = isActive ? styles.statusActive : styles.statusInactive;
 
             return (
-    <div key={provider.id} className={styles.carouselItem}>
-      <div className={styles.imageContainer}>
-        <Link 
-          href={`/${locale}/providers/${provider.id}`} 
-          aria-label={provider.name}
-          className={styles.imageLink}
-        >
-          <img
-            src={provider.image || 'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck'}
-            alt={provider.name}
-            className={styles.productImage}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck';
-            }}
-          />
-        </Link>
-        
-        {/* Share button positioned in top right corner of image */}
-        <button
-          type="button"
-          className={styles.shareButton}
-          onClick={() => void handleShare(provider)}
-          aria-label={t('share') || 'Share'}
-          title={t('share') || 'Share'}
-        >
-          <Share2 size={16} aria-hidden="true" />
-        </button>
-        
-        {/* Share menu popover */}
-        {openShareForId === provider.id && (
-          <div
-            ref={sharePopoverRef}
-            className={styles.shareMenu}
-            role="menu"
-            aria-label="Share options"
-          >
-            {/* Share menu items */}
-          </div>
-        )}
-      </div>
+              <div key={provider.id} className={styles.carouselItem}>
+                <div className={styles.imageContainer}>
+                  <Link
+                    href={`/${locale}/providers/${provider.id}`}
+                    aria-label={provider.name}
+                    className={styles.imageLink}
+                  >
+                    <img
+                      src={provider.image || 'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck'}
+                      alt={provider.name}
+                      className={styles.productImage}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck';
+                      }}
+                    />
+                  </Link>
 
-      <div className={styles.contentWrapper}>
-        {/* Description - now more prominent */}
-        {provider.description && (
-          <div className={styles.descriptionContainer}>
-            <p className={styles.description}>
-              {provider.description.length > 140 
-                ? `${provider.description.substring(0, 140)}...` 
-                : provider.description}
-            </p>
-          </div>
-        )}
+                  <button
+                    type="button"
+                    className={styles.shareButton}
+                    onClick={() => void handleShare(provider)}
+                    aria-label={t('share') || 'Share'}
+                    title={t('share') || 'Share'}
+                  >
+                    <Share2 size={16} aria-hidden="true" />
+                  </button>
 
-        {/* Location with better spacing */}
-        <div className={styles.locationContainer}>
-          <MapPin size={14} className={styles.locationIcon} />
-          <span className={styles.locationText}>
-            {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
-          </span>
-          <span className={`${styles.statusDot} ${statusClass}`} 
-                title={isActive ? t('active') : t('inactive')} />
-        </div>
+                  {openShareForId === provider.id && (
+                    <div
+                      ref={sharePopoverRef}
+                      className={styles.shareMenu}
+                      role="menu"
+                      aria-label="Share options"
+                    >
+                      {/* Share menu items */}
+                    </div>
+                  )}
+                </div>
 
-        {/* Destination/Business place */}
-        {(provider.destination ?? provider.placeOfBusiness) && (
-          <div className={styles.destinationContainer}>
-            <Truck size={14} className={styles.destinationIcon} />
-            <span className={styles.destinationText}>
-              {t('destinationPrefix')}{' '}
-              {getLocationLabel(
-                (provider.destination ?? provider.placeOfBusiness) ?? '',
-                locale === 'ar' ? 'ar' : 'en'
-              )}
-            </span>
-          </div>
-        )}
+                <div className={styles.contentWrapper}>
+                  {provider.description && (
+                    <div className={styles.descriptionContainer}>
+                      <p className={styles.description}>
+                        {provider.description.length > 140
+                          ? `${provider.description.substring(0, 140)}...`
+                          : provider.description}
+                      </p>
+                    </div>
+                  )}
 
-        {/* Call button */}
-        <div className={styles.actionContainer}>
-          <a
-            className={`${styles.callButton} ${statusClass}`}
-            href={toTelHref(provider.phone)}
-            onClick={() => trackCall(provider.id)}
-            aria-label={t('call') || 'Call'}
-            title={t('call') || 'Call'}
-          >
-            <Phone size={16} className={styles.callIcon} />
-            <span className={styles.callText}>{t('call') || 'Call'}</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-})}
+                  <div className={styles.locationContainer}>
+                    <MapPin size={14} className={styles.locationIcon} />
+                    <span className={styles.locationText}>
+                      {getLocationLabel(provider.location || '-', locale === 'ar' ? 'ar' : 'en')}
+                    </span>
+                    <span
+                      className={`${styles.statusDot} ${statusClass}`}
+                      title={
+                        isActive
+                          ? locale === 'ar'
+                            ? 'نشط'
+                            : 'Active'
+                          : locale === 'ar'
+                            ? 'غير نشط'
+                            : 'Inactive'
+                      }
+                    />
+                  </div>
 
+                  {(provider.destination ?? provider.placeOfBusiness) && (
+                    <div className={styles.destinationContainer}>
+                      <Truck size={14} className={styles.destinationIcon} />
+                      <span className={styles.destinationText}>
+                        {t('destinationPrefix')}{' '}
+                        {getLocationLabel(
+                          (provider.destination ?? provider.placeOfBusiness) ?? '',
+                          locale === 'ar' ? 'ar' : 'en'
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className={styles.actionContainer}>
+                    <a
+                      className={`${styles.callButton} ${statusClass}`}
+                      href={toTelHref(provider.phone)}
+                      onClick={() => trackCall(provider.id)}
+                      aria-label={t('call') || 'Call'}
+                      title={t('call') || 'Call'}
+                    >
+                      <Phone size={16} className={styles.callIcon} />
+                      <span className={styles.callText}>{t('call') || 'Call'}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
 
           {hasMore ? (
             <Link
@@ -411,8 +412,7 @@ const CarouselSection: React.FC = () => {
             </Link>
           ) : null}
         </div>
-        
-        {/* Right Arrow */}
+
         <button
           className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
           onClick={scrollRight}
