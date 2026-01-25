@@ -77,6 +77,13 @@ export default function MyProvidersPage() {
         return;
       }
       await refresh();
+
+      try {
+        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to update');
     } finally {
@@ -95,6 +102,13 @@ export default function MyProvidersPage() {
         return;
       }
       await refresh();
+
+      try {
+        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to delete');
     } finally {

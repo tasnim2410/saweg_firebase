@@ -249,6 +249,14 @@ export default function MyPostsPage() {
       }
 
       await refresh();
+
+      try {
+        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
+
       pushToast({
         variant: 'success',
         title: titleFor('success'),
@@ -279,6 +287,14 @@ export default function MyPostsPage() {
         return;
       }
       await refresh();
+
+      try {
+        void fetch('/api/providers/mine', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
+
       pushToast({
         variant: 'success',
         title: titleFor('success'),

@@ -187,6 +187,13 @@ export default function AdminMerchantGoodsPostsClient() {
       }
 
       await refresh();
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to update');
     } finally {
@@ -216,6 +223,13 @@ export default function AdminMerchantGoodsPostsClient() {
 
       await refresh();
       setImageFiles((prev) => ({ ...prev, [id]: null }));
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to update image');
     } finally {
@@ -239,6 +253,13 @@ export default function AdminMerchantGoodsPostsClient() {
       }
 
       await refresh();
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to remove image');
     } finally {
@@ -257,6 +278,13 @@ export default function AdminMerchantGoodsPostsClient() {
         return;
       }
       await refresh();
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
     } catch {
       setError('Failed to delete');
     } finally {
