@@ -172,7 +172,7 @@ const CarouselSection: React.FC = () => {
   const hasMore = providers.length > MAX_ITEMS;
   const visibleProviders = hasMore ? providers.slice(0, MAX_ITEMS) : providers;
   const seeMoreOffersHref = `/${locale}/providers`;
-  const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد من العروض' : 'See more offers';
+  const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد' : 'See more    ';
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -230,11 +230,16 @@ const CarouselSection: React.FC = () => {
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
           <h2 className={styles.carouselTitle}>{title}</h2>
-          {canAdd ? (
-            <Link className={styles.addButton} href={addHref}>
-              {t('addProvider')}
+          <div className={styles.topBarActions}>
+            <Link className={styles.viewAllButton} href={seeMoreOffersHref}>
+              {seeMoreOffersLabel}
             </Link>
-          ) : null}
+            {canAdd ? (
+              <Link className={styles.addButton} href={addHref}>
+                {t('addProvider')}
+              </Link>
+            ) : null}
+          </div>
         </div>
         <div className={styles.loading}>{t('loading') || 'جاري تحميل العروض...'}</div>
       </section>
@@ -247,11 +252,16 @@ const CarouselSection: React.FC = () => {
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
           <h2 className={styles.carouselTitle}>{title}</h2>
-          {canAdd ? (
-            <Link className={styles.addButton} href={addHref}>
-              {t('addProvider')}
+          <div className={styles.topBarActions}>
+            <Link className={styles.viewAllButton} href={seeMoreOffersHref}>
+              {seeMoreOffersLabel}
             </Link>
-          ) : null}
+            {canAdd ? (
+              <Link className={styles.addButton} href={addHref}>
+                {t('addProvider')}
+              </Link>
+            ) : null}
+          </div>
         </div>
         <div className={styles.emptyState}>
           {error
@@ -266,11 +276,16 @@ const CarouselSection: React.FC = () => {
     <section className={styles.carouselContainer}>
       <div className={styles.carouselTopBar}>
         <h2 className={styles.carouselTitle}>{title}</h2>
-        {canAdd ? (
-          <Link className={styles.addButton} href={addHref}>
-            {t('addProvider')}
+        <div className={styles.topBarActions}>
+          <Link className={styles.viewAllButton} href={seeMoreOffersHref}>
+            {seeMoreOffersLabel}
           </Link>
-        ) : null}
+          {canAdd ? (
+            <Link className={styles.addButton} href={addHref}>
+              {t('addProvider')}
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <div className={styles.carouselWrapper}>

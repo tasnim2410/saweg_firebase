@@ -24,6 +24,12 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .backButton {
   position: fixed;
   top: 1rem;
@@ -58,6 +64,25 @@
   border-radius: 8px;
   text-decoration: none;
   transition: background-color 0.2s ease;
+}
+
+.viewAllButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: white;
+  color: black;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background-color: #f9fafb;
 }
 
 .addButton:hover {

@@ -207,7 +207,7 @@ const CarouselSectionMerchant: React.FC = () => {
   const hasMore = posts.length > MAX_ITEMS;
   const visiblePosts = hasMore ? posts.slice(0, MAX_ITEMS) : posts;
   const seeMoreHref = `/${locale}/merchant-goods-posts`;
-  const seeMoreLabel = locale === 'ar' ? 'عرض المزيد من الطلبات' : 'See more requests';
+  const seeMoreLabel = locale === 'ar' ? 'عرض المزيد' : 'See all';
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -241,11 +241,16 @@ const CarouselSectionMerchant: React.FC = () => {
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
           <h2 className={styles.carouselTitle}>{title}</h2>
-          {canAdd ? (
-            <Link className={styles.addButton} href={addHref}>
-              {t('addProvider')}
+          <div className={styles.topBarActions}>
+            <Link className={styles.viewAllButton} href={seeMoreHref}>
+              {seeMoreLabel}
             </Link>
-          ) : null}
+            {canAdd ? (
+              <Link className={styles.addButton} href={addHref}>
+                {t('addProvider')}
+              </Link>
+            ) : null}
+          </div>
         </div>
         <div className={styles.loading}>{t('loading') || 'جاري تحميل العروض...'}</div>
       </section>
@@ -257,11 +262,16 @@ const CarouselSectionMerchant: React.FC = () => {
       <section className={styles.carouselContainer}>
         <div className={styles.carouselTopBar}>
           <h2 className={styles.carouselTitle}>{title}</h2>
-          {canAdd ? (
-            <Link className={styles.addButton} href={addHref}>
-              {t('addProvider')}
+          <div className={styles.topBarActions}>
+            <Link className={styles.viewAllButton} href={seeMoreHref}>
+              {seeMoreLabel}
             </Link>
-          ) : null}
+            {canAdd ? (
+              <Link className={styles.addButton} href={addHref}>
+                {t('addProvider')}
+              </Link>
+            ) : null}
+          </div>
         </div>
         <div className={styles.emptyState}>
           {error ? t('error') || 'حدث خطأ أثناء تحميل العروض' : t('noProviders') || 'لا توجد عروض متاحة حالياً'}
@@ -274,11 +284,16 @@ const CarouselSectionMerchant: React.FC = () => {
     <section className={styles.carouselContainer}>
       <div className={styles.carouselTopBar}>
         <h2 className={styles.carouselTitle}>{title}</h2>
-        {canAdd ? (
-          <Link className={styles.addButton} href={addHref}>
-            {t('addProvider')}
+        <div className={styles.topBarActions}>
+          <Link className={styles.viewAllButton} href={seeMoreHref}>
+            {seeMoreLabel}
           </Link>
-        ) : null}
+          {canAdd ? (
+            <Link className={styles.addButton} href={addHref}>
+              {t('addProvider')}
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <div className={styles.carouselWrapper}>
