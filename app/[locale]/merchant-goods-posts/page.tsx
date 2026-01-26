@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import styles from '@/components/CarouselSection.module.css';
 import Link from 'next/link';
@@ -50,6 +49,7 @@ export default async function MerchantGoodsPostsPage({
   const title = locale === 'ar' ? 'كل طلبات التجّار' : 'All merchants requests';
   const countLabel = locale === 'ar' ? `${posts.length} طلب` : `${posts.length} requests`;
   const lang = locale === 'ar' ? 'ar' : 'en';
+  const arrow = locale === 'ar' ? '→' : '←';
 
   const formatDate = (d: string | Date) => {
     const date = new Date(d as any);
@@ -63,7 +63,9 @@ export default async function MerchantGoodsPostsPage({
 
   return (
     <main>
-      <Header />
+      <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+        {arrow}
+      </Link>
       <div className={styles.listPage}>
         <div className={styles.listHeader}>
           <h1 className={styles.listTitle}>{title}</h1>

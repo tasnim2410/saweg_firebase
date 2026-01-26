@@ -1,22 +1,101 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './WhyUseSection.module.css';
+
+type AuthMeResponse = {
+  ok: boolean;
+  user: null | {
+    type: 'SHIPPER' | 'MERCHANT' | 'ADMIN' | null;
+    isAdmin?: boolean;
+  };
+};
+
+type UsersStatsResponse = {
+  ok: boolean;
+  merchantCount: number;
+  shipperCount: number;
+};
 
 export default function WhyUseSection() {
   const t = useTranslations('whyUse');
   const locale = useLocale();
   const isRTL = locale === 'ar';
 
+  const [authUser, setAuthUser] = useState<AuthMeResponse['user']>(null);
+  const [stats, setStats] = useState<UsersStatsResponse | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = (await res.json().catch(() => null)) as AuthMeResponse | null;
+        if (cancelled) return;
+        setAuthUser(data?.user ?? null);
+      } catch {
+        if (cancelled) return;
+        setAuthUser(null);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch('/api/stats/users', { cache: 'no-store' });
+        const data = (await res.json().catch(() => null)) as UsersStatsResponse | null;
+        if (cancelled) return;
+        setStats(data && typeof data.merchantCount === 'number' && typeof data.shipperCount === 'number' ? data : null);
+      } catch {
+        if (cancelled) return;
+        setStats(null);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isLoggedIn = Boolean(authUser);
+
   const features = [
     { title: t('feature1Title'), desc: t('feature1Desc') },
     { title: t('feature2Title'), desc: t('feature2Desc') },
     { title: t('feature3Title'), desc: t('feature3Desc') },
     { title: t('feature4Title'), desc: t('feature4Desc') },
-
   ];
+
+  const userStatsLabel = useMemo(() => {
+    const base = t('stats.users');
+    const m = base.match(/\d+/);
+    const baseline = m ? Number(m[0]) : 0;
+    const live = stats?.merchantCount ?? 0;
+    const nextValue = baseline + live;
+    return m ? base.replace(/\d+/, String(nextValue)) : base;
+  }, [stats?.merchantCount, t]);
+
+  const deliveriesStatsLabel = useMemo(() => {
+    const base = t('stats.deliveries');
+    const m = base.match(/\d+/);
+    const baseline = m ? Number(m[0]) : 0;
+    const live = stats?.shipperCount ?? 0;
+    const nextValue = baseline + live;
+    return m ? base.replace(/\d+/, String(nextValue)) : base;
+  }, [stats?.shipperCount, t]);
 
   return (
     <section id="partners" className={styles.section}>
@@ -78,15 +157,16 @@ export default function WhyUseSection() {
               </div>
               <div className={styles.tagline}>{t('tagline')}</div>
 
-              {/* Register Button */}
-              <div>
-                <Link
-                  href={`/${locale}/register`}
-                  className={styles.registerButton}
-                >
-                  {t('registerNow')}
-                </Link>
-              </div>
+              {!isLoggedIn ? (
+                <div>
+                  <Link
+                    href={`/${locale}/register`}
+                    className={styles.registerButton}
+                  >
+                    {t('registerNow')}
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -102,7 +182,7 @@ export default function WhyUseSection() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
             </div>
-            <div className={styles.statLabel}>{t('stats.users')}</div>
+            <div className={styles.statLabel}>{userStatsLabel}</div>
           </div>
           
           <div className={styles.statBox}>
@@ -114,7 +194,7 @@ export default function WhyUseSection() {
                 <circle cx="18.5" cy="18.5" r="2.5"></circle>
               </svg>
             </div>
-            <div className={styles.statLabel}>{t('stats.deliveries')}</div>
+            <div className={styles.statLabel}>{deliveriesStatsLabel}</div>
           </div>
         </div>
       </div>

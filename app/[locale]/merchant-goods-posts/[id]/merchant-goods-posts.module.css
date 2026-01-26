@@ -17,6 +17,28 @@
   padding-bottom: 3rem;
 }
 
+.backButton {
+  position: fixed;
+  top: 1rem;
+  inset-inline-start: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #111827;
+  z-index: 50;
+}
+
+.backButton:hover {
+  background: white;
+}
+
 .card {
   background: white;
   border-radius: 1.5rem;

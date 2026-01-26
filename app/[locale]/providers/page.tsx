@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import styles from '@/components/CarouselSection.module.css';
 import Link from 'next/link';
@@ -37,10 +36,13 @@ export default async function ProvidersPage({
 
   const title = locale === 'ar' ? 'كل عروض السوّاق' : 'All shippers offers';
   const countLabel = locale === 'ar' ? `${providers.length} عرض` : `${providers.length} offers`;
+  const arrow = locale === 'ar' ? '→' : '←';
 
   return (
     <main>
-      <Header />
+      <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+        {arrow}
+      </Link>
       <div className={styles.listPage}>
         <div className={styles.listHeader}>
           <h1 className={styles.listTitle}>{title}</h1>

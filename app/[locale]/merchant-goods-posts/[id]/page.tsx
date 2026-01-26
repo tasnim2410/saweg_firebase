@@ -1,10 +1,10 @@
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
 import { isAdminIdentifier } from '@/lib/admin';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import styles from './merchant-goods-posts.module.css';
 
 type MerchantGoodsPostDetails = {
@@ -132,13 +132,17 @@ export default async function MerchantGoodsPostDetailsPage({
 }) {
   const { locale, id } = await params;
 
+  const arrow = locale === 'ar' ? '→' : '←';
+
   const tCarousel = await getTranslations('carousel');
 
   const postId = Number(id);
   if (!Number.isFinite(postId)) {
     return (
       <main className={styles.main}>
-        <Header />
+        <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+          {arrow}
+        </Link>
         <section className={styles.section}>
           <div className={styles.card}>{locale === 'ar' ? 'الطلب غير موجود' : 'Post not found'}</div>
         </section>
@@ -179,7 +183,9 @@ export default async function MerchantGoodsPostDetailsPage({
   if (!post) {
     return (
       <main className={styles.main}>
-        <Header />
+        <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+          {arrow}
+        </Link>
         <section className={styles.section}>
           <div className={styles.card}>{locale === 'ar' ? 'الطلب غير موجود' : 'Post not found'}</div>
         </section>
@@ -261,7 +267,9 @@ export default async function MerchantGoodsPostDetailsPage({
 
   return (
     <main className={styles.main}>
-      <Header />
+      <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+        {arrow}
+      </Link>
       <section className={styles.section}>
         <div className={styles.card}>
           <img className={styles.coverImage} src={coverImage} alt={merchantName} />

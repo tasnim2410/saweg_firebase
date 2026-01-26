@@ -1,9 +1,9 @@
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import styles from './providers.module.css';
 
 type ProviderDetails = {
@@ -127,6 +127,8 @@ export default async function ProviderDetailsPage({
 }) {
   const { locale, id } = await params;
 
+  const arrow = locale === 'ar' ? '→' : '←';
+
   const tForm = await getTranslations('providerForm');
   const tDash = await getTranslations('providerDashboard');
   const tRegister = await getTranslations('register');
@@ -136,7 +138,9 @@ export default async function ProviderDetailsPage({
   if (!Number.isFinite(providerId)) {
     return (
       <main className={styles.main}>
-        <Header />
+        <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+          {arrow}
+        </Link>
         <section className={styles.section}>
           <div className={styles.card}>Provider not found</div>
         </section>
@@ -174,7 +178,9 @@ export default async function ProviderDetailsPage({
   if (!provider) {
     return (
       <main className={styles.main}>
-        <Header />
+        <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+          {arrow}
+        </Link>
         <section className={styles.section}>
           <div className={styles.card}>Provider not found</div>
         </section>
@@ -235,7 +241,9 @@ export default async function ProviderDetailsPage({
 
   return (
     <main className={styles.main}>
-      <Header />
+      <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+        {arrow}
+      </Link>
       <section className={styles.section}>
         <div className={styles.card}>
           <img className={styles.coverImage} src={postImage} alt={provider.name} />
