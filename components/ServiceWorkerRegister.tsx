@@ -16,13 +16,16 @@ export default function ServiceWorkerRegister() {
         const existing = document.getElementById(id);
         if (existing) existing.remove();
 
+        const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+        const text = lang === 'en' ? '✓ Synced successfully' : '✓ تمت المزامنة بنجاح';
+
         const el = document.createElement('div');
         el.id = id;
-        el.textContent = '✓ Données synchronisées';
+        el.textContent = text;
         el.setAttribute('role', 'status');
         el.style.position = 'fixed';
         el.style.left = '50%';
-        el.style.bottom = '16px';
+        el.style.top = '16px';
         el.style.transform = 'translateX(-50%)';
         el.style.zIndex = '9999';
         el.style.background = 'rgba(16, 185, 129, 0.95)';
@@ -50,21 +53,8 @@ export default function ServiceWorkerRegister() {
         const existing = document.getElementById(id);
         if (existing) existing.remove();
 
-        const status = payload && typeof payload === 'object' ? payload.status : undefined;
-        const error = payload && typeof payload === 'object' ? payload.error : undefined;
-        const message = payload && typeof payload === 'object' ? payload.message : undefined;
-        const method = payload && typeof payload === 'object' ? payload.method : undefined;
-        const url = payload && typeof payload === 'object' ? payload.url : undefined;
-
-        const parts: string[] = [];
-        if (method) parts.push(String(method).toUpperCase());
-        if (url) parts.push(String(url));
-        if (status) parts.push(`HTTP ${String(status)}`);
-        if (error) parts.push(String(error));
-        if (message) parts.push(String(message));
-
-        const details = parts.length ? ` (${parts.join(' | ').slice(0, 600)})` : '';
-        const text = `Sync failed${details}. Please open the app and try again.`;
+        const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
+        const text = lang === 'en' ? 'Something went wrong.' : 'حدث خطأ ما.';
 
         try {
           localStorage.setItem(
@@ -91,7 +81,7 @@ export default function ServiceWorkerRegister() {
         el.setAttribute('aria-label', 'Sync failed');
         el.style.position = 'fixed';
         el.style.left = '50%';
-        el.style.bottom = '16px';
+        el.style.top = '16px';
         el.style.transform = 'translateX(-50%)';
         el.style.zIndex = '9999';
         el.style.background = 'rgba(239, 68, 68, 0.95)';
@@ -104,25 +94,6 @@ export default function ServiceWorkerRegister() {
         el.style.maxWidth = 'calc(100vw - 32px)';
         el.style.whiteSpace = 'pre-wrap';
         el.style.textAlign = 'center';
-        el.style.cursor = 'pointer';
-        el.style.userSelect = 'text';
-        el.onclick = async () => {
-          try {
-            await navigator.clipboard.writeText(text);
-            el.textContent = 'Copied sync error details.';
-            window.setTimeout(() => {
-              try {
-                el.remove();
-              } catch {
-              }
-            }, 1500);
-          } catch {
-            try {
-              el.remove();
-            } catch {
-            }
-          }
-        };
         document.body.appendChild(el);
 
         window.setTimeout(() => {
@@ -168,6 +139,10 @@ export default function ServiceWorkerRegister() {
         }
       }
       if (type === 'SYNC_FAILED') {
+        try {
+          if (!navigator.onLine) return;
+        } catch {
+        }
         showSyncFailed(payload);
       }
     };
