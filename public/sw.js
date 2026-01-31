@@ -8,6 +8,9 @@ try {
 
 const CACHE_NAME = 'saweg-pwa-v6';
 
+const SYNC_TAG = 'saweg-sync-v1';
+const MAX_QUEUE_BYTES = 10 * 1024 * 1024;
+
 const PRECACHE_URLS = [
   '/offline.html',
   '/manifest.json',
@@ -25,6 +28,266 @@ const DYNAMIC_API_PATHS = [
 ];
 
 const makeApiKey = (url) => `api:${url.pathname}${url.search}`;
+
+const isQueueableApiRequest = (url, req) => {
+  if (url.origin !== self.location.origin) return false;
+  if (!url.pathname.startsWith('/api/')) return false;
+  if (url.pathname.startsWith('/api/auth')) return false;
+  const m = String(req.method || '').toUpperCase();
+  if (m !== 'POST' && m !== 'PUT' && m !== 'PATCH') return false;
+  return true;
+};
+
+const safeJsonResponse = (obj, status) =>
+  new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+    },
+  });
+
+const collectQueueSize = async () => {
+  try {
+    const items = (await self.sawegIdb?.queueGetAll?.()) || [];
+    let total = 0;
+    for (const it of items) {
+      const n = typeof it?.sizeBytes === 'number' ? it.sizeBytes : 0;
+      total += n;
+    }
+    return total;
+  } catch {
+    return 0;
+  }
+};
+
+const tryRegisterSync = async () => {
+  try {
+    if (self.registration && self.registration.sync && typeof self.registration.sync.register === 'function') {
+      await self.registration.sync.register(SYNC_TAG);
+    }
+  } catch {
+  }
+};
+
+const broadcastMessage = async (data) => {
+  try {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(allClients.map((c) => c.postMessage(data)));
+  } catch {
+  }
+};
+
+const serializeFormData = (fd) => {
+  const parts = [];
+  let sizeBytes = 0;
+  try {
+    for (const pair of fd.entries()) {
+      const name = pair[0];
+      const value = pair[1];
+      if (typeof value === 'string') {
+        sizeBytes += value.length;
+        parts.push({ name, kind: 'text', value });
+      } else {
+        const f = value;
+        const fSize = typeof f?.size === 'number' ? f.size : 0;
+        sizeBytes += fSize;
+        parts.push({ name, kind: 'file', file: f, filename: f?.name || 'file', contentType: f?.type || '' });
+      }
+    }
+  } catch {
+  }
+  return { parts, sizeBytes };
+};
+
+const serializeRequestForQueue = async (req) => {
+  const url = new URL(req.url);
+  const method = String(req.method || 'GET').toUpperCase();
+  const headers = {};
+  try {
+    req.headers.forEach((v, k) => {
+      const key = String(k || '').toLowerCase();
+      if (key === 'content-length') return;
+      if (key === 'host') return;
+      if (key === 'connection') return;
+      if (key === 'accept-encoding') return;
+      headers[key] = v;
+    });
+  } catch {
+  }
+
+  let bodyType = null;
+  let body = null;
+  let sizeBytes = 0;
+
+  const contentType = String(req.headers.get('content-type') || '');
+
+  if (method !== 'GET' && method !== 'HEAD') {
+    if (contentType.includes('multipart/form-data')) {
+      try {
+        const fd = await req.clone().formData();
+        const serialized = serializeFormData(fd);
+        bodyType = 'formData';
+        body = serialized.parts;
+        sizeBytes += serialized.sizeBytes;
+        try {
+          delete headers['content-type'];
+        } catch {
+        }
+      } catch {
+      }
+    } else {
+      try {
+        const txt = await req.clone().text();
+        bodyType = 'text';
+        body = txt;
+        sizeBytes += txt.length;
+      } catch {
+      }
+    }
+  }
+
+  return {
+    url: url.pathname + url.search,
+    method,
+    headers,
+    bodyType,
+    body,
+    createdAt: Date.now(),
+    sizeBytes,
+  };
+};
+
+const enqueueFailedApiRequest = async (req) => {
+  const item = await serializeRequestForQueue(req);
+  const currentBytes = await collectQueueSize();
+  if (currentBytes + (item.sizeBytes || 0) > MAX_QUEUE_BYTES) {
+    return { ok: false, error: 'OFFLINE_QUEUE_FULL' };
+  }
+  try {
+    await self.sawegIdb?.queueAdd?.(item);
+  } catch {
+    return { ok: false, error: 'OFFLINE_QUEUE_FAILED' };
+  }
+  await tryRegisterSync();
+  return { ok: true };
+};
+
+const replayQueuedRequest = async (item) => {
+  const headers = new Headers();
+  try {
+    for (const k of Object.keys(item.headers || {})) {
+      headers.set(k, String(item.headers[k]));
+    }
+  } catch {
+  }
+
+  let body = undefined;
+  if (item.bodyType === 'formData') {
+    const fd = new FormData();
+    const parts = Array.isArray(item.body) ? item.body : [];
+    for (const p of parts) {
+      if (!p || typeof p.name !== 'string') continue;
+      if (p.kind === 'text') {
+        fd.append(p.name, typeof p.value === 'string' ? p.value : '');
+      } else if (p.kind === 'file') {
+        if (p.file) {
+          try {
+            fd.append(p.name, p.file, p.filename || 'file');
+          } catch {
+            fd.append(p.name, p.file);
+          }
+        }
+      }
+    }
+    body = fd;
+    try {
+      headers.delete('content-type');
+    } catch {
+    }
+  } else if (item.bodyType === 'text') {
+    body = typeof item.body === 'string' ? item.body : '';
+  }
+
+  const reqInit = {
+    method: item.method,
+    headers,
+    body,
+    credentials: 'include',
+  };
+
+  return fetch(item.url, reqInit);
+};
+
+const processQueue = async () => {
+  const items = (await self.sawegIdb?.queueGetAll?.()) || [];
+  const sorted = items.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+  let removed = 0;
+
+  let didCreate = false;
+  let didUpdate = false;
+
+  for (const item of sorted) {
+    if (!item || typeof item.id !== 'number') continue;
+    try {
+      const res = await replayQueuedRequest(item);
+      if (res && res.ok) {
+        const m = String(item.method || '').toUpperCase();
+        if (m === 'POST') didCreate = true;
+        if (m === 'PATCH' || m === 'PUT') didUpdate = true;
+        await self.sawegIdb?.queueDelete?.(item.id);
+        removed += 1;
+        continue;
+      }
+      break;
+    } catch {
+      break;
+    }
+  }
+
+  const remaining = (await self.sawegIdb?.queueGetAll?.()) || [];
+  if (removed > 0 && remaining.length === 0) {
+    const kind = didCreate && didUpdate ? 'mixed' : didCreate ? 'created' : didUpdate ? 'updated' : 'synced';
+
+    let allClients = [];
+    try {
+      allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    } catch {
+      allClients = [];
+    }
+
+    let anyVisible = false;
+    try {
+      anyVisible = allClients.some((c) => c && c.visibilityState === 'visible');
+    } catch {
+      anyVisible = false;
+    }
+
+    if (anyVisible) {
+      await broadcastMessage({ type: 'SYNC_SUCCESS', kind });
+      return;
+    }
+
+    try {
+      const body =
+        kind === 'created'
+          ? 'Post added'
+          : kind === 'updated'
+            ? 'Post updated'
+            : kind === 'mixed'
+              ? 'Posts synchronized'
+              : 'Data synchronized';
+
+      await self.registration.showNotification('Saweg', {
+        body,
+        icon: '/icons/icon-192x192.png?v=2',
+        badge: '/icons/icon-192x192.png?v=2',
+        data: { url: '/ar' },
+        tag: 'saweg-sync-success',
+      });
+    } catch {
+    }
+  }
+};
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -48,6 +311,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   if (event?.data?.type === 'SKIP_WAITING') {
     event.waitUntil(self.skipWaiting());
+    return;
+  }
+
+  if (event?.data?.type === 'PROCESS_QUEUE') {
+    event.waitUntil(processQueue());
     return;
   }
 
@@ -143,6 +411,11 @@ self.addEventListener('message', (event) => {
   }
 });
 
+self.addEventListener('sync', (event) => {
+  if (event?.tag !== SYNC_TAG) return;
+  event.waitUntil(processQueue());
+});
+
 self.addEventListener('push', (event) => {
   event.waitUntil(
     (async () => {
@@ -189,6 +462,24 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
 
   const url = new URL(req.url);
+
+  if (isQueueableApiRequest(url, req)) {
+    event.respondWith(
+      (async () => {
+        try {
+          const res = await fetch(req);
+          return res;
+        } catch {
+          const enq = await enqueueFailedApiRequest(req);
+          if (!enq.ok) {
+            return safeJsonResponse({ error: enq.error || 'OFFLINE_QUEUE_FAILED' }, 507);
+          }
+          return safeJsonResponse({ queued: true }, 202);
+        }
+      })()
+    );
+    return;
+  }
 
   // Cache Next.js static assets (JS/CSS) so offline/poor network doesn't render unstyled HTML.
   // These are content-hashed, so serving them from cache is safe.

@@ -7,6 +7,62 @@ export default function ServiceWorkerRegister() {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator)) return;
 
+    const showSyncSuccess = () => {
+      try {
+        const id = 'saweg-sync-success-toast';
+        const existing = document.getElementById(id);
+        if (existing) existing.remove();
+
+        const el = document.createElement('div');
+        el.id = id;
+        el.textContent = '✓ Données synchronisées';
+        el.setAttribute('role', 'status');
+        el.style.position = 'fixed';
+        el.style.left = '50%';
+        el.style.bottom = '16px';
+        el.style.transform = 'translateX(-50%)';
+        el.style.zIndex = '9999';
+        el.style.background = 'rgba(16, 185, 129, 0.95)';
+        el.style.color = '#ffffff';
+        el.style.padding = '10px 14px';
+        el.style.borderRadius = '9999px';
+        el.style.fontSize = '14px';
+        el.style.fontFamily = 'var(--font-sans)';
+        el.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -4px rgba(0,0,0,0.2)';
+        document.body.appendChild(el);
+
+        window.setTimeout(() => {
+          try {
+            el.remove();
+          } catch {
+          }
+        }, 4000);
+      } catch {
+      }
+    };
+
+    const requestQueueProcess = () => {
+      try {
+        navigator.serviceWorker?.controller?.postMessage({ type: 'PROCESS_QUEUE' });
+      } catch {
+      }
+      try {
+        void navigator.serviceWorker?.ready
+          ?.then((reg) => reg.active?.postMessage({ type: 'PROCESS_QUEUE' }))
+          .catch(() => null);
+      } catch {
+      }
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      const type = (event as any)?.data?.type;
+      if (type === 'SYNC_SUCCESS') {
+        showSyncSuccess();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', onMessage);
+
     if (process.env.NODE_ENV !== 'production') {
       const key = 'dev_sw_cleared_v1';
       try {
@@ -43,6 +99,11 @@ export default function ServiceWorkerRegister() {
       };
 
       void cleanup();
+
+      try {
+        navigator.serviceWorker.removeEventListener('message', onMessage);
+      } catch {
+      }
       return;
     }
 
@@ -192,10 +253,25 @@ export default function ServiceWorkerRegister() {
         window.addEventListener('saweg:warmup', onWarmup as EventListener);
         const intervalId = window.setInterval(onUpdateCheck, 60 * 60 * 1000);
 
+        const onOnline = () => {
+          requestQueueProcess();
+        };
+
+        const onFocus = () => {
+          requestQueueProcess();
+        };
+
+        window.addEventListener('online', onOnline);
+        window.addEventListener('focus', onFocus);
+
+        requestQueueProcess();
+
         return () => {
           window.removeEventListener('focus', onUpdateCheck);
           window.removeEventListener('online', onUpdateCheck);
           window.removeEventListener('saweg:warmup', onWarmup as EventListener);
+          window.removeEventListener('online', onOnline);
+          window.removeEventListener('focus', onFocus);
           window.clearInterval(intervalId);
         };
       } catch (err) {
@@ -208,6 +284,10 @@ export default function ServiceWorkerRegister() {
     });
 
     return () => {
+      try {
+        navigator.serviceWorker.removeEventListener('message', onMessage);
+      } catch {
+      }
       dispose?.();
     };
   }, []);
