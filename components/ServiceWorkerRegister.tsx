@@ -63,8 +63,20 @@ export default function ServiceWorkerRegister() {
         if (error) parts.push(String(error));
         if (message) parts.push(String(message));
 
-        const details = parts.length ? ` (${parts.join(' | ').slice(0, 200)})` : '';
+        const details = parts.length ? ` (${parts.join(' | ').slice(0, 600)})` : '';
         const text = `Sync failed${details}. Please open the app and try again.`;
+
+        try {
+          localStorage.setItem(
+            'saweg:lastSyncFailed',
+            JSON.stringify({
+              at: Date.now(),
+              text,
+              payload,
+            })
+          );
+        } catch {
+        }
 
         const now = Date.now();
         const key = text;
@@ -76,6 +88,7 @@ export default function ServiceWorkerRegister() {
         el.id = id;
         el.textContent = text;
         el.setAttribute('role', 'status');
+        el.setAttribute('aria-label', 'Sync failed');
         el.style.position = 'fixed';
         el.style.left = '50%';
         el.style.bottom = '16px';
@@ -88,6 +101,28 @@ export default function ServiceWorkerRegister() {
         el.style.fontSize = '14px';
         el.style.fontFamily = 'var(--font-sans)';
         el.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -4px rgba(0,0,0,0.2)';
+        el.style.maxWidth = 'calc(100vw - 32px)';
+        el.style.whiteSpace = 'pre-wrap';
+        el.style.textAlign = 'center';
+        el.style.cursor = 'pointer';
+        el.style.userSelect = 'text';
+        el.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            el.textContent = 'Copied sync error details.';
+            window.setTimeout(() => {
+              try {
+                el.remove();
+              } catch {
+              }
+            }, 1500);
+          } catch {
+            try {
+              el.remove();
+            } catch {
+            }
+          }
+        };
         document.body.appendChild(el);
 
         window.setTimeout(() => {
@@ -95,7 +130,7 @@ export default function ServiceWorkerRegister() {
             el.remove();
           } catch {
           }
-        }, 5000);
+        }, 20000);
       } catch {
       }
     };
