@@ -12,7 +12,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
-  const userType = (session.user as any).type;
+  let userType = (session.user as any).type;
+  if (!userType) {
+    try {
+      const u = await (prisma as any).user.findUnique({
+        where: { id: session.user.id },
+        select: { type: true },
+      });
+      userType = u?.type;
+    } catch {
+      userType = null;
+    }
+  }
   if (userType !== 'SHIPPER' && userType !== 'ADMIN') {
     return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
   }

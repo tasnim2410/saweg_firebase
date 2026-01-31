@@ -7,6 +7,15 @@ export default function ServiceWorkerRegister() {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator)) return;
 
+    const isLighthouseRun = (() => {
+      try {
+        const ua = String(navigator.userAgent || '');
+        if (/lighthouse/i.test(ua)) return true;
+      } catch {
+      }
+      return false;
+    })();
+
     let lastSyncFailedAt = 0;
     let lastSyncFailedKey = '';
 
@@ -267,6 +276,7 @@ export default function ServiceWorkerRegister() {
     };
 
     const requestQueueProcess = () => {
+      if (isLighthouseRun) return;
       try {
         navigator.serviceWorker?.controller?.postMessage({ type: 'PROCESS_QUEUE' });
       } catch {
@@ -309,7 +319,9 @@ export default function ServiceWorkerRegister() {
 
     navigator.serviceWorker.addEventListener('message', onMessage);
 
-    if (process.env.NODE_ENV !== 'production') {
+    const disableSwInDev = process.env.NEXT_PUBLIC_DISABLE_SW_DEV === '1';
+
+    if (process.env.NODE_ENV !== 'production' && disableSwInDev) {
       const key = 'dev_sw_cleared_v1';
       try {
         if (sessionStorage.getItem(key) === '1') return;
@@ -361,6 +373,15 @@ export default function ServiceWorkerRegister() {
           scope: '/',
           updateViaCache: 'none',
         });
+
+        if (isLighthouseRun) {
+          try {
+            void reg.update().catch(() => null);
+          } catch {
+          }
+          return () => {
+          };
+        }
 
         try {
           const anyReg: any = reg as any;

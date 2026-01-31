@@ -4,6 +4,7 @@ import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { sendPushToSubscription } from '@/lib/webPush';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -234,6 +235,41 @@ export async function POST(req: NextRequest) {
           },
         },
       });
+
+      try {
+        const subs = await (prisma as any).pushSubscription.findMany({
+          where: {
+            user: {
+              type: 'SHIPPER',
+            },
+          },
+          select: { endpoint: true, p256dh: true, auth: true, expirationTime: true },
+        });
+
+        const title = 'Saweg';
+        const body = `New offer: ${post.startingPoint} to ${post.destination}`;
+        const url = '/ar/merchant-goods-posts';
+
+        for (const sub of subs) {
+          const r = await sendPushToSubscription(
+            {
+              endpoint: sub.endpoint,
+              expirationTime: sub.expirationTime,
+              keys: { p256dh: sub.p256dh, auth: sub.auth },
+            },
+            { title, body, url }
+          );
+
+          if (!r.ok && r.gone) {
+            await (prisma as any).pushSubscription
+              .delete({ where: { endpoint: sub.endpoint } })
+              .catch(() => null);
+          }
+        }
+      } catch (error) {
+        console.error('POST /api/merchant-goods-posts push notify error:', error);
+      }
+
       return post;
     })();
 
