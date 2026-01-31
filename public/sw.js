@@ -163,12 +163,25 @@ const serializeRequestForQueue = async (req) => {
     }
   }
 
+  let idempotencyKey = null;
+  if (method === 'POST') {
+    try {
+      idempotencyKey =
+        self.crypto && typeof self.crypto.randomUUID === 'function'
+          ? self.crypto.randomUUID()
+          : `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      idempotencyKey = `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
+
   return {
     url: url.pathname + url.search,
     method,
     headers,
     bodyType,
     body,
+    idempotencyKey,
     createdAt: Date.now(),
     sizeBytes,
   };
@@ -203,6 +216,16 @@ const replayQueuedRequest = async (item) => {
       headers.set(k, String(item.headers[k]));
     }
   } catch {
+  }
+
+  if (item && item.method === 'POST') {
+    const stableKey =
+      item.idempotencyKey ||
+      `legacy-${String(item.id || '')}:${String(item.createdAt || '')}:${String(item.url || '')}`;
+    try {
+      headers.set('x-idempotency-key', String(stableKey));
+    } catch {
+    }
   }
 
   let body = undefined;
@@ -240,6 +263,20 @@ const replayQueuedRequest = async (item) => {
   };
 
   return fetch(item.url, reqInit);
+};
+
+let queueProcessingPromise = null;
+
+const processQueueOnce = async () => {
+  if (queueProcessingPromise) return queueProcessingPromise;
+  queueProcessingPromise = (async () => {
+    try {
+      await processQueue();
+    } finally {
+      queueProcessingPromise = null;
+    }
+  })();
+  return queueProcessingPromise;
 };
 
 const processQueue = async () => {
@@ -395,7 +432,7 @@ self.addEventListener('message', (event) => {
   }
 
   if (event?.data?.type === 'PROCESS_QUEUE') {
-    event.waitUntil(processQueue());
+    event.waitUntil(processQueueOnce());
     return;
   }
 
@@ -496,7 +533,7 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('sync', (event) => {
   if (event?.tag !== SYNC_TAG) return;
-  event.waitUntil(processQueue());
+  event.waitUntil(processQueueOnce());
 });
 
 self.addEventListener('push', (event) => {

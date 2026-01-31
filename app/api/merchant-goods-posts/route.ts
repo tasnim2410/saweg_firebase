@@ -9,6 +9,14 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
+const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+
+const getIdempotencyStore = (): Map<string, { ts: number; promise: Promise<any> }> => {
+  const g = globalThis as any;
+  if (!g.__sawegIdempotencyStore) g.__sawegIdempotencyStore = new Map();
+  return g.__sawegIdempotencyStore as Map<string, { ts: number; promise: Promise<any> }>;
+};
+
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const uploadDir = path.join(process.cwd(), 'public/images/merchant-goods-posts');
@@ -65,6 +73,24 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = session.user.id as string;
+
+  const rawIdem = req.headers.get('x-idempotency-key');
+  const idempotencyKey = rawIdem && typeof rawIdem === 'string' ? rawIdem.trim() : '';
+  const store = getIdempotencyStore();
+  const storeKey = idempotencyKey ? `merchant-goods-posts:${userId}:${idempotencyKey}` : '';
+  if (storeKey) {
+    const existing = store.get(storeKey);
+    if (existing && Date.now() - existing.ts < IDEMPOTENCY_TTL_MS) {
+      try {
+        const data = await existing.promise;
+        return NextResponse.json(data, { status: 201 });
+      } catch {
+        store.delete(storeKey);
+      }
+    } else if (existing) {
+      store.delete(storeKey);
+    }
+  }
 
   const adminOk = Boolean(
     (session.user.email && isAdminIdentifier(session.user.email)) ||
@@ -181,34 +207,43 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const post = await (prisma as any).merchantGoodsPost.create({
-      data: {
-        name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
-        phone: normalizedPhone.e164,
-        startingPoint,
-        destination,
-        goodsType,
-        goodsWeight,
-        goodsWeightUnit: normalizedUnit,
-        loadingDate,
-        vehicleTypeDesired,
-        budget,
-        budgetCurrency,
-        image: imagePath,
-        description: description || null,
-        userId,
-      },
-      include: {
-        user: {
-          select: {
-            fullName: true,
-            phone: true,
+    const createPromise = (async () => {
+      const post = await (prisma as any).merchantGoodsPost.create({
+        data: {
+          name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
+          phone: normalizedPhone.e164,
+          startingPoint,
+          destination,
+          goodsType,
+          goodsWeight,
+          goodsWeightUnit: normalizedUnit,
+          loadingDate,
+          vehicleTypeDesired,
+          budget,
+          budgetCurrency,
+          image: imagePath,
+          description: description || null,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              phone: true,
+            },
           },
         },
-      },
-    });
+      });
+      return post;
+    })();
 
-    return NextResponse.json(post, { status: 201 });
+    if (storeKey) {
+      store.set(storeKey, { ts: Date.now(), promise: createPromise });
+      createPromise.catch(() => store.delete(storeKey));
+    }
+
+    const created = await createPromise;
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error('POST /api/merchant-goods-posts error:', error);
     return NextResponse.json({ error: 'Failed to create merchant goods post' }, { status: 500 });

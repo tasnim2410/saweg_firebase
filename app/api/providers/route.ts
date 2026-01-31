@@ -12,6 +12,14 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
+const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+
+const getIdempotencyStore = (): Map<string, { ts: number; promise: Promise<any> }> => {
+  const g = globalThis as any;
+  if (!g.__sawegIdempotencyStore) g.__sawegIdempotencyStore = new Map();
+  return g.__sawegIdempotencyStore as Map<string, { ts: number; promise: Promise<any> }>;
+};
+
 const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const uploadDir = path.join(process.cwd(), 'public/images/providers');
@@ -71,6 +79,24 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = session.user.id as string;
+
+  const rawIdem = req.headers.get('x-idempotency-key');
+  const idempotencyKey = rawIdem && typeof rawIdem === 'string' ? rawIdem.trim() : '';
+  const store = getIdempotencyStore();
+  const storeKey = idempotencyKey ? `providers:${userId}:${idempotencyKey}` : '';
+  if (storeKey) {
+    const existing = store.get(storeKey);
+    if (existing && Date.now() - existing.ts < IDEMPOTENCY_TTL_MS) {
+      try {
+        const data = await existing.promise;
+        return NextResponse.json(data, { status: 201 });
+      } catch {
+        store.delete(storeKey);
+      }
+    } else if (existing) {
+      store.delete(storeKey);
+    }
+  }
 
   const adminOk = Boolean(
     (session.user.email && isAdminIdentifier(session.user.email)) ||
@@ -177,62 +203,70 @@ export async function POST(req: NextRequest) {
       lastLocationUpdateAt: new Date(),
     };
 
-    const provider = await prisma.provider.create({ data: createData });
+    const createPromise = (async () => {
+      const provider = await prisma.provider.create({ data: createData });
 
-    try {
-      const resendApiKey = process.env.RESEND_API_KEY;
-      const resendFrom = process.env.RESEND_FROM_EMAIL;
-      const to = process.env.CONTACT_TO_EMAIL;
-      if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
+      try {
+        const resendApiKey = process.env.RESEND_API_KEY;
+        const resendFrom = process.env.RESEND_FROM_EMAIL;
+        const to = process.env.CONTACT_TO_EMAIL;
+        if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
 
-      const resend = new Resend(resendApiKey);
+        const resend = new Resend(resendApiKey);
 
-      const detailsText = [
-        `Name: ${provider.name}`,
-        `Phone: ${provider.phone}`,
-        `Location: ${provider.location}`,
-        `Destination: ${(provider as any).destination ?? (provider as any).placeOfBusiness ?? '-'}`,
-        `Description: ${provider.description ?? '-'}`,
-        `Active: ${provider.active ? 'true' : 'false'}`,
-        `CreatedAt: ${(provider as any).createdAt ? new Date((provider as any).createdAt).toISOString() : '-'}`,
-        `Id: ${provider.id}`,
-      ].join('\n');
+        const detailsText = [
+          `Name: ${provider.name}`,
+          `Phone: ${provider.phone}`,
+          `Location: ${provider.location}`,
+          `Destination: ${(provider as any).destination ?? (provider as any).placeOfBusiness ?? '-'}`,
+          `Description: ${provider.description ?? '-'}`,
+          `Active: ${provider.active ? 'true' : 'false'}`,
+          `CreatedAt: ${(provider as any).createdAt ? new Date((provider as any).createdAt).toISOString() : '-'}`,
+          `Id: ${provider.id}`,
+        ].join('\n');
 
-      const safeDetailsHtml = detailsText
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+        const safeDetailsHtml = detailsText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
 
-      await resend.emails.send({
-        from: resendFrom,
-        to,
-        subject: `New carousel post added: ${provider.name}`,
-        text: `A new provider post was added to the carousel.\n\n${detailsText}`,
-        html: `
+        await resend.emails.send({
+          from: resendFrom,
+          to,
+          subject: `New carousel post added: ${provider.name}`,
+          text: `A new provider post was added to the carousel.\n\n${detailsText}`,
+          html: `
 <p>A new provider post was added to the carousel.</p>
 <pre style="white-space:pre-wrap">${safeDetailsHtml}</pre>
 ${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
         `,
-        attachments: imageAttachment
-          ? [
-              {
-                filename: imageAttachment.filename,
-                content: imageAttachment.contentBase64,
-              },
-            ]
-          : undefined,
-      });
-    } catch (error) {
-      console.error('POST /api/providers notify email error:', error);
-    }
+          attachments: imageAttachment
+            ? [
+                {
+                  filename: imageAttachment.filename,
+                  content: imageAttachment.contentBase64,
+                },
+              ]
+            : undefined,
+        });
+      } catch (error) {
+        console.error('POST /api/providers notify email error:', error);
+      }
 
-    return NextResponse.json(
-      {
+      return {
         ...provider,
         destination: (provider as any).destination ?? (provider as any).placeOfBusiness ?? null,
-      },
-      { status: 201 }
-    );
+      };
+    })();
+
+    if (storeKey) {
+      store.set(storeKey, { ts: Date.now(), promise: createPromise });
+      createPromise.catch(() => store.delete(storeKey));
+    }
+
+    const created = await createPromise;
+
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error('POST /api/providers error:', error);
     return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 });
