@@ -291,10 +291,14 @@ export default function AddMerchantGoodsPostPage() {
             message: locale === 'ar' ? 'طول رقم الهاتف غير صحيح' : 'Invalid phone number length',
           });
         } else {
+          const extra =
+            `HTTP ${res.status}` +
+            (code ? ` | ${String(code)}` : '') +
+            (data?.message ? ` | ${String(data.message)}` : '');
           pushToast({
             variant: 'error',
             title: titleFor('server'),
-            message: locale === 'ar' ? 'فشل نشر الطلب' : 'Failed to publish post',
+            message: `${locale === 'ar' ? 'فشل نشر الطلب' : 'Failed to publish post'} (${extra})`,
           });
         }
         return;
@@ -315,11 +319,12 @@ export default function AddMerchantGoodsPostPage() {
 
       router.push(`/${locale}`);
       router.refresh();
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       pushToast({
         variant: 'error',
         title: titleFor('network'),
-        message: locale === 'ar' ? 'فشل نشر الطلب' : 'Failed to publish post',
+        message: `${locale === 'ar' ? 'فشل نشر الطلب' : 'Failed to publish post'} (${msg})`,
       });
     } finally {
       setSubmitting(false);

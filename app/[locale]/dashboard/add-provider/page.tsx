@@ -206,7 +206,11 @@ export default function AddProviderPage() {
         } else if (code === 'MISSING_REQUIRED_FIELDS') {
           pushToast({ variant: 'error', title: titleFor('form'), message: t('errors.missingRequiredFields') });
         } else {
-          pushToast({ variant: 'error', title: titleFor('server'), message: t('errors.publishFailed') });
+          const extra =
+            `HTTP ${res.status}` +
+            (code ? ` | ${String(code)}` : '') +
+            (data?.message ? ` | ${String(data.message)}` : '');
+          pushToast({ variant: 'error', title: titleFor('server'), message: `${t('errors.publishFailed')} (${extra})` });
         }
         return;
       }
@@ -222,8 +226,9 @@ export default function AddProviderPage() {
 
       router.push(`/${locale}`);
       router.refresh();
-    } catch {
-      pushToast({ variant: 'error', title: titleFor('network'), message: t('errors.publishFailed') });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      pushToast({ variant: 'error', title: titleFor('network'), message: `${t('errors.publishFailed')} (${msg})` });
     } finally {
       setSubmitting(false);
     }
