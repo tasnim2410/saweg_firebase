@@ -161,7 +161,13 @@ const enqueueFailedApiRequest = async (req) => {
   const item = await serializeRequestForQueue(req);
   const currentBytes = await collectQueueSize();
   if (currentBytes + (item.sizeBytes || 0) > MAX_QUEUE_BYTES) {
-    return { ok: false, error: 'OFFLINE_QUEUE_FULL' };
+    return {
+      ok: false,
+      error: 'OFFLINE_QUEUE_FULL',
+      currentBytes,
+      itemBytes: item.sizeBytes || 0,
+      maxBytes: MAX_QUEUE_BYTES,
+    };
   }
   try {
     await self.sawegIdb?.queueAdd?.(item);
@@ -238,14 +244,42 @@ const processQueue = async () => {
         removed += 1;
         continue;
       }
+
+      let parsed = null;
+      let rawText = '';
       try {
-        await broadcastMessage({ type: 'SYNC_FAILED' });
+        rawText = await res.clone().text();
+      } catch {
+        rawText = '';
+      }
+      if (rawText) {
+        try {
+          parsed = JSON.parse(rawText);
+        } catch {
+          parsed = null;
+        }
+      }
+
+      try {
+        await broadcastMessage({
+          type: 'SYNC_FAILED',
+          status: res?.status,
+          error: parsed && typeof parsed === 'object' ? parsed.error : undefined,
+          message: parsed && typeof parsed === 'object' ? parsed.message : rawText ? rawText.slice(0, 200) : undefined,
+          url: item?.url,
+          method: item?.method,
+        });
       } catch {
       }
       break;
-    } catch {
+    } catch (err) {
       try {
-        await broadcastMessage({ type: 'SYNC_FAILED' });
+        await broadcastMessage({
+          type: 'SYNC_FAILED',
+          message: err instanceof Error ? err.message : String(err),
+          url: item?.url,
+          method: item?.method,
+        });
       } catch {
       }
       break;
@@ -484,7 +518,15 @@ self.addEventListener('fetch', (event) => {
         } catch {
           const enq = await enqueueFailedApiRequest(reqForQueue);
           if (!enq.ok) {
-            return safeJsonResponse({ error: enq.error || 'OFFLINE_QUEUE_FAILED' }, 507);
+            return safeJsonResponse(
+              {
+                error: enq.error || 'OFFLINE_QUEUE_FAILED',
+                currentBytes: enq.currentBytes,
+                itemBytes: enq.itemBytes,
+                maxBytes: enq.maxBytes,
+              },
+              507
+            );
           }
           return safeJsonResponse({ queued: true }, 202);
         }

@@ -190,7 +190,18 @@ export default function AddProviderPage() {
 
       if (!res.ok) {
         const code = data?.error;
-        if (code === 'IMAGE_TOO_LARGE') {
+        if (code === 'OFFLINE_QUEUE_FULL') {
+          const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : null;
+          const limit = maxBytes ? ` (${Math.round(maxBytes / 1024 / 1024)}MB limit)` : '';
+          pushToast({
+            variant: 'error',
+            title: titleFor('network'),
+            message:
+              locale === 'ar'
+                ? `سعة التخزين دون اتصال ممتلئة${limit}. يرجى الاتصال بالإنترنت للمزامنة أو تقليل حجم الصور ثم المحاولة مرة أخرى.`
+                : `Offline queue is full${limit}. Please go online to sync, or reduce image size and try again.`,
+          });
+        } else if (code === 'IMAGE_TOO_LARGE') {
           const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_PROVIDER_IMAGE_BYTES;
           pushToast({
             variant: 'error',

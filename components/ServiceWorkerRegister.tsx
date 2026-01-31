@@ -7,6 +7,9 @@ export default function ServiceWorkerRegister() {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator)) return;
 
+    let lastSyncFailedAt = 0;
+    let lastSyncFailedKey = '';
+
     const showSyncSuccess = () => {
       try {
         const id = 'saweg-sync-success-toast';
@@ -41,15 +44,37 @@ export default function ServiceWorkerRegister() {
       }
     };
 
-    const showSyncFailed = () => {
+    const showSyncFailed = (payload: any) => {
       try {
         const id = 'saweg-sync-failed-toast';
         const existing = document.getElementById(id);
         if (existing) existing.remove();
 
+        const status = payload && typeof payload === 'object' ? payload.status : undefined;
+        const error = payload && typeof payload === 'object' ? payload.error : undefined;
+        const message = payload && typeof payload === 'object' ? payload.message : undefined;
+        const method = payload && typeof payload === 'object' ? payload.method : undefined;
+        const url = payload && typeof payload === 'object' ? payload.url : undefined;
+
+        const parts: string[] = [];
+        if (method) parts.push(String(method).toUpperCase());
+        if (url) parts.push(String(url));
+        if (status) parts.push(`HTTP ${String(status)}`);
+        if (error) parts.push(String(error));
+        if (message) parts.push(String(message));
+
+        const details = parts.length ? ` (${parts.join(' | ').slice(0, 200)})` : '';
+        const text = `Sync failed${details}. Please open the app and try again.`;
+
+        const now = Date.now();
+        const key = text;
+        if (key === lastSyncFailedKey && now - lastSyncFailedAt < 10000) return;
+        lastSyncFailedAt = now;
+        lastSyncFailedKey = key;
+
         const el = document.createElement('div');
         el.id = id;
-        el.textContent = 'Sync failed. Please open the app and try again.';
+        el.textContent = text;
         el.setAttribute('role', 'status');
         el.style.position = 'fixed';
         el.style.left = '50%';
@@ -89,12 +114,13 @@ export default function ServiceWorkerRegister() {
     };
 
     const onMessage = (event: MessageEvent) => {
-      const type = (event as any)?.data?.type;
+      const payload = (event as any)?.data;
+      const type = payload?.type;
       if (type === 'SYNC_SUCCESS') {
         showSyncSuccess();
       }
       if (type === 'SYNC_FAILED') {
-        showSyncFailed();
+        showSyncFailed(payload);
       }
     };
 
