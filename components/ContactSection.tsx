@@ -81,7 +81,8 @@ export default function ContactSection() {
                   alt={locale === 'ar' ? 'صورة شاحنات سواق' : 'Saweg contact trucks'}
                   fill
                   className={styles.image}
-                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  loading="lazy"
                 />
               </div>
             </div>

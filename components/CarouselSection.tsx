@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
 import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
@@ -33,6 +34,7 @@ const CarouselSection: React.FC = () => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+  const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/providers';
@@ -317,6 +319,10 @@ const CarouselSection: React.FC = () => {
                 ? `${description.slice(0, MAX_DESCRIPTION_CHARS)}...`
                 : description;
 
+            const imageSrc = brokenImages[provider.id]
+              ? '/images/truck.png'
+              : provider.image || '/images/truck.png';
+
             return (
               <div key={provider.id} className={styles.carouselItem}>
                 <div className={styles.imageContainer}>
@@ -325,13 +331,15 @@ const CarouselSection: React.FC = () => {
                     aria-label={provider.name}
                     className={styles.imageLink}
                   >
-                    <img
-                      src={provider.image || 'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck'}
+                    <Image
+                      src={imageSrc}
                       alt={provider.name}
+                      fill
+                      sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
                       className={styles.productImage}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://via.placeholder.com/280x210/F3F3F3/666666?text=Truck';
+                      loading="lazy"
+                      onError={() => {
+                        setBrokenImages((prev) => (prev[provider.id] ? prev : { ...prev, [provider.id]: true }));
                       }}
                     />
                   </Link>

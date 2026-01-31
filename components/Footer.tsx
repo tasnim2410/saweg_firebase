@@ -23,7 +23,8 @@ export default function Footer() {
                 width={240}
                 height={140}
                 className={styles.logoImage}
-                priority
+                sizes="240px"
+                loading="lazy"
               />
             </div>
             <h3 className={styles.columnTitle}>{t('followUs')}</h3>

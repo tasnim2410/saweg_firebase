@@ -1,13 +1,35 @@
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
-import FeaturesSection from '@/components/FeaturesSection';
-import HowToUseSection from '@/components/HowToUseSection';
-import WhyUseSection from '@/components/WhyUseSection';
-import ContactSection from '@/components/ContactSection';
-import Footer from '@/components/Footer';
+import dynamic from 'next/dynamic';
 import styles from './home.module.css';
-import CarouselSection from '@/components/CarouselSection';
-import CarouselSectionMerchant from '@/components/CarouselSectionMerchant';
+
+const CarouselSection = dynamic(() => import('@/components/CarouselSection'), {
+  loading: () => null,
+});
+
+const CarouselSectionMerchant = dynamic(() => import('@/components/CarouselSectionMerchant'), {
+  loading: () => null,
+});
+
+const FeaturesSection = dynamic(() => import('@/components/FeaturesSection'), {
+  loading: () => null,
+});
+
+const HowToUseSection = dynamic(() => import('@/components/HowToUseSection'), {
+  loading: () => null,
+});
+
+const WhyUseSection = dynamic(() => import('@/components/WhyUseSection'), {
+  loading: () => null,
+});
+
+const ContactSection = dynamic(() => import('@/components/ContactSection'), {
+  loading: () => null,
+});
+
+const Footer = dynamic(() => import('@/components/Footer'), {
+  loading: () => null,
+});
 
 export default function HomePage() {
   return (

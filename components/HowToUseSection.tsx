@@ -84,7 +84,8 @@ export default function HowToUseSection() {
                     width={240}
                     height={480}
                     className={styles.appPreviewImage}
-                    priority
+                    sizes="240px"
+                    loading="lazy"
                   />
                 </div>
               </div>

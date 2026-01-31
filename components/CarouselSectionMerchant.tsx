@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
@@ -42,6 +43,7 @@ const CarouselSectionMerchant: React.FC = () => {
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+  const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
@@ -302,7 +304,7 @@ const CarouselSectionMerchant: React.FC = () => {
           onClick={scrollLeft}
           aria-label={t('scrollLeft')}
         >
-         ›
+          ›
         </button>
 
         <div className={styles.carousel} ref={carouselRef}>
@@ -311,6 +313,10 @@ const CarouselSectionMerchant: React.FC = () => {
               (typeof post.name === 'string' && post.name.trim()) ||
               post.user?.fullName ||
               (locale === 'ar' ? 'تاجر' : 'Merchant');
+
+            const imageSrc = brokenImages[post.id]
+              ? '/images/logo.png'
+              : post.image || '/images/logo.png';
 
             const phoneCandidate =
               (typeof post.phone === 'string' && post.phone.trim()) ||
@@ -343,14 +349,16 @@ const CarouselSectionMerchant: React.FC = () => {
                     aria-label={merchantName}
                     className={styles.imageLink}
                   >
-                    <img
-                      src={post.image || '/images/logo.png'}
+                    <Image
+                      src={imageSrc}
                       alt={merchantName}
+                      fill
+                      sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
                       className={styles.productImage}
-                      style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/logo.png';
-                        (e.target as HTMLImageElement).style.filter = 'grayscale(100%)';
+                      loading="lazy"
+                      style={!post.image || brokenImages[post.id] ? { filter: 'grayscale(100%)' } : undefined}
+                      onError={() => {
+                        setBrokenImages((prev) => (prev[post.id] ? prev : { ...prev, [post.id]: true }));
                       }}
                     />
                   </Link>

@@ -64,7 +64,8 @@ export default function FeaturesSection() {
                 width={600}
                 height={300}
                 className={styles.truckImage}
-                priority
+                sizes="(max-width: 768px) 300px, 600px"
+                loading="lazy"
               />
             </motion.div>
           </div>

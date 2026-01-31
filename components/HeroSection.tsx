@@ -59,6 +59,8 @@ export default function HeroSection() {
           alt={isRTL ? 'شاحنة على الطريق' : 'Truck on the road'}
           fill
           priority
+          sizes="100vw"
+          quality={60}
           className={styles.heroImage}
         />
         <div className={styles.overlay} />

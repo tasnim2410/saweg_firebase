@@ -55,6 +55,33 @@ export default function ServiceWorkerRegister() {
           updateViaCache: 'none',
         });
 
+        const isSlowConnection = () => {
+          try {
+            const anyNav = navigator as any;
+            const conn = anyNav.connection || anyNav.mozConnection || anyNav.webkitConnection;
+            if (!conn) return false;
+            if (conn.saveData) return true;
+            const t = String(conn.effectiveType || '').toLowerCase();
+            return t === 'slow-2g' || t === '2g' || t === '3g';
+          } catch {
+            return false;
+          }
+        };
+
+        const scheduleIdle = (fn: () => void) => {
+          if (typeof window === 'undefined') return;
+          try {
+            const ric = (window as any).requestIdleCallback as undefined | ((cb: () => void, opts?: any) => number);
+            if (typeof ric === 'function') {
+              ric(fn, { timeout: 5000 });
+            } else {
+              window.setTimeout(fn, 3000);
+            }
+          } catch {
+            window.setTimeout(fn, 3000);
+          }
+        };
+
         const warmup = async () => {
           const lang = document.documentElement.lang === 'en' ? 'en' : 'ar';
 
@@ -129,8 +156,15 @@ export default function ServiceWorkerRegister() {
         // If there's already a waiting SW (e.g. after returning to the app), activate it.
         await tryActivateWaitingWorker();
 
-        // Warm caches on app start so offline pages work even if user didn't open them explicitly.
-        void warmup();
+        // Warm caches only when user is idle and connection is not slow.
+        const scheduleWarmup = () => {
+          if (isSlowConnection()) return;
+          scheduleIdle(() => {
+            void warmup();
+          });
+        };
+
+        scheduleWarmup();
 
         // When a new worker is found, and it reaches "installed", trigger activation.
         reg.addEventListener('updatefound', () => {
@@ -144,13 +178,13 @@ export default function ServiceWorkerRegister() {
         });
 
         const onWarmup = () => {
-          void warmup();
+          scheduleWarmup();
         };
 
         // Proactively check for updates.
         const onUpdateCheck = () => {
           void reg.update().catch(() => null);
-          void warmup();
+          scheduleWarmup();
         };
 
         window.addEventListener('focus', onUpdateCheck);
