@@ -228,6 +228,30 @@ export default function ServiceWorkerRegister() {
         });
 
         try {
+          const anyReg: any = reg as any;
+          const periodic = anyReg && anyReg.periodicSync;
+          if (periodic && typeof periodic.register === 'function') {
+            let permState: string | null = null;
+            try {
+              const p: any = await (navigator as any).permissions?.query?.({ name: 'periodic-background-sync' });
+              permState = p && typeof p.state === 'string' ? p.state : null;
+            } catch {
+              permState = null;
+            }
+
+            if (permState !== 'denied') {
+              try {
+                await periodic.register('saweg-periodic-sync-v1', {
+                  minInterval: 60 * 60 * 1000,
+                });
+              } catch {
+              }
+            }
+          }
+        } catch {
+        }
+
+        try {
           void reg.update().catch(() => null);
         } catch {
         }

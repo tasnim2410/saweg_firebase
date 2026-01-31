@@ -9,6 +9,7 @@ try {
 const CACHE_NAME = 'saweg-pwa-v7';
 
 const SYNC_TAG = 'saweg-sync-v1';
+const PERIODIC_SYNC_TAG = 'saweg-periodic-sync-v1';
 const DEFAULT_MAX_QUEUE_BYTES = 50 * 1024 * 1024;
 const ABSOLUTE_MAX_QUEUE_BYTES = 150 * 1024 * 1024;
 
@@ -342,6 +343,21 @@ const processQueue = async () => {
   }
 
   const remaining = (await self.sawegIdb?.queueGetAll?.()) || [];
+
+  let allClients = [];
+  try {
+    allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  } catch {
+    allClients = [];
+  }
+
+  let anyVisible = false;
+  try {
+    anyVisible = allClients.some((c) => c && c.visibilityState === 'visible');
+  } catch {
+    anyVisible = false;
+  }
+
   if (removed > 0 && remaining.length === 0) {
     const kind = didCreate && didUpdate ? 'mixed' : didCreate ? 'created' : didUpdate ? 'updated' : 'synced';
 
@@ -363,20 +379,6 @@ const processQueue = async () => {
       );
     } catch {
       // ignore
-    }
-
-    let allClients = [];
-    try {
-      allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    } catch {
-      allClients = [];
-    }
-
-    let anyVisible = false;
-    try {
-      anyVisible = allClients.some((c) => c && c.visibilityState === 'visible');
-    } catch {
-      anyVisible = false;
     }
 
     if (anyVisible) {
@@ -401,6 +403,40 @@ const processQueue = async () => {
         data: { url: '/ar' },
         tag: 'saweg-sync-success',
       });
+    } catch {
+    }
+    return;
+  }
+
+  if (!anyVisible && remaining.length > 0) {
+    try {
+      if (removed === 0) {
+        const throttleKey = 'saweg:lastPendingSyncNotify';
+        let lastAt = 0;
+        try {
+          const entry = await self.sawegIdb?.getJson?.(throttleKey);
+          const at = entry && entry.data && typeof entry.data.at === 'number' ? entry.data.at : 0;
+          lastAt = Number.isFinite(at) ? at : 0;
+        } catch {
+          lastAt = 0;
+        }
+
+        const now = Date.now();
+        if (!lastAt || now - lastAt > 30 * 60 * 1000) {
+          try {
+            await self.sawegIdb?.setJson?.(throttleKey, { at: now, count: remaining.length });
+          } catch {
+          }
+
+          await self.registration.showNotification('Saweg', {
+            body: 'Pending post could not be synced. Open the app to finish.',
+            icon: '/icons/icon-192x192.png?v=2',
+            badge: '/icons/icon-192x192.png?v=2',
+            data: { url: '/ar' },
+            tag: 'saweg-sync-pending',
+          });
+        }
+      }
     } catch {
     }
   }
@@ -533,6 +569,11 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('sync', (event) => {
   if (event?.tag !== SYNC_TAG) return;
+  event.waitUntil(processQueueOnce());
+});
+
+self.addEventListener('periodicsync', (event) => {
+  if (event?.tag !== PERIODIC_SYNC_TAG) return;
   event.waitUntil(processQueueOnce());
 });
 
