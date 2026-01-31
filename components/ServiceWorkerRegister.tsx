@@ -158,6 +158,9 @@ export default function ServiceWorkerRegister() {
             `/${lang}/my-profile`,
             `/${lang}/dashboard/my-posts`,
             `/${lang}/dashboard/my-providers`,
+            `/${lang}/dashboard/add-provider`,
+            `/${lang}/dashboard/add-merchant-post`,
+            `/${lang}/dashboard/add-merchant-goods-post`,
           ];
 
           const apis = [

@@ -327,6 +327,9 @@ self.addEventListener('message', (event) => {
       `/${lang}/my-profile`,
       `/${lang}/dashboard/my-posts`,
       `/${lang}/dashboard/my-providers`,
+      `/${lang}/dashboard/add-provider`,
+      `/${lang}/dashboard/add-merchant-post`,
+      `/${lang}/dashboard/add-merchant-goods-post`,
     ];
 
     const apis = [
@@ -464,13 +467,14 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   if (isQueueableApiRequest(url, req)) {
+    const reqForQueue = req.clone();
     event.respondWith(
       (async () => {
         try {
           const res = await fetch(req);
           return res;
         } catch {
-          const enq = await enqueueFailedApiRequest(req);
+          const enq = await enqueueFailedApiRequest(reqForQueue);
           if (!enq.ok) {
             return safeJsonResponse({ error: enq.error || 'OFFLINE_QUEUE_FAILED' }, 507);
           }
