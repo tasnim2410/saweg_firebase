@@ -238,8 +238,16 @@ const processQueue = async () => {
         removed += 1;
         continue;
       }
+      try {
+        await broadcastMessage({ type: 'SYNC_FAILED' });
+      } catch {
+      }
       break;
     } catch {
+      try {
+        await broadcastMessage({ type: 'SYNC_FAILED' });
+      } catch {
+      }
       break;
     }
   }

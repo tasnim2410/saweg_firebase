@@ -41,6 +41,40 @@ export default function ServiceWorkerRegister() {
       }
     };
 
+    const showSyncFailed = () => {
+      try {
+        const id = 'saweg-sync-failed-toast';
+        const existing = document.getElementById(id);
+        if (existing) existing.remove();
+
+        const el = document.createElement('div');
+        el.id = id;
+        el.textContent = 'Sync failed. Please open the app and try again.';
+        el.setAttribute('role', 'status');
+        el.style.position = 'fixed';
+        el.style.left = '50%';
+        el.style.bottom = '16px';
+        el.style.transform = 'translateX(-50%)';
+        el.style.zIndex = '9999';
+        el.style.background = 'rgba(239, 68, 68, 0.95)';
+        el.style.color = '#ffffff';
+        el.style.padding = '10px 14px';
+        el.style.borderRadius = '9999px';
+        el.style.fontSize = '14px';
+        el.style.fontFamily = 'var(--font-sans)';
+        el.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -4px rgba(0,0,0,0.2)';
+        document.body.appendChild(el);
+
+        window.setTimeout(() => {
+          try {
+            el.remove();
+          } catch {
+          }
+        }, 5000);
+      } catch {
+      }
+    };
+
     const requestQueueProcess = () => {
       try {
         navigator.serviceWorker?.controller?.postMessage({ type: 'PROCESS_QUEUE' });
@@ -58,6 +92,9 @@ export default function ServiceWorkerRegister() {
       const type = (event as any)?.data?.type;
       if (type === 'SYNC_SUCCESS') {
         showSyncSuccess();
+      }
+      if (type === 'SYNC_FAILED') {
+        showSyncFailed();
       }
     };
 

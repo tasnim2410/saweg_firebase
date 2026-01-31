@@ -255,6 +255,18 @@ export default function AddMerchantGoodsPostPage() {
 
       const data = await res.json().catch(() => null);
 
+      if (res.status === 202 && data && typeof data === 'object' && (data as any).queued === true) {
+        pushToast({
+          variant: 'info',
+          title: titleFor('success'),
+          message:
+            locale === 'ar'
+              ? 'تم حفظ البيانات بدون اتصال وسيتم المزامنة تلقائياً عند عودة الإنترنت.'
+              : 'Saved offline. It will sync automatically when you are back online.',
+        });
+        return;
+      }
+
       if (!res.ok) {
         const code = data?.error;
         if (code === 'IMAGE_TOO_LARGE') {
