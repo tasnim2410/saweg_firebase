@@ -644,7 +644,7 @@
   height: 140px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f3f4f6;
+  position: relative;
   flex-shrink: 0;
 }
 

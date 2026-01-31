@@ -308,6 +308,26 @@ const processQueue = async () => {
   if (removed > 0 && remaining.length === 0) {
     const kind = didCreate && didUpdate ? 'mixed' : didCreate ? 'created' : didUpdate ? 'updated' : 'synced';
 
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const keys = await cache.keys();
+      await Promise.all(
+        keys.map(async (req) => {
+          try {
+            const u = new URL(req.url);
+            if (u.origin !== self.location.origin) return;
+            if (u.pathname.endsWith('/providers') || u.pathname.endsWith('/merchant-goods-posts')) {
+              await cache.delete(req);
+            }
+          } catch {
+            // ignore
+          }
+        })
+      );
+    } catch {
+      // ignore
+    }
+
     let allClients = [];
     try {
       allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

@@ -153,6 +153,19 @@ export default function ServiceWorkerRegister() {
       const type = payload?.type;
       if (type === 'SYNC_SUCCESS') {
         showSyncSuccess();
+
+        try {
+          const p = window.location.pathname || '';
+          if (p.endsWith('/providers') || p.endsWith('/merchant-goods-posts')) {
+            window.setTimeout(() => {
+              try {
+                window.location.reload();
+              } catch {
+              }
+            }, 300);
+          }
+        } catch {
+        }
       }
       if (type === 'SYNC_FAILED') {
         showSyncFailed(payload);

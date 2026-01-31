@@ -3,10 +3,15 @@ import styles from '@/components/CarouselSection.module.css';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
+import { MapPin, Phone, Truck } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 type MerchantGoodsPostListItem = {
   id: number;
   name: string | null;
+  phone: string | null;
   startingPoint: string;
   destination: string;
   goodsType: string;
@@ -18,6 +23,7 @@ type MerchantGoodsPostListItem = {
   createdAt: string | Date;
   user: {
     fullName: string;
+    phone: string | null;
   };
 };
 
@@ -32,6 +38,7 @@ export default async function MerchantGoodsPostsPage({
     select: {
       id: true,
       name: true,
+      phone: true,
       startingPoint: true,
       destination: true,
       goodsType: true,
@@ -41,7 +48,7 @@ export default async function MerchantGoodsPostsPage({
       image: true,
       description: true,
       createdAt: true,
-      user: { select: { fullName: true } },
+      user: { select: { fullName: true, phone: true } },
     },
     orderBy: { createdAt: 'desc' },
   })) as MerchantGoodsPostListItem[];
@@ -61,6 +68,29 @@ export default async function MerchantGoodsPostsPage({
     }
   };
 
+  const toTelHref = (phoneNumber: string) => {
+    const normalized = String(phoneNumber || '').replace(/[^+\d]/g, '');
+    return `tel:${normalized}`;
+  };
+
+  const timeAgoLabelFromMs = (ms: number) => {
+    if (!Number.isFinite(ms)) return '';
+    const diffMs = Date.now() - ms;
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+    const minutes = Math.floor(diffMs / 1000 / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const isAr = locale === 'ar';
+    if (minutes < 1) return isAr ? 'الآن' : 'now';
+    if (minutes < 60) return isAr ? `منذ ${minutes} دقيقة` : `${minutes}m ago`;
+    if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
+    if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return isAr ? `منذ ${weeks} أسبوع` : `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    return isAr ? `منذ ${months} شهر` : `${months}mo ago`;
+  };
+
   return (
     <main>
       <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
@@ -78,6 +108,14 @@ export default async function MerchantGoodsPostsPage({
             const startLabel = getLocationLabel(post.startingPoint || '-', lang);
             const destLabel = getLocationLabel(post.destination || '-', lang);
 
+            const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
+            const timeAgo = timeAgoLabelFromMs(createdAtMs);
+
+            const isRecent = Number.isFinite(createdAtMs)
+              ? Date.now() - createdAtMs <= 24 * 60 * 60 * 1000
+              : false;
+            const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
+
             const summaryParts: string[] = [];
             if (post.goodsType) summaryParts.push(post.goodsType);
             if (Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit) {
@@ -92,30 +130,71 @@ export default async function MerchantGoodsPostsPage({
             const description = (post.description || '').trim();
             const shortDesc = description.length > 160 ? `${description.slice(0, 160)}...` : description;
 
+            const phone = (post.phone || post.user?.phone || '').trim();
+
+            const postHref = `/${locale}/merchant-goods-posts/${post.id}`;
+
             return (
-              <Link key={post.id} href={`/${locale}/merchant-goods-posts/${post.id}`} className={styles.listItem}>
-                <div className={styles.listItemMedia}>
+              <div key={post.id} className={styles.listItem}>
+                <Link href={postHref} className={styles.listItemMedia}>
                   <img
                     src={post.image || '/images/logo.png'}
                     alt={merchantName}
                     style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
                   />
-                </div>
+                  {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
+                </Link>
 
                 <div className={styles.listItemBody}>
-                  <div className={styles.listItemTitleRow}>
+                  {/* <Link href={postHref} className={styles.listItemTitleRow}>
                     <h3 className={styles.listItemTitle}>{merchantName}</h3>
+                  </Link> */}
+
+                  <div className={styles.metaContainer}>
+                    {shortDesc ? (
+                      <div className={styles.descriptionContainer}>
+                        <Link href={postHref} className={styles.descriptionLink} aria-label={merchantName}>
+                          <p className={`${styles.description} ${styles.descriptionClickable}`}>{shortDesc}</p>
+                        </Link>
+                      </div>
+                    ) : null}
+
+                    <div className={styles.locationContainer}>
+                      <MapPin size={14} className={styles.locationIcon} />
+                      <span className={styles.locationText}>{startLabel}</span>
+                    </div>
+
+                    <div className={styles.destinationContainer}>
+                      <Truck size={14} className={styles.destinationIcon} />
+                      <span className={styles.destinationText}>{destLabel}</span>
+                    </div>
+
+                    {summary ? (
+                      <div className={styles.descriptionContainer}>
+                        <Link href={postHref} className={styles.descriptionLink} aria-label={merchantName}>
+                          <p className={`${styles.description} ${styles.descriptionClickable}`}>{summary}</p>
+                        </Link>
+                      </div>
+                    ) : null}
                   </div>
 
-                  <div className={styles.listItemMeta}>
-                    <span>{startLabel}</span>
-                    <span>{`→ ${destLabel}`}</span>
+                  <div className={styles.actionContainer}>
+                    {phone ? (
+                      <a
+                        className={`${styles.callButton} ${statusClass}`}
+                        href={toTelHref(phone)}
+                        aria-label={locale === 'ar' ? 'اتصال' : 'Call'}
+                        title={locale === 'ar' ? 'اتصال' : 'Call'}
+                      >
+                        <Phone size={16} className={styles.callIcon} aria-hidden="true" />
+                        <span className={styles.callText}>{locale === 'ar' ? 'اتصال' : 'Call'}</span>
+                      </a>
+                    ) : (
+                      <span className={`${styles.callButton} ${styles.statusInactive}`}>-</span>
+                    )}
                   </div>
-
-                  {summary ? <div className={styles.listItemSummary}>{summary}</div> : null}
-                  {shortDesc ? <div className={styles.listItemSummary}>{shortDesc}</div> : null}
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
