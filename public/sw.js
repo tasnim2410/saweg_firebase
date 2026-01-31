@@ -6,10 +6,27 @@ try {
   // ignore
 }
 
-const CACHE_NAME = 'saweg-pwa-v6';
+const CACHE_NAME = 'saweg-pwa-v7';
 
 const SYNC_TAG = 'saweg-sync-v1';
-const MAX_QUEUE_BYTES = 10 * 1024 * 1024;
+const DEFAULT_MAX_QUEUE_BYTES = 50 * 1024 * 1024;
+const ABSOLUTE_MAX_QUEUE_BYTES = 150 * 1024 * 1024;
+
+const getMaxQueueBytes = async () => {
+  try {
+    const nav = self.navigator;
+    const storage = nav && nav.storage;
+    if (!storage || typeof storage.estimate !== 'function') return DEFAULT_MAX_QUEUE_BYTES;
+    const est = await storage.estimate();
+    const quota = typeof est?.quota === 'number' ? est.quota : 0;
+    if (!quota) return DEFAULT_MAX_QUEUE_BYTES;
+    const tenPct = Math.floor(quota * 0.1);
+    const max = Math.max(DEFAULT_MAX_QUEUE_BYTES, tenPct);
+    return Math.min(ABSOLUTE_MAX_QUEUE_BYTES, max);
+  } catch {
+    return DEFAULT_MAX_QUEUE_BYTES;
+  }
+};
 
 const PRECACHE_URLS = [
   '/offline.html',
@@ -160,13 +177,14 @@ const serializeRequestForQueue = async (req) => {
 const enqueueFailedApiRequest = async (req) => {
   const item = await serializeRequestForQueue(req);
   const currentBytes = await collectQueueSize();
-  if (currentBytes + (item.sizeBytes || 0) > MAX_QUEUE_BYTES) {
+  const maxBytes = await getMaxQueueBytes();
+  if (currentBytes + (item.sizeBytes || 0) > maxBytes) {
     return {
       ok: false,
       error: 'OFFLINE_QUEUE_FULL',
       currentBytes,
       itemBytes: item.sizeBytes || 0,
-      maxBytes: MAX_QUEUE_BYTES,
+      maxBytes,
     };
   }
   try {

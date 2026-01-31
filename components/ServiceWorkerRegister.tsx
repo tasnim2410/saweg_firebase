@@ -214,6 +214,11 @@ export default function ServiceWorkerRegister() {
           updateViaCache: 'none',
         });
 
+        try {
+          void reg.update().catch(() => null);
+        } catch {
+        }
+
         const isSlowConnection = () => {
           try {
             const anyNav = navigator as any;
@@ -358,22 +363,59 @@ export default function ServiceWorkerRegister() {
           requestQueueProcess();
         };
 
-        const onFocus = () => {
-          requestQueueProcess();
+        const onVisibilityChange = () => {
+          try {
+            if (document.visibilityState === 'visible' && navigator.onLine) {
+              requestQueueProcess();
+            }
+          } catch {
+          }
+        };
+
+        const startOnlineRetryWindow = () => {
+          try {
+            if (!navigator.onLine) return;
+            let tries = 0;
+            const id = window.setInterval(() => {
+              tries += 1;
+              requestQueueProcess();
+              if (tries >= 6) {
+                try {
+                  window.clearInterval(id);
+                } catch {
+                }
+              }
+            }, 5000);
+          } catch {
+          }
         };
 
         window.addEventListener('online', onOnline);
-        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        // Mobile browsers sometimes miss the first online event; retry a few times when we know we're online.
+        startOnlineRetryWindow();
 
         requestQueueProcess();
 
-        return () => {
-          window.removeEventListener('focus', onUpdateCheck);
-          window.removeEventListener('online', onUpdateCheck);
-          window.removeEventListener('saweg:warmup', onWarmup as EventListener);
-          window.removeEventListener('online', onOnline);
-          window.removeEventListener('focus', onFocus);
-          window.clearInterval(intervalId);
+        dispose = () => {
+          try {
+            window.removeEventListener('focus', onUpdateCheck);
+            window.removeEventListener('online', onUpdateCheck);
+            window.removeEventListener('saweg:warmup', onWarmup as EventListener);
+            window.clearInterval(intervalId);
+          } catch {
+          }
+
+          try {
+            window.removeEventListener('online', onOnline);
+          } catch {
+          }
+
+          try {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+          } catch {
+          }
         };
       } catch (err) {
         // ignore
