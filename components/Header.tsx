@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { Globe, ChevronDown, Menu, X, Bell, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,7 +33,43 @@ export default function Header() {
   const [checkingPush, setCheckingPush] = useState(false);
   const [enablingPush, setEnablingPush] = useState(false);
 
-  // Adjust the extraOffset to make the scroll more aggressive
+  const showPushToast = (type: 'success' | 'error', message: string) => {
+    try {
+      const id = 'saweg-push-toast';
+      const existing = document.getElementById(id);
+      if (existing) existing.remove();
+
+      const el = document.createElement('div');
+      el.id = id;
+      el.textContent = message;
+      el.setAttribute('role', 'status');
+      el.style.position = 'fixed';
+      el.style.left = '50%';
+      el.style.top = '16px';
+      el.style.transform = 'translateX(-50%)';
+      el.style.zIndex = '10001';
+      el.style.maxWidth = 'calc(100vw - 32px)';
+      el.style.whiteSpace = 'pre-wrap';
+      el.style.textAlign = 'center';
+      el.style.background = type === 'success' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+      el.style.color = '#ffffff';
+      el.style.padding = '10px 14px';
+      el.style.borderRadius = '9999px';
+      el.style.fontSize = '14px';
+      el.style.fontFamily = 'var(--font-sans)';
+      el.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -4px rgba(0,0,0,0.2)';
+      document.body.appendChild(el);
+
+      window.setTimeout(() => {
+        try {
+          el.remove();
+        } catch {
+        }
+      }, 4500);
+    } catch {
+    }
+  };
+
   const extraOffset = -55; // Adjust this value to make the scroll less aggressive
 
   const scrollToSection = (sectionId: string) => {
@@ -207,6 +244,151 @@ export default function Header() {
     };
   }, [authUser?.id, authUser?.type, authUser?.isAdmin]);
 
+  const enablePushFromBanner = async () => {
+    if (enablingPush) return;
+    setEnablingPush(true);
+
+    const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T> => {
+      return await Promise.race([
+        p,
+        new Promise<T>((_, reject) => {
+          window.setTimeout(() => reject(new Error('TIMEOUT')), ms);
+        }),
+      ]);
+    };
+
+    try {
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showPushToast('error', locale === 'ar' ? 'هذا الجهاز لا يدعم إشعارات الويب.' : 'This device does not support web push notifications.');
+        return;
+      }
+
+      const isLocalhost =
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.hostname === '[::1]';
+      if (!window.isSecureContext && !isLocalhost) {
+        showPushToast(
+          'error',
+          locale === 'ar'
+            ? 'لتفعيل الإشعارات يجب فتح الموقع عبر HTTPS.'
+            : 'Notifications require HTTPS.'
+        );
+        return;
+      }
+
+      let permission: NotificationPermission = Notification.permission;
+      if (permission === 'default') {
+        try {
+          permission = await Notification.requestPermission();
+        } catch {
+          permission = Notification.permission;
+        }
+      }
+      if (permission !== 'granted') {
+        showPushToast(
+          'error',
+          locale === 'ar'
+            ? 'لم يتم السماح بالإشعارات. يمكنك تفعيلها من إعدادات المتصفح.'
+            : 'Notifications were not allowed. You can enable them in your browser settings.'
+        );
+        return;
+      }
+
+      const reg = await getPushRegistration();
+      if (!reg) {
+        showPushToast('error', locale === 'ar' ? 'تعذر تفعيل الإشعارات.' : 'Could not enable notifications.');
+        return;
+      }
+
+      const existing = await withTimeout(reg.pushManager.getSubscription(), 8000).catch(() => null);
+      if (existing) {
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(existing),
+        }).catch(() => null);
+        setShowPushBanner(false);
+        showPushToast('success', locale === 'ar' ? 'تم تفعيل الإشعارات.' : 'Notifications enabled.');
+        return;
+      }
+
+      const keyRes = await withTimeout(fetch('/api/push/public-key', { cache: 'no-store' }), 12000).catch(() => null);
+      if (!keyRes) {
+        showPushToast('error', locale === 'ar' ? 'تعذر الاتصال بالخادم.' : 'Could not reach the server.');
+        return;
+      }
+
+      const keyData = await keyRes.json().catch(() => null);
+      if (!keyRes.ok || !keyData?.publicKey) {
+        const msg =
+          typeof keyData?.error === 'string' && keyData.error
+            ? keyData.error
+            : locale === 'ar'
+              ? 'الإشعارات غير مهيأة حالياً.'
+              : 'Notifications are not configured.';
+        showPushToast('error', msg);
+        return;
+      }
+
+      let sub: PushSubscription;
+      try {
+        sub = await withTimeout(
+          reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
+          }),
+          15000
+        );
+      } catch (err: any) {
+        const name = typeof err?.name === 'string' ? err.name : '';
+        const message = typeof err?.message === 'string' ? err.message : '';
+        const isAbort = name === 'AbortError' || /push service error/i.test(message);
+        showPushToast(
+          'error',
+          isAbort
+            ? locale === 'ar'
+              ? 'تعذر التسجيل في خدمة الإشعارات. تأكد من الاتصال أو جرّب لاحقاً.'
+              : 'Could not register with the push service. Check your connection and try again.'
+            : locale === 'ar'
+              ? 'تعذر تفعيل الإشعارات.'
+              : 'Could not enable notifications.'
+        );
+        return;
+      }
+
+      const saveRes = await withTimeout(
+        fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(sub),
+        }),
+        12000
+      ).catch(() => null);
+
+      if (!saveRes) {
+        showPushToast('error', locale === 'ar' ? 'تعذر حفظ الاشتراك.' : 'Could not save subscription.');
+        return;
+      }
+      if (!saveRes.ok) {
+        const data = await saveRes.json().catch(() => null);
+        const errMsg =
+          typeof data?.error === 'string' && data.error
+            ? data.error
+            : locale === 'ar'
+              ? 'تعذر حفظ الاشتراك.'
+              : 'Could not save subscription.';
+        showPushToast('error', errMsg);
+        return;
+      }
+
+      setShowPushBanner(false);
+      showPushToast('success', locale === 'ar' ? 'تم تفعيل الإشعارات.' : 'Notifications enabled.');
+    } finally {
+      setEnablingPush(false);
+    }
+  };
+
   const dismissPushBanner = () => {
     if (!authUser?.id) {
       setShowPushBanner(false);
@@ -218,62 +400,6 @@ export default function Header() {
       // ignore
     }
     setShowPushBanner(false);
-  };
-
-  const enablePushFromBanner = async () => {
-    if (enablingPush) return;
-    setEnablingPush(true);
-
-    try {
-      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-        return;
-      }
-
-      let permission: NotificationPermission = Notification.permission;
-      if (permission === 'default') {
-        permission = await Notification.requestPermission();
-      }
-      if (permission !== 'granted') {
-        return;
-      }
-
-      const reg = await getPushRegistration();
-      if (!reg) return;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) {
-        await fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(existing),
-        }).catch(() => null);
-        setShowPushBanner(false);
-        return;
-      }
-
-      const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' });
-      const keyData = await keyRes.json().catch(() => null);
-      if (!keyRes.ok || !keyData?.publicKey) {
-        return;
-      }
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
-      });
-
-      const saveRes = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(sub),
-      });
-      if (!saveRes.ok) {
-        return;
-      }
-
-      setShowPushBanner(false);
-    } finally {
-      setEnablingPush(false);
-    }
   };
 
   useEffect(() => {
