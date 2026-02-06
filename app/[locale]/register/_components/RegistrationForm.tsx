@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
 import styles from '../register.module.css';
@@ -11,6 +11,21 @@ import { normalizePhoneNumber } from '@/lib/phone';
 type RegistrationRole = 'shipper' | 'merchant';
 
 const MAX_TRUCK_IMAGE_BYTES = 10 * 1024 * 1024;
+
+const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
+  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
+  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
+  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
+  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
+  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
+  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
+  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
+  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
+  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
+  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
+  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
+  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
+];
 
 type Props = {
   role: RegistrationRole;
@@ -27,6 +42,7 @@ export default function RegistrationForm({ role }: Props) {
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [carKindOpen, setCarKindOpen] = useState(false);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -74,8 +90,43 @@ export default function RegistrationForm({ role }: Props) {
     trucksNeeded: '',
   });
 
+  const selectedCarKind = CAR_KIND_OPTIONS.find((opt) => opt.value === formData.carKind) ?? null;
+
+  useEffect(() => {
+    if (!carKindOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest('[data-car-kind-root="true"]')) {
+        setCarKindOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCarKindOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [carKindOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (role === 'shipper') {
+      if (!CAR_KIND_OPTIONS.some((opt) => opt.value === formData.carKind)) {
+        pushToast({
+          title: titleFor('form'),
+          message: locale === 'ar' ? 'يرجى اختيار نوع المركبة من القائمة' : 'Please choose a vehicle type from the list',
+        });
+        return;
+      }
+    }
 
     if (truckImage && truckImage.size > MAX_TRUCK_IMAGE_BYTES) {
       const maxMb = Math.floor(MAX_TRUCK_IMAGE_BYTES / (1024 * 1024));
@@ -337,19 +388,59 @@ export default function RegistrationForm({ role }: Props) {
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label className={styles.label}>{t('carKind')}</label>
-                    <input
-                      type="text"
-                      name="carKind"
-                      value={formData.carKind}
-                      onChange={handleChange}
-                      required
-                      className={styles.input}
-                      placeholder={
-                        locale === 'ar'
-                          ? 'مثال: شاحنة صغيرة, شاحنة كبيرة, مع حافظة, مع جرار'
-                          : 'e.g. Small truck / Big truck with trailer'
-                      }
-                    />
+                    <div className={styles.carKindRoot} data-car-kind-root="true">
+                      <button
+                        type="button"
+                        className={`${styles.input} ${styles.carKindButton}`}
+                        aria-haspopup="listbox"
+                        aria-expanded={carKindOpen ? 'true' : 'false'}
+                        onClick={() => setCarKindOpen((v) => !v)}
+                      >
+                        {selectedCarKind ? (
+                          <span className={styles.carKindButtonInner}>
+                            <img
+                              src={selectedCarKind.imagePath}
+                              alt={selectedCarKind.value}
+                              className={styles.carKindThumb}
+                              loading="lazy"
+                            />
+                            <span className={styles.carKindButtonLabel}>{selectedCarKind.value}</span>
+                          </span>
+                        ) : (
+                          <span className={styles.carKindPlaceholder}>
+                            {locale === 'ar' ? 'اختر نوع المركبة' : 'Choose vehicle type'}
+                          </span>
+                        )}
+                      </button>
+
+                      {carKindOpen ? (
+                        <div className={styles.carKindPopover} role="listbox">
+                          {CAR_KIND_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              className={styles.carKindOption}
+                              role="option"
+                              aria-selected={opt.value === formData.carKind ? 'true' : 'false'}
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, carKind: opt.value }));
+                                setCarKindOpen(false);
+                              }}
+                            >
+                              <img
+                                src={opt.imagePath}
+                                alt={opt.value}
+                                className={styles.carKindOptionThumb}
+                                loading="lazy"
+                              />
+                              <span className={styles.carKindOptionLabel}>{opt.value}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <input type="hidden" name="carKind" value={formData.carKind} />
+                    </div>
                   </div>
 
                   <div className={styles.formGroup}>

@@ -156,30 +156,74 @@ export default function Header() {
 
     const waitForActive = async (reg: ServiceWorkerRegistration) => {
       if (reg.active) return;
-      const sw = reg.installing || reg.waiting;
-      if (!sw) return;
+
       await withTimeout(
         new Promise<void>((resolve) => {
-          const onState = () => {
-            if (sw.state === 'activated' || sw.state === 'redundant') {
-              sw.removeEventListener('statechange', onState);
+          let sw: ServiceWorker | null = reg.installing || reg.waiting || null;
+
+          const cleanup = () => {
+            try {
+              reg.removeEventListener('updatefound', onUpdateFound);
+              navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+              sw?.removeEventListener('statechange', onStateChange);
+            } catch {
+            }
+          };
+
+          const maybeResolve = () => {
+            if (reg.active) {
+              cleanup();
               resolve();
             }
           };
-          sw.addEventListener('statechange', onState);
-          onState();
+
+          const onStateChange = () => {
+            if (!sw) return;
+            if (sw.state === 'activated' || sw.state === 'redundant') {
+              maybeResolve();
+            }
+          };
+
+          const onUpdateFound = () => {
+            try {
+              sw?.removeEventListener('statechange', onStateChange);
+            } catch {
+            }
+            sw = reg.installing || null;
+            sw?.addEventListener('statechange', onStateChange);
+            onStateChange();
+          };
+
+          const onControllerChange = () => {
+            maybeResolve();
+          };
+
+          reg.addEventListener('updatefound', onUpdateFound);
+          navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+          sw?.addEventListener('statechange', onStateChange);
+          maybeResolve();
         }),
-        5000
+        8000
       ).catch(() => null);
     };
 
     try {
-      let reg = await navigator.serviceWorker.getRegistration();
+      let reg: ServiceWorkerRegistration | undefined;
+      try {
+        reg = await navigator.serviceWorker.getRegistration('/');
+      } catch {
+        reg = undefined;
+      }
+      if (!reg) {
+        reg = await navigator.serviceWorker.getRegistration();
+      }
       if (!reg) {
         reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
       }
       await waitForActive(reg);
-      return reg;
+
+      const readyReg = await withTimeout(navigator.serviceWorker.ready, 8000).catch(() => null);
+      return readyReg ?? reg;
     } catch {
       return null;
     }
@@ -187,6 +231,60 @@ export default function Header() {
 
   useEffect(() => {
     let cancelled = false;
+    let permStatus: PermissionStatus | null = null;
+
+    const ensureSubscribedOnce = async () => {
+      if (!authUser?.id) return;
+      const attemptedKey = `push_auto_attempted:${authUser.id}`;
+      try {
+        if (sessionStorage.getItem(attemptedKey) === '1') return;
+        sessionStorage.setItem(attemptedKey, '1');
+      } catch {
+      }
+
+      setCheckingPush(true);
+      try {
+        const reg = await getPushRegistration();
+        if (!reg) return;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) return;
+
+        const keyRes = await fetch('/api/push/public-key', { cache: 'no-store' }).catch(() => null);
+        if (!keyRes) return;
+        const keyData = await keyRes.json().catch(() => null);
+        if (!keyRes.ok || !keyData?.publicKey) return;
+
+        const publicKeyRaw = String(keyData.publicKey);
+        const publicKey = publicKeyRaw.trim().replace(/^['"]+|['"]+$/g, '');
+        if (!publicKey) return;
+
+        let appServerKeyBytes: Uint8Array;
+        try {
+          appServerKeyBytes = urlBase64ToUint8Array(publicKey);
+        } catch {
+          return;
+        }
+        if (appServerKeyBytes.length !== 65) return;
+
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: appServerKeyBytes as unknown as BufferSource,
+        });
+
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(sub),
+        }).catch(() => null);
+      } catch (err) {
+        try {
+          console.error('Push auto-subscribe failed:', err);
+        } catch {
+        }
+      } finally {
+        if (!cancelled) setCheckingPush(false);
+      }
+    };
 
     const check = async () => {
       if (typeof window === 'undefined') return;
@@ -206,7 +304,6 @@ export default function Header() {
           return;
         }
       } catch {
-        // ignore
       }
 
       if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -214,33 +311,40 @@ export default function Header() {
         return;
       }
 
-      if (Notification.permission === 'denied') {
+      const permission = Notification.permission;
+      if (permission === 'granted') {
         setShowPushBanner(false);
+        void ensureSubscribedOnce();
         return;
       }
 
-      setCheckingPush(true);
-      try {
-        const reg = await getPushRegistration();
-        if (!reg) {
-          setShowPushBanner(false);
-          return;
-        }
-        const existing = await reg.pushManager.getSubscription();
-        if (cancelled) return;
-        setShowPushBanner(!existing);
-      } catch {
-        if (cancelled) return;
-        setShowPushBanner(false);
-      } finally {
-        if (cancelled) return;
-        setCheckingPush(false);
+      if (permission === 'default' || permission === 'denied') {
+        setShowPushBanner(true);
+        return;
       }
+
+      setShowPushBanner(false);
     };
 
     void check();
+
+    const setupPermissionListener = async () => {
+      if (!('permissions' in navigator)) return;
+      try {
+        permStatus = await (navigator.permissions as any).query({ name: 'notifications' });
+        if (!permStatus) return;
+        permStatus.onchange = () => {
+          if (cancelled) return;
+          void check();
+        };
+      } catch {
+      }
+    };
+
+    void setupPermissionListener();
     return () => {
       cancelled = true;
+      if (permStatus) permStatus.onchange = null;
     };
   }, [authUser?.id, authUser?.type, authUser?.isAdmin]);
 
@@ -295,13 +399,15 @@ export default function Header() {
         return;
       }
 
+      setShowPushBanner(false);
+
       const reg = await getPushRegistration();
       if (!reg) {
         showPushToast('error', locale === 'ar' ? 'تعذر تفعيل الإشعارات.' : 'Could not enable notifications.');
         return;
       }
 
-      const existing = await withTimeout(reg.pushManager.getSubscription(), 8000).catch(() => null);
+      const existing = await reg.pushManager.getSubscription();
       if (existing) {
         await fetch('/api/push/subscribe', {
           method: 'POST',
@@ -331,28 +437,84 @@ export default function Header() {
         return;
       }
 
+      const publicKeyRaw = String(keyData.publicKey);
+      const publicKey = publicKeyRaw.trim().replace(/^['"]+|['"]+$/g, '');
+      if (!publicKey) {
+        showPushToast('error', locale === 'ar' ? 'الإشعارات غير مهيأة حالياً.' : 'Notifications are not configured.');
+        return;
+      }
+
+      if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(publicKey)) {
+        showPushToast(
+          'error',
+          locale === 'ar'
+            ? 'مفتاح الإشعارات غير صالح. تأكد من إعداد VAPID_PUBLIC_KEY بشكل صحيح.'
+            : 'Invalid push public key. Please verify VAPID_PUBLIC_KEY configuration.'
+        );
+        return;
+      }
+
+      let appServerKeyBytes: Uint8Array;
+      try {
+        appServerKeyBytes = urlBase64ToUint8Array(publicKey);
+      } catch {
+        showPushToast(
+          'error',
+          locale === 'ar'
+            ? 'مفتاح الإشعارات غير صالح. تأكد من إعداد VAPID_PUBLIC_KEY بشكل صحيح.'
+            : 'Invalid push public key. Please verify VAPID_PUBLIC_KEY configuration.'
+        );
+        return;
+      }
+
+      if (appServerKeyBytes.length !== 65) {
+        showPushToast(
+          'error',
+          locale === 'ar'
+            ? 'مفتاح الإشعارات غير صالح. تأكد من استخدام VAPID_PUBLIC_KEY الصحيح.'
+            : 'Invalid push public key. Please verify you are using the correct VAPID_PUBLIC_KEY.'
+        );
+        return;
+      }
+
+      const appServerKey = appServerKeyBytes as unknown as BufferSource;
+
       let sub: PushSubscription;
       try {
         sub = await withTimeout(
           reg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(String(keyData.publicKey)),
+            applicationServerKey: appServerKey,
           }),
           15000
         );
       } catch (err: any) {
+        try {
+          console.error('Push subscribe failed:', err);
+        } catch {
+        }
         const name = typeof err?.name === 'string' ? err.name : '';
         const message = typeof err?.message === 'string' ? err.message : '';
         const isAbort = name === 'AbortError' || /push service error/i.test(message);
+        const isInvalidKey = name === 'InvalidAccessError' || /applicationServerKey/i.test(message);
+        const isNotAllowed = name === 'NotAllowedError' || /denied/i.test(message);
         showPushToast(
           'error',
-          isAbort
+          isInvalidKey
             ? locale === 'ar'
-              ? 'تعذر التسجيل في خدمة الإشعارات. تأكد من الاتصال أو جرّب لاحقاً.'
-              : 'Could not register with the push service. Check your connection and try again.'
-            : locale === 'ar'
-              ? 'تعذر تفعيل الإشعارات.'
-              : 'Could not enable notifications.'
+              ? 'مفتاح الإشعارات غير صالح. تأكد من إعداد VAPID_PUBLIC_KEY.'
+              : 'Invalid push public key. Please verify VAPID_PUBLIC_KEY.'
+            : isNotAllowed
+              ? locale === 'ar'
+                ? 'لم يتم السماح بالإشعارات. يمكنك تفعيلها من إعدادات المتصفح.'
+                : 'Notifications were not allowed. You can enable them in your browser settings.'
+              : isAbort
+                ? locale === 'ar'
+                  ? 'تعذر التسجيل في خدمة الإشعارات. تأكد من الاتصال أو جرّب لاحقاً.'
+                  : 'Could not register with the push service. Check your connection and try again.'
+                : locale === 'ar'
+                  ? 'تعذر تفعيل الإشعارات.'
+                  : 'Could not enable notifications.'
         );
         return;
       }

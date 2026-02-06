@@ -10,6 +10,21 @@ import { normalizePhoneNumber } from '@/lib/phone';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+const VEHICLE_TYPE_OPTIONS: Array<{ value: string; imagePath: string }> = [
+  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
+  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
+  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
+  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
+  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
+  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
+  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
+  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
+  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
+  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
+  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
+  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
+];
+
 type WeightUnit = 'kg' | 'ton';
 
 export default function AddMerchantGoodsPostPage() {
@@ -23,6 +38,7 @@ export default function AddMerchantGoodsPostPage() {
   const [phone, setPhone] = useState<string>('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmImageUrl, setConfirmImageUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -43,8 +59,11 @@ export default function AddMerchantGoodsPostPage() {
   const [budgetCurrency, setBudgetCurrency] = useState<string>('');
   const [loadingDate, setLoadingDate] = useState('');
   const [vehicleTypeDesired, setVehicleTypeDesired] = useState('');
+  const [vehicleTypeOpen, setVehicleTypeOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const selectedVehicleType = VEHICLE_TYPE_OPTIONS.find((opt) => opt.value === vehicleTypeDesired) ?? null;
 
   const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -76,6 +95,10 @@ export default function AddMerchantGoodsPostPage() {
     const maxMb = Math.floor(maxBytes / (1024 * 1024));
     return locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `File is too large. Max is ${maxMb}MB.`;
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +157,29 @@ export default function AddMerchantGoodsPostPage() {
     };
   }, [confirmOpen]);
 
+  useEffect(() => {
+    if (!vehicleTypeOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest('[data-vehicle-type-root="true"]')) {
+        setVehicleTypeOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setVehicleTypeOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [vehicleTypeOpen]);
+
   const validateForSubmit = () => {
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone.ok) {
@@ -156,6 +202,15 @@ export default function AddMerchantGoodsPostPage() {
           message: locale === 'ar' ? 'طول رقم الهاتف غير صحيح' : 'Invalid phone number length',
         });
       }
+      return { ok: false as const };
+    }
+
+    if (!VEHICLE_TYPE_OPTIONS.some((opt) => opt.value === vehicleTypeDesired)) {
+      pushToast({
+        variant: 'error',
+        title: titleFor('form'),
+        message: locale === 'ar' ? 'يرجى اختيار نوع المركبة من القائمة' : 'Please choose a vehicle type from the list',
+      });
       return { ok: false as const };
     }
 
@@ -617,12 +672,61 @@ export default function AddMerchantGoodsPostPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</label>
-            <input
-              className={styles.input}
-              value={vehicleTypeDesired}
-              onChange={(e) => setVehicleTypeDesired(e.target.value)}
-              required
-            />
+            {mounted ? (
+              <div className={styles.vehicleTypeRoot} data-vehicle-type-root="true">
+                <button
+                  type="button"
+                  className={`${styles.input} ${styles.vehicleTypeButton}`}
+                  aria-haspopup="listbox"
+                  aria-expanded={vehicleTypeOpen ? 'true' : 'false'}
+                  onClick={() => setVehicleTypeOpen((v) => !v)}
+                >
+                  {selectedVehicleType ? (
+                    <span className={styles.vehicleTypeButtonInner}>
+                      <img
+                        src={selectedVehicleType.imagePath}
+                        alt={selectedVehicleType.value}
+                        className={styles.vehicleTypeThumb}
+                        loading="lazy"
+                      />
+                      <span className={styles.vehicleTypeButtonLabel}>{selectedVehicleType.value}</span>
+                    </span>
+                  ) : (
+                    <span className={styles.vehicleTypePlaceholder}>
+                      {locale === 'ar' ? 'اختر نوع المركبة' : 'Choose vehicle type'}
+                    </span>
+                  )}
+                </button>
+
+                {vehicleTypeOpen ? (
+                  <div className={styles.vehicleTypePopover} role="listbox">
+                    {VEHICLE_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={styles.vehicleTypeOption}
+                        role="option"
+                        aria-selected={opt.value === vehicleTypeDesired ? 'true' : 'false'}
+                        onClick={() => {
+                          setVehicleTypeDesired(opt.value);
+                          setVehicleTypeOpen(false);
+                        }}
+                      >
+                        <img
+                          src={opt.imagePath}
+                          alt={opt.value}
+                          className={styles.vehicleTypeOptionThumb}
+                          loading="lazy"
+                        />
+                        <span className={styles.vehicleTypeOptionLabel}>{opt.value}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <input className={styles.input} value={vehicleTypeDesired} readOnly required />
+            )}
           </div>
 
           <div className={styles.row}>

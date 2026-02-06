@@ -19,10 +19,10 @@
 }
 
 .pushBannerInner {
-  max-width: 72rem;
+  max-width: 80rem; 
   margin-left: auto;
   margin-right: auto;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.5rem; 
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,8 +31,8 @@
 
 @media (min-width: 640px) {
   .pushBannerInner {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 2rem; 
+    padding-right: 2rem; 
   }
 }
 
@@ -107,24 +107,29 @@
 }
 
 .container {
-  max-width: none;
+  max-width: 80rem; /* Increased from none */
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  /* padding-top: 0.625rem;
-  padding-bottom: 0.625rem; */
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-left: 1.5rem; /* Increased from 1rem */
+  padding-right: 1.5rem; /* Increased from 1rem */
+  padding-top: 0.18rem;
+  padding-bottom: 0.18rem;
 }
 
 @media (min-width: 640px) {
   .container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding-left: 2rem; /* Increased from 1.5rem */
+    padding-right: 2rem; /* Increased from 1.5rem */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 3rem; /* Added for larger screens */
+    padding-right: 3rem; /* Added for larger screens */
   }
 }
 
@@ -132,8 +137,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 1.5rem; 
   flex-direction: row;
+}
+
+@media (min-width: 768px) {
+  .flexContainer {
+    gap: 2rem; 
+  }
 }
 
 :global(html[dir="rtl"]) .flexContainer {
@@ -141,7 +152,7 @@
 }
 
 .logoImage {
-  height: auto;
+  height: 60px;
   width: auto;
 }
 
@@ -155,15 +166,18 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    gap: 2rem;
+    gap: 2.5rem; /* Increased from 2rem */
   }
 }
 
 .navButton {
-  padding-bottom: 0.25rem;
+  padding: 0.25rem 0.25rem;
   border-bottom-width: 2px;
-  font-size: 1.2rem; /* Increased from 0.875rem */
-  font-weight: 700; /* Increased from 500 */
+  font-size: 1.05rem;
+  line-height: 1.1;
+  font-weight: 700;
+  margin-left: 2rem;
+  margin-right: 2rem;
   transition: color 0.3s, border-color 0.3s;
 }
 
@@ -189,7 +203,7 @@
   .desktopActions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem; /* Increased from 1rem */
     flex-direction: row;
   }
 }
@@ -205,8 +219,8 @@
 }
 
 .avatarButton {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
   border: 1px solid #d1d5db;
   background: white;
@@ -222,15 +236,15 @@
 }
 
 .avatarImage {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   object-fit: cover;
   border-radius: 9999px;
 }
 
 .avatarPlaceholder {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -374,6 +388,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-right: 1rem; /* Added margin */
 }
 
 .langButton {
@@ -393,8 +408,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 9999px;
   border: 1px solid black;
 }
@@ -441,7 +456,7 @@
 }
 
 .mobileMenuBtn {
-  padding: 0.625rem;
+  padding: 0.5rem;
   border-radius: 0.375rem;
   border: 1px solid #d1d5db;
   color: #374151;
@@ -468,25 +483,26 @@
 }
 
 .mobileMenuContent {
-  max-width: 72rem;
+  max-width: 80rem; /* Increased from 72rem */
   margin-left: auto;
   margin-right: auto;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem; /* Increased vertical padding */
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem; /* Increased from 0.75rem */
+}
+@media (min-width: 640px) {
+  .mobileMenuContent {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
-.mobileNavLink {
-  text-align: left;
-  font-size: 1rem; /* Increased from 0.875rem */
-  font-weight: 700; /* Increased from 500 */
-  color: #374151;
-  padding: 0.5rem 0.5rem;
-  border-radius: 0.375rem;
-  transition: background-color 0.3s;
-  text-decoration: none;
-  display: block;
+@media (min-width: 640px) {
+  .mobileMenuContent {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 .mobileNavLink:hover {

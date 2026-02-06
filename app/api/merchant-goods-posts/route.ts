@@ -20,6 +20,21 @@ const getIdempotencyStore = (): Map<string, { ts: number; promise: Promise<any> 
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+const ALLOWED_VEHICLE_TYPES = new Set([
+  'شاحنة صندوقية (Van / Box Truck)',
+  'شاحنة مسطحة (Flatbed Truck)',
+  'شاحنة مبردة (Reefer Truck)',
+  'شاحنة قلابة (Dump Truck / Tipper)',
+  'شاحنة مغطاة (Curtainsider)',
+  'شاحنة صهريج (Tanker Truck)',
+  'شاحنة برافعة خلفية (Tail-lift Truck)',
+  'شاحنة رافعة (Crane Truck)',
+  'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)',
+  'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)',
+  'شاحنة صهريج أغذية (Food Grade Tanker)',
+  'نصف مقطورة مجرورة(semi Trailer)',
+]);
+
 const uploadDir = path.join(process.cwd(), 'public/images/merchant-goods-posts');
 
 async function ensureUploadDir() {
@@ -143,6 +158,10 @@ export async function POST(req: NextRequest) {
 
     if (!startingPoint || !destination || !goodsType || !goodsWeightRaw || !loadingDateRaw || !vehicleTypeDesired) {
       return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
+    }
+
+    if (!ALLOWED_VEHICLE_TYPES.has(vehicleTypeDesired)) {
+      return NextResponse.json({ error: 'INVALID_VEHICLE_TYPE' }, { status: 400 });
     }
 
     const goodsWeight = Number(goodsWeightRaw);
