@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { MapPin, Power, Navigation } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import styles from './LocationSharing.module.css';
 
 interface LocationData {
@@ -169,14 +169,14 @@ export default function LocationSharing({ tripId, providerId, onStatusChange }: 
           <MapPin className={styles.icon} size={20} />
           <span className={styles.simpleTitle}>{t('title')}</span>
         </div>
-        <button
-          type="button"
-          onClick={toggleSharing}
-          className={`${styles.simpleToggle} ${isSharing ? styles.active : styles.inactive}`}
-        >
-          <Power size={16} />
-          <span>{isSharing ? (locale === 'ar' ? 'إيقاف' : 'Stop') : (locale === 'ar' ? 'بدء' : 'Start')}</span>
-        </button>
+        <label className={styles.toggle}>
+          <input
+            type="checkbox"
+            checked={isSharing}
+            onChange={toggleSharing}
+          />
+          <span className={styles.toggleSlider} />
+        </label>
       </div>
 
       {isSharing && lastLocation && (
