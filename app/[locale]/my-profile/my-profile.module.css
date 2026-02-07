@@ -18,6 +18,10 @@
 
 .header {
   margin-bottom: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
@@ -495,5 +499,163 @@
 .carKindOption[aria-selected="true"] .carKindOptionLabel {
   color: #4a90e2;
   font-weight: 500;
+}
+
+/* Back Arrow */
+.backArrow {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #374151;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.backArrow:hover {
+  background-color: #f3f4f6;
+}
+
+/* Features Section - Simplified Notifications & Location Sharing */
+.featuresSection {
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.featureRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.featureRow:last-child {
+  border-bottom: none;
+}
+
+.featureInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.featureIcon {
+  color: #4a90e2;
+  flex-shrink: 0;
+}
+
+.featureTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 2px 0;
+}
+
+.featureDescription {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Toggle Switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked + .toggleSlider {
+  background-color: #4a90e2;
+}
+
+.toggle input:checked + .toggleSlider:before {
+  transform: translateX(22px);
+}
+
+.toggle input:disabled + .toggleSlider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Feature Button */
+.featureButton {
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.featureButton:hover {
+  background-color: #e5e7eb;
+}
+
+/* Location Panel (expanded state) */
+.locationPanel {
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingSmall {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  padding: 12px 0;
 }
 

@@ -7,8 +7,8 @@ import Link from 'next/link';
 import styles from './my-profile.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { getLocationOptionGroups } from '@/lib/locations';
-// Update the import statement to include new icons
-import { Camera, Bell, Loader2, Check, AlertCircle } from 'lucide-react';
+import LocationSharing from '../dashboard/_components/LocationSharing';
+import { Camera, Bell, Loader2, Check, AlertCircle, MapPin, ArrowLeft } from 'lucide-react';
 
 const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
   { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
@@ -82,6 +82,11 @@ export default function MyProfilePage() {
   const [enablingPush, setEnablingPush] = useState(false);
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'blocked' | 'not_supported'>('unknown');
   const [togglingPush, setTogglingPush] = useState(false);
+
+  // Providers state for location sharing
+  const [providers, setProviders] = useState<Array<{ id: number; name: string; location: string }>>([]);
+  const [selectedProviderId, setSelectedProviderId] = useState<number | null>(null);
+  const [providersLoading, setProvidersLoading] = useState(false);
 
   const getPushRegistration = async (): Promise<ServiceWorkerRegistration | null> => {
     if (typeof window === 'undefined') return null;
@@ -199,6 +204,26 @@ export default function MyProfilePage() {
         setTruckImage(user.truckImage ?? null);
 
         setInitialUser(user);
+
+        // Fetch providers for location sharing
+        if (user.type === 'SHIPPER' || user.type === 'ADMIN') {
+          setProvidersLoading(true);
+          try {
+            const providersRes = await fetch('/api/providers/mine', { cache: 'no-store' });
+            const providersData = await providersRes.json();
+            if (providersRes.ok && Array.isArray(providersData)) {
+              setProviders(providersData.map((p: { id: number; name: string; location: string }) => ({
+                id: p.id,
+                name: p.name,
+                location: p.location,
+              })));
+            }
+          } catch {
+            // Ignore providers fetch errors
+          } finally {
+            setProvidersLoading(false);
+          }
+        }
 
         if (
           typeof window !== 'undefined' &&
@@ -584,6 +609,9 @@ return (
   <div className={styles.page}>
     <div className={styles.card}>
       <div className={styles.header}>
+        <Link className={styles.backArrow} href={`/${locale}`} aria-label={t('back')}>
+          <ArrowLeft size={24} />
+        </Link>
         <h1 className={styles.title}>{t('title')}</h1>
       </div>
 
@@ -591,32 +619,22 @@ return (
         <div className={styles.loading}>{t('loading')}</div>
       ) : (
         <form className={styles.form} onSubmit={onSubmit}>
+          {/* Features Section - Notifications & Location Sharing */}
           {(userType === 'SHIPPER' || userType === 'ADMIN') && (
-            <div className={styles.pushRow}>
-              <div className={styles.pushHeader}>
-                <Bell className={styles.pushIcon} size={18} />
-                <h3 className={styles.pushTitle}>{locale === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
-              </div>
-
-              <p className={styles.pushDescription}>
-                {locale === 'ar'
-                  ? 'احصل على إشعارات فورية عند وجود عروض جديدة تناسبك'
-                  : 'Get instant notifications when new offers match your criteria'}
-              </p>
-
-              {pushStatus === 'blocked' ? (
-                <p className={styles.error} style={{ fontSize: '12px', marginTop: '8px' }}>
-                  {locale === 'ar'
-                    ? 'يجب السماح بالإشعارات من إعدادات المتصفح أولاً'
-                    : 'Please allow notifications from browser settings first'}
-                </p>
-              ) : null}
-
-              <div className={styles.pushToggleRow}>
-                <label className={styles.pushToggleLabel}>
-                  <span>{locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable notifications'}</span>
+            <div className={styles.featuresSection}>
+              {/* Notifications Toggle */}
+              <div className={styles.featureRow}>
+                <div className={styles.featureInfo}>
+                  <Bell className={styles.featureIcon} size={20} />
+                  <div>
+                    <h3 className={styles.featureTitle}>{locale === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
+                    <p className={styles.featureDescription}>
+                      {locale === 'ar' ? 'عروض جديدة تناسبك' : 'New matching offers'}
+                    </p>
+                  </div>
+                </div>
+                <label className={styles.toggle}>
                   <input
-                    className={styles.pushToggleInput}
                     type="checkbox"
                     checked={pushStatus === 'enabled'}
                     disabled={enablingPush || togglingPush || pushStatus === 'blocked' || pushStatus === 'not_supported'}
@@ -629,24 +647,60 @@ return (
                       }
                     }}
                   />
-                  <span className={styles.pushToggleSwitch} aria-hidden="true" />
+                  <span className={styles.toggleSlider} />
                 </label>
-
-                {(enablingPush || togglingPush) && (
-                  <div className={styles.pushToggleLoading}>
-                    <Loader2 size={16} className="animate-spin" />
-                    {locale === 'ar' ? 'جارِ التحديث...' : 'Updating...'}
-                  </div>
-                )}
               </div>
 
-              {pushStatus === 'enabled' ? (
-                <div className={`${styles.pushStatus} ${styles.enabled}`}>
-                  <span>
-                    <Check size={14} /> {locale === 'ar' ? 'مفعّل' : 'Enabled'}
-                  </span>
+              {/* Location Sharing Section */}
+              {providers.length > 0 && (
+                <div className={styles.featureRow}>
+                  <div className={styles.featureInfo}>
+                    <MapPin className={styles.featureIcon} size={20} />
+                    <div>
+                      <h3 className={styles.featureTitle}>{locale === 'ar' ? 'مشاركة الموقع' : 'Location Sharing'}</h3>
+                      <p className={styles.featureDescription}>
+                        {locale === 'ar' ? 'أثناء الرحلات' : 'During trips'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.featureButton}
+                    onClick={() => setSelectedProviderId(selectedProviderId ? null : providers[0]?.id ?? null)}
+                  >
+                    {selectedProviderId
+                      ? (locale === 'ar' ? 'إخفاء' : 'Hide')
+                      : (locale === 'ar' ? 'إعداد' : 'Setup')}
+                  </button>
                 </div>
-              ) : null}
+              )}
+
+              {/* Provider Selector & Location Sharing UI */}
+              {selectedProviderId && (
+                <div className={styles.locationPanel}>
+                  {providersLoading ? (
+                    <div className={styles.loadingSmall}>{locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
+                  ) : (
+                    <>
+                      <select
+                        className={styles.input}
+                        value={selectedProviderId}
+                        onChange={(e) => setSelectedProviderId(parseInt(e.target.value))}
+                      >
+                        {providers.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} - {p.location}
+                          </option>
+                        ))}
+                      </select>
+                      <LocationSharing
+                        providerId={selectedProviderId.toString()}
+                        tripId={selectedProviderId.toString()}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -843,13 +897,6 @@ return (
           <button className={styles.button} type="submit" disabled={saving}>
             {saving ? t('saving') : t('save')}
           </button>
-
-          {/* Footer Link */}
-          <div className={styles.footer}>
-            <Link className={styles.link} href={`/${locale}`}>
-              {t('back')}
-            </Link>
-          </div>
         </form>
       )}
     </div>

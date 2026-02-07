@@ -252,6 +252,56 @@
   gap: 0.5rem;
   color: #374151;
   font-weight: 500;
+  cursor: pointer;
+}
+
+.locationInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.locationLoading {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.locationCoords {
+  color: #111827;
+  font-weight: 500;
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+.locationError {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.locationRefreshBtn {
+  padding: 0.4rem 0.75rem;
+  background-color: #FFB81C;
+  color: black;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.locationRefreshBtn:hover {
+  background-color: #ffa000;
+}
+
+.locationRefreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .button {

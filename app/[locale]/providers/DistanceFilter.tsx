@@ -1,9 +1,13 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import styles from './DistanceFilter.module.css';
+import { getLocationOptionGroups, getLocationLabel, LOCATION_OPTIONS } from '@/lib/locations';
+import { getCurrentPosition, findNearestCity } from '@/lib/distance';
 
 export type DistanceValue = 'same-city' | 'nearby-50' | 'nearby-100' | 'any';
+export type DistanceSource = 'profile' | 'current-location' | 'selected-city';
 
 export const DISTANCE_OPTIONS: Array<{ value: DistanceValue; labelAR: string; labelEN: string }> = [
   { value: 'same-city', labelAR: 'نفس المدينة', labelEN: 'Same city' },
@@ -17,62 +21,305 @@ interface Props {
   onChange: (value: DistanceValue | null) => void;
   onClear: () => void;
   merchantCity: string | null;
+  distanceSource: DistanceSource;
+  onSourceChange: (source: DistanceSource) => void;
+  selectedCity: string | null;
+  onSelectedCityChange: (city: string | null) => void;
+  currentLocation: { lat: number; lon: number } | null;
+  onCurrentLocationChange: (location: { lat: number; lon: number } | null) => void;
+  classifiedCity: string | null;
+  onClassifiedCityChange: (city: string | null) => void;
+  isCalculating?: boolean;
 }
 
-export default function DistanceFilter({ selectedOption, onChange, onClear, merchantCity }: Props) {
+export default function DistanceFilter({
+  selectedOption,
+  onChange,
+  onClear,
+  merchantCity,
+  distanceSource,
+  onSourceChange,
+  selectedCity,
+  onSelectedCityChange,
+  currentLocation,
+  onCurrentLocationChange,
+  classifiedCity,
+  onClassifiedCityChange,
+  isCalculating = false,
+}: Props) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedLabel = selectedOption
-    ? DISTANCE_OPTIONS.find((o) => o.value === selectedOption)?.[isRTL ? 'labelAR' : 'labelEN']
-    : null;
+  const locationOptionGroups = getLocationOptionGroups(locale as 'ar' | 'en');
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
+  // Classify GPS location to nearest city when it changes
+  useEffect(() => {
+    const classifyLocation = async () => {
+      if (distanceSource === 'current-location' && currentLocation) {
+        const nearest = await findNearestCity(currentLocation, LOCATION_OPTIONS);
+        onClassifiedCityChange(nearest);
+      } else if (distanceSource !== 'current-location') {
+        onClassifiedCityChange(null);
+      }
+    };
+    classifyLocation();
+  }, [currentLocation, distanceSource, onClassifiedCityChange]);
+
+  const handleGetCurrentLocation = async () => {
+    setIsLocating(true);
+    setLocationError(null);
+    try {
+      const position = await getCurrentPosition();
+      const coords = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      };
+      onCurrentLocationChange(coords);
+      onSourceChange('current-location');
+      // Find and classify nearest city
+      const nearest = await findNearestCity(coords, LOCATION_OPTIONS);
+      onClassifiedCityChange(nearest);
+    } catch (error) {
+      setLocationError(
+        isRTL
+          ? 'تعذر الحصول على موقعك. تأكد من السماح بالوصول إلى الموقع.'
+          : 'Could not get your location. Please allow location access.'
+      );
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const getDisplayLabel = (): string => {
+    if (!selectedOption) {
+      return isRTL ? 'اختر نطاق المسافة' : 'Choose distance range';
+    }
+    
+    const option = DISTANCE_OPTIONS.find(o => o.value === selectedOption);
+    if (!option) return '';
+    
+    let sourceLabel = '';
+    switch (distanceSource) {
+      case 'profile':
+        sourceLabel = merchantCity 
+          ? ` (${isRTL ? 'من' : 'from'} ${getLocationLabel(merchantCity, locale as 'ar' | 'en')})`
+          : '';
+        break;
+      case 'current-location':
+        sourceLabel = classifiedCity
+          ? ` (${isRTL ? 'من' : 'from'} ${getLocationLabel(classifiedCity, locale as 'ar' | 'en')})`
+          : ` (${isRTL ? 'من موقعك' : 'from your location'})`;
+        break;
+      case 'selected-city':
+        sourceLabel = selectedCity 
+          ? ` (${isRTL ? 'من' : 'from'} ${getLocationLabel(selectedCity, locale as 'ar' | 'en')})`
+          : '';
+        break;
+    }
+    
+    return (isRTL ? option.labelAR : option.labelEN) + sourceLabel;
+  };
+
+  const canFilter = distanceSource === 'profile' ? !!merchantCity : 
+                   distanceSource === 'selected-city' ? !!selectedCity : 
+                   distanceSource === 'current-location' ? !!currentLocation : false;
+
+  const hasSelection = selectedOption !== null;
+
+  const handleClear = () => {
+    onClear();
+    setIsOpen(false);
+  };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>
-          {isRTL ? '📍 المسافة من مدينتك' : '📍 Distance from your city'}
-        </h3>
-        {selectedOption && (
-          <button type="button" className={styles.clearButton} onClick={onClear}>
+    <div className={styles.filterContainer} ref={containerRef}>
+      <label className={styles.filterLabel}>
+        {isRTL ? '📍 فلتر المسافة' : '📍 Distance Filter'}
+      </label>
+      
+      <div className={styles.controls}>
+        <button
+          type="button"
+          className={styles.dropdownButton}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+        >
+          <span className={styles.buttonText}>{getDisplayLabel()}</span>
+          <span className={`${styles.caret} ${isOpen ? styles.caretOpen : ''}`}>▼</span>
+        </button>
+
+        {hasSelection && (
+          <button type="button" className={styles.clearButton} onClick={handleClear}>
             {isRTL ? 'مسح' : 'Clear'}
           </button>
         )}
       </div>
 
-      {!merchantCity && (
-        <p className={styles.noCityWarning}>
-          {isRTL 
-            ? 'يرجى تحديث مدينتك في الملف الشخصي لاستخدام فلتر المسافة'
-            : 'Please update your city in your profile to use distance filter'}
-        </p>
-      )}
+      {isOpen && (
+        <div className={styles.dropdown}>
+          {/* Loading State */}
+          {isCalculating && (
+            <div className={styles.loadingState}>
+              <div className={styles.spinner} />
+              <span>{isRTL ? 'جاري حساب المسافات...' : 'Calculating distances...'}</span>
+            </div>
+          )}
 
-      <div className={styles.optionsGrid}>
-        {DISTANCE_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className={`${styles.option} ${selectedOption === option.value ? styles.selected : ''}`}
-            onClick={() => onChange(option.value === selectedOption ? null : option.value)}
-            disabled={!merchantCity && option.value !== 'any'}
-          >
-            <span className={styles.check}>
-              {selectedOption === option.value ? '✓' : ''}
-            </span>
-            <span className={styles.label}>
-              {isRTL ? option.labelAR : option.labelEN}
-            </span>
-          </button>
-        ))}
-      </div>
+          {/* Source Selector */}
+          <div className={styles.sourceSection}>
+            <p className={styles.sourceLabel}>
+              {isRTL ? 'حساب المسافة من:' : 'Calculate distance from:'}
+            </p>
 
-      {selectedOption && selectedOption !== 'any' && merchantCity && (
-        <p className={styles.activeFilter}>
-          {isRTL 
-            ? `تبحث في: ${merchantCity}`
-            : `Searching from: ${merchantCity}`}
-        </p>
+            <div className={styles.sourceOptions}>
+              <label className={styles.sourceOption}>
+                <input
+                  type="radio"
+                  name="distanceSource"
+                  value="profile"
+                  checked={distanceSource === 'profile'}
+                  onChange={() => onSourceChange('profile')}
+                />
+                <span className={styles.sourceRadio} />
+                <span className={styles.sourceText}>
+                  {isRTL ? 'مدينتي (الملف الشخصي)' : 'My city (profile)'}
+                  {merchantCity && (
+                    <span className={styles.sourceDetail}>
+                      {' '}- {getLocationLabel(merchantCity, locale as 'ar' | 'en')}
+                    </span>
+                  )}
+                </span>
+              </label>
+
+              <label className={styles.sourceOption}>
+                <input
+                  type="radio"
+                  name="distanceSource"
+                  value="current-location"
+                  checked={distanceSource === 'current-location'}
+                  onChange={handleGetCurrentLocation}
+                  disabled={isLocating}
+                />
+                <span className={styles.sourceRadio} />
+                <span className={styles.sourceText}>
+                  {isLocating 
+                    ? (isRTL ? 'جاري تحديد الموقع...' : 'Getting location...')
+                    : (isRTL ? 'موقعي الحالي 📍' : 'My current location 📍')}
+                  {classifiedCity && distanceSource === 'current-location' && (
+                    <span className={styles.sourceDetail}>
+                      {' '}- {isRTL ? 'أقرب مدينة:' : 'Nearest city:'} {getLocationLabel(classifiedCity, locale as 'ar' | 'en')}
+                    </span>
+                  )}
+                </span>
+              </label>
+
+              <label className={styles.sourceOption}>
+                <input
+                  type="radio"
+                  name="distanceSource"
+                  value="selected-city"
+                  checked={distanceSource === 'selected-city'}
+                  onChange={() => onSourceChange('selected-city')}
+                />
+                <span className={styles.sourceRadio} />
+                <span className={styles.sourceText}>
+                  {isRTL ? 'مدينة محددة' : 'Specific city'}
+                </span>
+              </label>
+            </div>
+
+            {locationError && (
+              <p className={styles.locationError}>{locationError}</p>
+            )}
+          </div>
+
+          {/* City Selector (when selected-city is chosen) */}
+          {distanceSource === 'selected-city' && (
+            <div className={styles.citySelector}>
+              <select
+                className={styles.citySelect}
+                value={selectedCity || ''}
+                onChange={(e) => onSelectedCityChange(e.target.value || null)}
+              >
+                <option value="">
+                  {isRTL ? 'اختر مدينة...' : 'Select a city...'}
+                </option>
+                {locationOptionGroups.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Warning messages */}
+          {!canFilter && distanceSource === 'profile' && !merchantCity && (
+            <p className={styles.noCityWarning}>
+              {isRTL
+                ? 'يرجى تحديث مدينتك في الملف الشخصي أو اختيار مصدر آخر'
+                : 'Please update your city in profile or choose another source'}
+            </p>
+          )}
+
+          {!canFilter && distanceSource === 'selected-city' && !selectedCity && (
+            <p className={styles.noCityWarning}>
+              {isRTL ? 'يرجى اختيار مدينة من القائمة' : 'Please select a city from the list'}
+            </p>
+          )}
+
+          {/* Distance Options */}
+          <div className={styles.optionsGrid}>
+            {DISTANCE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`${styles.option} ${selectedOption === option.value ? styles.selected : ''}`}
+                onClick={() => {
+                  onChange(option.value === selectedOption ? null : option.value);
+                  if (option.value !== selectedOption) {
+                    setIsOpen(false);
+                  }
+                }}
+                disabled={!canFilter && option.value !== 'any'}
+              >
+                <span className={styles.check}>
+                  {selectedOption === option.value ? '✓' : ''}
+                </span>
+                <span className={styles.label}>
+                  {isRTL ? option.labelAR : option.labelEN}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

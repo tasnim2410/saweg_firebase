@@ -82,13 +82,56 @@ export async function reverseGeocode(
 }
 
 /**
- * Get a short location name (city or place name) from coordinates
- * Used for displaying in UI
+ * Get formatted location with city/town, state/county, and country
+ * Returns a general location string like "City, State, Country" or "Town, Country"
  */
-export async function getLocationName(
+export async function getFormattedLocationName(
   latitude: number,
   longitude: number
 ): Promise<string | null> {
   const result = await reverseGeocode(latitude, longitude);
-  return result.city || result.address || result.fullAddress;
+  
+  if (!result.fullAddress) {
+    return null;
+  }
+  
+  // Parse the full address to get components
+  // Nominatim returns: "road, suburb, neighbourhood, city/town/village, county, state, country"
+  const parts = result.fullAddress.split(',').map(p => p.trim()).filter(Boolean);
+  
+  // Find country (usually last)
+  const country = parts[parts.length - 1] || '';
+  
+  // Find state/county (usually second to last or third to last)
+  const stateOrCounty = parts[parts.length - 2] || parts[parts.length - 3] || '';
+  
+  // Find city/town (look for common patterns, usually before state/county)
+  let cityOrTown = '';
+  for (let i = parts.length - 3; i >= 0; i--) {
+    const part = parts[i];
+    // Skip road names (usually contain numbers or are long)
+    if (part.length > 3 && !/^\d/.test(part)) {
+      cityOrTown = part;
+      break;
+    }
+  }
+  
+  // Build the formatted location
+  const components: string[] = [];
+  
+  if (cityOrTown) {
+    components.push(cityOrTown);
+  }
+  
+  // Add state/county if different from city and exists
+  if (stateOrCounty && stateOrCounty !== cityOrTown) {
+    components.push(stateOrCounty);
+  }
+  
+  // Always add country if available
+  if (country) {
+    components.push(country);
+  }
+  
+  return components.length > 0 ? components.join(', ') : result.city || result.address || result.fullAddress;
 }

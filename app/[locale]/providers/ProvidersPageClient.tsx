@@ -7,7 +7,8 @@ import Footer from '@/components/Footer';
 import styles from './ProvidersPage.module.css';
 import VehicleTypeFilter, { VehicleType, VEHICLE_TYPE_OPTIONS } from './VehicleTypeFilter';
 import MaxChargeFilter, { MaxChargeValue, MAX_CHARGE_OPTIONS } from './MaxChargeFilter';
-import DistanceFilter, { DistanceValue, DISTANCE_OPTIONS } from './DistanceFilter';
+import DistanceFilter, { DistanceValue, DistanceSource, DISTANCE_OPTIONS } from './DistanceFilter';
+import { getLocationCoordinates, calculateDistance, isWithinDistance } from '@/lib/distance';
 import DestinationFilter from './DestinationFilter';
 
 interface Provider {
@@ -39,8 +40,14 @@ export default function ProvidersPageClient() {
   const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<VehicleType[]>([]);
   const [selectedMaxChargeOptions, setSelectedMaxChargeOptions] = useState<MaxChargeValue[]>([]);
   const [selectedDistance, setSelectedDistance] = useState<DistanceValue | null>(null);
+  const [distanceSource, setDistanceSource] = useState<DistanceSource>('profile');
+  const [selectedDistanceCity, setSelectedDistanceCity] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [classifiedCity, setClassifiedCity] = useState<string | null>(null);
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
   const [merchantCity, setMerchantCity] = useState<string | null>(null);
+  const [distanceFilteredProviders, setDistanceFilteredProviders] = useState<Provider[]>([]);
+  const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
@@ -65,6 +72,12 @@ export default function ProvidersPageClient() {
             ? parsed.selectedDistance
             : null;
           setSelectedDistance(validDistance);
+        }
+        if (parsed.distanceSource) {
+          setDistanceSource(parsed.distanceSource as DistanceSource);
+        }
+        if (parsed.classifiedCity) {
+          setClassifiedCity(parsed.classifiedCity);
         }
         if (parsed.selectedDestinations && Array.isArray(parsed.selectedDestinations)) {
           setSelectedDestinations(parsed.selectedDestinations.filter((d: string) => typeof d === 'string'));
@@ -98,12 +111,15 @@ export default function ProvidersPageClient() {
         selectedTypes: selectedVehicleTypes,
         selectedMaxCharge: selectedMaxChargeOptions,
         selectedDistance: selectedDistance,
+        distanceSource: distanceSource,
+        selectedDistanceCity: selectedDistanceCity,
+        classifiedCity: classifiedCity,
         selectedDestinations: selectedDestinations,
       }));
     } catch {
       // Ignore localStorage errors
     }
-  }, [selectedVehicleTypes, selectedMaxChargeOptions, selectedDistance, selectedDestinations]);
+  }, [selectedVehicleTypes, selectedMaxChargeOptions, selectedDistance, distanceSource, selectedDistanceCity, classifiedCity, selectedDestinations]);
 
   // Fetch providers
   useEffect(() => {
@@ -117,6 +133,7 @@ export default function ProvidersPageClient() {
           return;
         }
         setProviders(data);
+        setDistanceFilteredProviders(data); // Initialize with all providers
       } catch {
         setError('Failed to load');
       } finally {
@@ -127,9 +144,104 @@ export default function ProvidersPageClient() {
     fetchProviders();
   }, []);
 
-  // Filter providers based on selected vehicle types, max charge, and distance
+  // Calculate distances asynchronously when distance filters change
+  useEffect(() => {
+    const calculateDistances = async () => {
+      // If no distance filter is active, use all providers
+      if (!selectedDistance || selectedDistance === 'any') {
+        setDistanceFilteredProviders(providers);
+        return;
+      }
+
+      setIsCalculatingDistances(true);
+
+      try {
+        // Get reference point based on selected source
+        let referenceCoords: { lat: number; lon: number } | null = null;
+
+        if (distanceSource === 'profile' && merchantCity) {
+          const coords = await getLocationCoordinates(merchantCity);
+          if (coords) referenceCoords = coords;
+        } else if (distanceSource === 'selected-city' && selectedDistanceCity) {
+          const coords = await getLocationCoordinates(selectedDistanceCity);
+          if (coords) referenceCoords = coords;
+        } else if (distanceSource === 'current-location' && currentLocation) {
+          referenceCoords = currentLocation;
+        }
+
+        if (!referenceCoords) {
+          // Can't calculate distances, fall back to city name matching
+          const refCity = distanceSource === 'profile' ? merchantCity : 
+                         distanceSource === 'current-location' ? classifiedCity : 
+                         selectedDistanceCity;
+          const refCityLower = refCity?.toLowerCase().trim();
+          
+          const filtered = providers.filter(p => {
+            const providerLocation = p.location?.toLowerCase().trim();
+            
+            if (selectedDistance === 'same-city') {
+              return providerLocation === refCityLower ||
+                providerLocation?.includes(refCityLower || '') ||
+                (refCityLower || '').includes(providerLocation || '');
+            }
+            return true;
+          });
+          setDistanceFilteredProviders(filtered);
+          return;
+        }
+
+        // Filter providers by actual distance
+        const filtered = await Promise.all(
+          providers.map(async (p) => {
+            // For same-city, try string matching first
+            if (selectedDistance === 'same-city') {
+              const refCity = distanceSource === 'profile' ? merchantCity : 
+                             distanceSource === 'current-location' ? classifiedCity : 
+                             selectedDistanceCity;
+              const refCityLower = refCity?.toLowerCase().trim();
+              const providerLocation = p.location?.toLowerCase().trim();
+              
+              const cityMatch = providerLocation === refCityLower ||
+                providerLocation?.includes(refCityLower || '') ||
+                (refCityLower || '').includes(providerLocation || '');
+              
+              if (cityMatch) return p;
+            }
+
+            // Try to geocode provider location and calculate distance
+            const providerCoords = await getLocationCoordinates(p.location);
+            if (!providerCoords) {
+              // Can't geocode - include only for nearby filters as fallback
+              return selectedDistance !== 'same-city' ? p : null;
+            }
+
+            const distance = calculateDistance(referenceCoords, providerCoords);
+
+            switch (selectedDistance) {
+              case 'same-city':
+                return distance <= 10 ? p : null;
+              case 'nearby-50':
+                return distance <= 50 ? p : null;
+              case 'nearby-100':
+                return distance <= 100 ? p : null;
+              default:
+                return p;
+            }
+          })
+        );
+
+        setDistanceFilteredProviders(filtered.filter((p): p is Provider => p !== null));
+      } finally {
+        setIsCalculatingDistances(false);
+      }
+    };
+
+    calculateDistances();
+  }, [providers, selectedDistance, distanceSource, merchantCity, selectedDistanceCity, currentLocation, classifiedCity]);
+
+  // Combined filter using pre-filtered distance results
   const filteredProviders = useMemo(() => {
-    return providers.filter(p => {
+    return distanceFilteredProviders.filter(p => {
       // Vehicle type filter
       const vehicleMatch = selectedVehicleTypes.length === 0 || 
         (p.user?.carKind && selectedVehicleTypes.includes(p.user.carKind as VehicleType));
@@ -158,29 +270,6 @@ export default function ProvidersPageClient() {
         }
       }
       
-      // Distance filter - simplified version based on city matching
-      let distanceMatch = true;
-      if (selectedDistance && selectedDistance !== 'any' && merchantCity) {
-        const providerLocation = p.location?.toLowerCase().trim();
-        const merchantCityLower = merchantCity.toLowerCase().trim();
-        
-        if (selectedDistance === 'same-city') {
-          // Exact city match
-          distanceMatch = providerLocation === merchantCityLower ||
-            providerLocation?.includes(merchantCityLower) ||
-            merchantCityLower?.includes(providerLocation || '');
-        } else if (selectedDistance === 'nearby-50') {
-          // For now, same city + some nearby (simplified)
-          // TODO: Implement proper geocoding for accurate distances
-          distanceMatch = providerLocation === merchantCityLower ||
-            providerLocation?.includes(merchantCityLower) ||
-            merchantCityLower?.includes(providerLocation || '');
-        } else if (selectedDistance === 'nearby-100') {
-          // For now, same city + nearby cities (simplified)
-          // TODO: Implement proper geocoding for accurate distances
-          distanceMatch = true; // Accept all for 100km range until geocoding is implemented
-        }
-      }
       // Destination filter
       let destinationMatch = true;
       if (selectedDestinations.length > 0) {
@@ -196,9 +285,9 @@ export default function ProvidersPageClient() {
         }
       }
       
-      return vehicleMatch && maxChargeMatch && distanceMatch && destinationMatch;
+      return vehicleMatch && maxChargeMatch && destinationMatch;
     });
-  }, [providers, selectedVehicleTypes, selectedMaxChargeOptions, selectedDistance, merchantCity, selectedDestinations]);
+  }, [distanceFilteredProviders, selectedVehicleTypes, selectedMaxChargeOptions, selectedDestinations]);
 
   // Count of compatible shippers
   const compatibleCount = filteredProviders.length;
@@ -210,6 +299,10 @@ export default function ProvidersPageClient() {
     setSelectedVehicleTypes([]);
     setSelectedMaxChargeOptions([]);
     setSelectedDistance(null);
+    setDistanceSource('profile');
+    setSelectedDistanceCity(null);
+    setCurrentLocation(null);
+    setClassifiedCity(null);
     setSelectedDestinations([]);
   };
 
@@ -255,7 +348,7 @@ export default function ProvidersPageClient() {
           
           {/* Counter showing compatible shippers */}
           <div className={styles.counter}>
-            {selectedVehicleTypes.length > 0 ? (
+            {hasAnyFilter ? (
               <>
                 <span className={styles.counterHighlight}>{compatibleCount}</span>
                 <span className={styles.counterText}>
@@ -301,8 +394,23 @@ export default function ProvidersPageClient() {
             <DistanceFilter
               selectedOption={selectedDistance}
               onChange={setSelectedDistance}
-              onClear={() => setSelectedDistance(null)}
+              onClear={() => {
+                setSelectedDistance(null);
+                setDistanceSource('profile');
+                setSelectedDistanceCity(null);
+                setCurrentLocation(null);
+                setClassifiedCity(null);
+              }}
               merchantCity={merchantCity}
+              distanceSource={distanceSource}
+              onSourceChange={setDistanceSource}
+              selectedCity={selectedDistanceCity}
+              onSelectedCityChange={setSelectedDistanceCity}
+              currentLocation={currentLocation}
+              onCurrentLocationChange={setCurrentLocation}
+              classifiedCity={classifiedCity}
+              onClassifiedCityChange={setClassifiedCity}
+              isCalculating={isCalculatingDistances}
             />
           </div>
           <div className={styles.filterColumn}>

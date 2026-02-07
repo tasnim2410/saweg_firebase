@@ -7,8 +7,11 @@ import { useEffect, useState } from 'react';
 import styles from './add-provider.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { getFormattedLocationName } from '@/lib/geocoding';
 
 const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
+
+type Coords = { latitude: number; longitude: number } | null;
 
 export default function AddProviderPage() {
   const t = useTranslations('providerForm');
@@ -37,6 +40,10 @@ export default function AddProviderPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmImageUrl, setConfirmImageUrl] = useState<string | null>(null);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [coords, setCoords] = useState<Coords>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [currentLocationName, setCurrentLocationName] = useState<string | null>(null);
 
   const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -133,10 +140,28 @@ export default function AddProviderPage() {
     }
 
     if (!location.trim() || !phone.trim()) {
+      if (!useCurrentLocation && !location.trim()) {
+        pushToast({
+          variant: 'error',
+          title: titleFor('form'),
+          message: t('errors.missingRequiredFields'),
+        });
+        return { ok: false as const };
+      }
+      if (!phone.trim()) {
+        pushToast({
+          variant: 'error',
+          title: titleFor('form'),
+          message: t('errors.missingRequiredFields'),
+        });
+        return { ok: false as const };
+      }
+    }
+    if (useCurrentLocation && !coords) {
       pushToast({
         variant: 'error',
         title: titleFor('form'),
-        message: t('errors.missingRequiredFields'),
+        message: locale === 'ar' ? 'الرجاء الحصول على الموقع الحالي أولاً.' : 'Please get your current location first.',
       });
       return { ok: false as const };
     }
@@ -156,13 +181,64 @@ export default function AddProviderPage() {
     return { ok: true as const, normalizedPhoneE164: normalizedPhone.e164 };
   };
 
+  const getCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      pushToast({
+        variant: 'error',
+        title: titleFor('form'),
+        message: locale === 'ar' ? 'الموقع الجغرافي غير مدعوم في هذا المتصفح.' : 'Geolocation is not supported by your browser.',
+      });
+      return;
+    }
+    setIsLocating(true);
+    setCurrentLocationName(null);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoords({ latitude: lat, longitude: lng });
+        
+        // Get location name from coordinates
+        try {
+          const locationName = await getFormattedLocationName(lat, lng);
+          setCurrentLocationName(locationName);
+        } catch {
+          // If geocoding fails, just use coordinates as fallback
+          setCurrentLocationName(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }
+        
+        setIsLocating(false);
+      },
+      (error) => {
+        setIsLocating(false);
+        const msg =
+          error.code === error.PERMISSION_DENIED
+            ? locale === 'ar'
+              ? 'تم رفض إذن الوصول إلى الموقع.'
+              : 'Location permission denied.'
+            : locale === 'ar'
+              ? 'تعذر الحصول على الموقع الحالي.'
+              : 'Failed to get current location.';
+        pushToast({ variant: 'error', title: titleFor('form'), message: msg });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const locationDisplayValue = useCurrentLocation
+    ? (currentLocationName || (coords ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}` : ''))
+    : location;
+
   const submitNow = async (normalizedPhoneE164: string) => {
+    const finalLocation = useCurrentLocation
+      ? (currentLocationName || (coords ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}` : ''))
+      : location;
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('destination', destination);
     payload.append('placeOfBusiness', destination);
     payload.append('description', description);
-    payload.append('location', location);
+    payload.append('location', finalLocation);
     payload.append('phone', normalizedPhoneE164);
     payload.append('active', 'true');
     if (imageFile) payload.append('image', imageFile);
@@ -282,7 +358,7 @@ export default function AddProviderPage() {
               </div>
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{t('location')}</div>
-                <div className={styles.modalValue}>{location || '-'}</div>
+                <div className={styles.modalValue}>{locationDisplayValue || '-'}</div>
               </div>
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{t('phone')}</div>
@@ -409,23 +485,74 @@ export default function AddProviderPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{t('location')}</label>
-            <select
-              className={styles.input}
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            >
-              <option value="" />
-              {locationOptionGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={useCurrentLocation}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setUseCurrentLocation(checked);
+                  if (checked) {
+                    setLocation('');
+                    setCurrentLocationName(null);
+                    getCurrentLocation();
+                  } else {
+                    setCoords(null);
+                    setCurrentLocationName(null);
+                  }
+                }}
+              />
+              <span>
+                {locale === 'ar' ? 'استخدام الموقع الحالي' : 'Use current location'}
+              </span>
+            </label>
+            {useCurrentLocation ? (
+              <div className={styles.locationInfo}>
+                {isLocating ? (
+                  <span className={styles.locationLoading}>
+                    {locale === 'ar' ? 'جاري تحديد الموقع...' : 'Getting location...'}
+                  </span>
+                ) : currentLocationName ? (
+                  <span className={styles.locationCoords}>
+                    {currentLocationName}
+                  </span>
+                ) : coords ? (
+                  <span className={styles.locationCoords}>
+                    {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
+                  </span>
+                ) : (
+                  <span className={styles.locationError}>
+                    {locale === 'ar' ? 'لم يتم تحديد الموقع' : 'Location not set'}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className={styles.locationRefreshBtn}
+                  onClick={getCurrentLocation}
+                  disabled={isLocating}
+                >
+                  {locale === 'ar' ? 'تحديث' : 'Refresh'}
+                </button>
+              </div>
+            ) : (
+              <select
+                className={styles.input}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                required={!useCurrentLocation}
+              >
+                <option value="" />
+                {locationOptionGroups.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className={styles.row}>
