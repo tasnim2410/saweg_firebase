@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import styles from './my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import LocationSharing from '../_components/LocationSharing';
 
 type Provider = {
   id: number;
@@ -30,6 +32,7 @@ export default function MyProvidersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<number | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -139,8 +142,38 @@ export default function MyProvidersPage() {
           ) : providers.length === 0 ? (
             <div className={styles.empty}>{t('empty')}</div>
           ) : (
-            <div className={styles.list}>
-              {providers.map((p) => (
+            <>
+              {/* Provider Selector for Location Sharing */}
+              <div className={styles.locationSection}>
+                <h2 className={styles.sectionTitle}>
+                  <MapPin size={20} />
+                  {t('locationSharing')}
+                </h2>
+                <div className={styles.providerSelector}>
+                  <label className={styles.label}>{t('selectProvider')}</label>
+                  <select
+                    className={styles.input}
+                    value={selectedProviderId || ''}
+                    onChange={(e) => setSelectedProviderId(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">{t('chooseProvider')}</option>
+                    {providers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} - {p.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {selectedProviderId && (
+                  <LocationSharing
+                    providerId={selectedProviderId.toString()}
+                    tripId={selectedProviderId.toString()}
+                  />
+                )}
+              </div>
+
+              <div className={styles.list}>
+                {providers.map((p) => (
                 <div key={p.id} className={styles.item}>
                   <div className={styles.itemTop}>
                     <div className={styles.itemTitleRow}>
@@ -199,7 +232,8 @@ export default function MyProvidersPage() {
                 </div>
               ))}
             </div>
-          )}
+          </>
+        )}
         </div>
       </div>
     </div>

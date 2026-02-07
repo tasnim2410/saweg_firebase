@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
 import styles from '../register.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { getLocationOptionGroups } from '@/lib/locations';
 
 type RegistrationRole = 'shipper' | 'merchant';
 
@@ -43,6 +44,7 @@ export default function RegistrationForm({ role }: Props) {
   const [repeatPassword, setRepeatPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [carKindOpen, setCarKindOpen] = useState(false);
+  const [trucksNeededOpen, setTrucksNeededOpen] = useState(false);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -91,6 +93,7 @@ export default function RegistrationForm({ role }: Props) {
   });
 
   const selectedCarKind = CAR_KIND_OPTIONS.find((opt) => opt.value === formData.carKind) ?? null;
+  const selectedTrucksNeeded = CAR_KIND_OPTIONS.find((opt) => opt.value === formData.trucksNeeded) ?? null;
 
   useEffect(() => {
     if (!carKindOpen) return;
@@ -114,6 +117,29 @@ export default function RegistrationForm({ role }: Props) {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [carKindOpen]);
+
+  useEffect(() => {
+    if (!trucksNeededOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest('[data-trucks-needed-root="true"]')) {
+        setTrucksNeededOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTrucksNeededOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [trucksNeededOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +250,7 @@ export default function RegistrationForm({ role }: Props) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -343,19 +369,38 @@ export default function RegistrationForm({ role }: Props) {
                 <label className={styles.label}>
                   {role === 'shipper' ? t('shipperCity') : t('merchantCity')}
                 </label>
-                <input
-                  type="text"
-                  name={role === 'shipper' ? 'shipperCity' : 'merchantCity'}
-                  value={role === 'shipper' ? formData.shipperCity : formData.merchantCity}
-                  onChange={handleChange}
-                  required
-                  className={styles.input}
-                  placeholder={
-                    role === 'shipper'
-                      ? (locale === 'ar' ? 'أدخل مكان عملك' : 'Enter your place of work')
-                      : (locale === 'ar' ? 'أدخل مدينتك' : 'Enter your city')
-                  }
-                />
+                {role === 'merchant' ? (
+                  <select
+                    className={styles.input}
+                    name="merchantCity"
+                    value={formData.merchantCity}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">
+                      {locale === 'ar' ? 'اختر مدينتك' : 'Choose your city'}
+                    </option>
+                    {getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en').map((group) => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="shipperCity"
+                    value={formData.shipperCity}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    placeholder={locale === 'ar' ? 'أدخل مكان عملك' : 'Enter your place of work'}
+                  />
+                )}
               </div>
             </div>
 
@@ -542,19 +587,59 @@ export default function RegistrationForm({ role }: Props) {
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>{t('trucksNeeded')}</label>
-                  <input
-                    type="text"
-                    name="trucksNeeded"
-                    value={formData.trucksNeeded}
-                    onChange={handleChange}
-                    required
-                    className={styles.input}
-                    placeholder={
-                      locale === 'ar'
-                        ? 'مثال: شاحنة صغيرة...'
-                        : 'e.g. small truck...'
-                    }
-                  />
+                  <div className={styles.carKindRoot} data-trucks-needed-root="true">
+                    <button
+                      type="button"
+                      className={`${styles.input} ${styles.carKindButton}`}
+                      aria-haspopup="listbox"
+                      aria-expanded={trucksNeededOpen ? 'true' : 'false'}
+                      onClick={() => setTrucksNeededOpen((v) => !v)}
+                    >
+                      {selectedTrucksNeeded ? (
+                        <span className={styles.carKindButtonInner}>
+                          <img
+                            src={selectedTrucksNeeded.imagePath}
+                            alt={selectedTrucksNeeded.value}
+                            className={styles.carKindThumb}
+                            loading="lazy"
+                          />
+                          <span className={styles.carKindButtonLabel}>{selectedTrucksNeeded.value}</span>
+                        </span>
+                      ) : (
+                        <span className={styles.carKindPlaceholder}>
+                          {locale === 'ar' ? 'اختر نوع الشاحنة' : 'Choose truck type'}
+                        </span>
+                      )}
+                    </button>
+
+                    {trucksNeededOpen ? (
+                      <div className={styles.carKindPopover} role="listbox">
+                        {CAR_KIND_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            className={styles.carKindOption}
+                            role="option"
+                            aria-selected={opt.value === formData.trucksNeeded ? 'true' : 'false'}
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, trucksNeeded: opt.value }));
+                              setTrucksNeededOpen(false);
+                            }}
+                          >
+                            <img
+                              src={opt.imagePath}
+                              alt={opt.value}
+                              className={styles.carKindOptionThumb}
+                              loading="lazy"
+                            />
+                            <span className={styles.carKindOptionLabel}>{opt.value}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <input type="hidden" name="trucksNeeded" value={formData.trucksNeeded} />
+                  </div>
                 </div>
               </div>
             )}

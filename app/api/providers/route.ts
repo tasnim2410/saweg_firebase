@@ -41,10 +41,10 @@ export async function GET() {
       },
     });
 
-    const providers = await prisma.provider.findMany({
+  const providers = await prisma.provider.findMany({
       include: {
         user: {
-          select: { fullName: true, email: true, phone: true },
+          select: { fullName: true, email: true, phone: true, carKind: true, maxCharge: true, maxChargeUnit: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -60,7 +60,7 @@ export async function GET() {
         ...p,
         destination: p.destination ?? p.placeOfBusiness ?? null,
         publishedByAdmin,
-        user: p.user ? { fullName: p.user.fullName } : null,
+        user: p.user ? { fullName: p.user.fullName, carKind: p.user.carKind, maxCharge: p.user.maxCharge, maxChargeUnit: p.user.maxChargeUnit } : null,
       };
     });
 

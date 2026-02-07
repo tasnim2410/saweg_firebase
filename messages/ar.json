@@ -73,7 +73,10 @@
     "save": "حفظ",
     "saving": "جاري الحفظ...",
     "delete": "حذف",
-    "deleteHint": "الحذف للمدير فقط"
+    "deleteHint": "الحذف للمدير فقط",
+    "locationSharing": "مشاركة الموقع",
+    "selectProvider": "اختيار مزود الخدمة",
+    "chooseProvider": "اختر مزود خدمة"
   },
   "hero": {
     "welcome": "أهلاً بك في سواق",
@@ -227,5 +230,35 @@
     "phoneRequired": "رقم الهاتف مطلوب",
     "phoneInvalidCharacters": "رقم الهاتف يحتوي على أحرف/رموز غير صالحة",
     "phoneInvalidLength": "يجب أن يكون رقم الهاتف 8 أرقام (تونس) أو 10 أرقام (ليبيا) أو 11 رقمًا (مصر)"
+  },
+  "locationSharing": {
+    "title": "مشاركة الموقع",
+    "startSharing": "بدء المشاركة",
+    "stopSharing": "إيقاف المشاركة",
+    "sharingEnabled": "المشاركة مفعّلة",
+    "sharingDisabled": "المشاركة معطّلة",
+    "deactivationWarning": "لن يتمكن العملاء من رؤية موقعك الحي بعد الآن.",
+    "sending": "جاري الإرسال...",
+    "sent": "تم الإرسال",
+    "failed": "فشل",
+    "lastUpdate": "آخر تحديث",
+    "updateInterval": "تحديث كل {seconds} ثانية",
+    "permissionDenied": "تم رفض إذن الموقع. يرجى تمكين خدمات الموقع في إعدادات المتصفح.",
+    "geolocationNotSupported": "تحديد الموقع الجغرافي غير مدعوم من متصفحك.",
+    "locationError": "خطأ في الحصول على الموقع. يرجى المحاولة مرة أخرى.",
+    "offlineMode": "وضع عدم الاتصال - التحديثات في قائمة الانتظار",
+    "batteryWarning": "قد تستنزف هذه الميزة البطارية. عطّلها عند عدم الحاجة."
+  },
+  "activeTrip": {
+    "title": "الرحلة النشطة",
+    "subtitle": "شارك موقعك مع العملاء أثناء النقل",
+    "loading": "جاري التحميل...",
+    "selectProvider": "اختيار مزود الخدمة",
+    "currentTrip": "الرحلة الحالية",
+    "noDestination": "لم يتم تحديد الوجهة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "locationSharing": "مشاركة الموقع",
+    "noProviders": "لم يتم العثور على مزودي خدمات"
   }
 }

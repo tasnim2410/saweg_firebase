@@ -1,0 +1,231 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container[data-rtl="true"] {
+  direction: rtl;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+.error {
+  text-align: center;
+  padding: 48px;
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 12px;
+}
+
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+.emptyIcon {
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.empty h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.empty p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Provider Selector */
+.providerSelector {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+/* Trip Card */
+.tripCard {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1px solid #86efac;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.tripHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 12px;
+}
+
+.tripDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.origin,
+.destination {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.arrow {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.tripMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status[data-active="true"] {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.phone {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Location Section */
+.locationSection {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+/* Info Grid */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.infoCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.infoCard svg {
+  color: #4a90e2;
+  flex-shrink: 0;
+}
+
+.infoCard h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.infoCard p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Battery Warning */
+.batteryWarning {
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.batteryWarning p {
+  font-size: 13px;
+  color: #92400e;
+  margin: 0;
+}

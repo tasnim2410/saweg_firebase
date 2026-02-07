@@ -434,6 +434,29 @@
   flex: 1;
 }
 
+/* Location Sharing Section */
+.locationSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1px solid #7dd3fc;
+  border-radius: 1rem;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0369a1;
+  margin: 0 0 1rem 0;
+}
+
+.providerSelector {
+  margin-bottom: 1rem;
+}
+
 @media (min-width: 768px) {
   .formRow {
     grid-template-columns: 180px 1fr 160px;

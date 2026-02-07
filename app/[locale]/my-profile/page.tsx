@@ -6,8 +6,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './my-profile.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { getLocationOptionGroups } from '@/lib/locations';
 // Update the import statement to include new icons
 import { Camera, Bell, Loader2, Check, AlertCircle } from 'lucide-react';
+
+const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
+  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
+  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
+  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
+  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
+  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
+  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
+  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
+  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
+  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
+  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
+  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
+  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
+];
 type User = {
   id: string;
   fullName: string;
@@ -57,6 +73,9 @@ export default function MyProfilePage() {
   const [maxChargeUnit, setMaxChargeUnit] = useState('kg');
   const [placeOfBusiness, setPlaceOfBusiness] = useState('');
   const [trucksNeeded, setTrucksNeeded] = useState('');
+  const [trucksNeededOpen, setTrucksNeededOpen] = useState(false);
+
+  const selectedTrucksNeeded = CAR_KIND_OPTIONS.find((opt) => opt.value === trucksNeeded) ?? null;
   const [truckImage, setTruckImage] = useState<string | null>(null);
   const [truckImageFile, setTruckImageFile] = useState<File | null>(null);
 
@@ -121,6 +140,29 @@ export default function MyProfilePage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!trucksNeededOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest('[data-trucks-needed-root="true"]')) {
+        setTrucksNeededOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTrucksNeededOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [trucksNeededOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -707,7 +749,24 @@ return (
             <>
               <div className={styles.row}>
                 <label className={styles.label}>{tRegister('merchantCity')}</label>
-                <input className={styles.input} value={merchantCity} onChange={(e) => setMerchantCity(e.target.value)} />
+                <select
+                  className={styles.input}
+                  value={merchantCity}
+                  onChange={(e) => setMerchantCity(e.target.value)}
+                >
+                  <option value="">
+                    {locale === 'ar' ? 'اختر مدينتك' : 'Choose your city'}
+                  </option>
+                  {getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en').map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.options.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.row}>
@@ -721,7 +780,57 @@ return (
 
               <div className={styles.row}>
                 <label className={styles.label}>{tRegister('trucksNeeded')}</label>
-                <input className={styles.input} value={trucksNeeded} onChange={(e) => setTrucksNeeded(e.target.value)} />
+                <div className={styles.carKindRoot} data-trucks-needed-root="true">
+                  <button
+                    type="button"
+                    className={`${styles.input} ${styles.carKindButton}`}
+                    aria-haspopup="listbox"
+                    aria-expanded={trucksNeededOpen ? 'true' : 'false'}
+                    onClick={() => setTrucksNeededOpen((v) => !v)}
+                  >
+                    {selectedTrucksNeeded ? (
+                      <span className={styles.carKindButtonInner}>
+                        <img
+                          src={selectedTrucksNeeded.imagePath}
+                          alt={selectedTrucksNeeded.value}
+                          className={styles.carKindThumb}
+                          loading="lazy"
+                        />
+                        <span className={styles.carKindButtonLabel}>{selectedTrucksNeeded.value}</span>
+                      </span>
+                    ) : (
+                      <span className={styles.carKindPlaceholder}>
+                        {locale === 'ar' ? 'اختر نوع الشاحنة' : 'Choose truck type'}
+                      </span>
+                    )}
+                  </button>
+
+                  {trucksNeededOpen ? (
+                    <div className={styles.carKindPopover} role="listbox">
+                      {CAR_KIND_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={styles.carKindOption}
+                          role="option"
+                          aria-selected={opt.value === trucksNeeded ? 'true' : 'false'}
+                          onClick={() => {
+                            setTrucksNeeded(opt.value);
+                            setTrucksNeededOpen(false);
+                          }}
+                        >
+                          <img
+                            src={opt.imagePath}
+                            alt={opt.value}
+                            className={styles.carKindOptionThumb}
+                            loading="lazy"
+                          />
+                          <span className={styles.carKindOptionLabel}>{opt.value}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </>
           ) : null}

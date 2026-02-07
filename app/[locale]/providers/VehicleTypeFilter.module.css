@@ -1,0 +1,199 @@
+.filterContainer {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.filterLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dropdownButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.dropdownButton:hover {
+  border-color: #FFB81C;
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.1);
+}
+
+.buttonText {
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.caret {
+  font-size: 0.7rem;
+  color: #6b7280;
+  transition: transform 0.2s;
+  margin-left: 0.5rem;
+}
+
+:global(html[dir="rtl"]) .caret {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+.caretOpen {
+  transform: rotate(180deg);
+}
+
+.clearButton {
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clearButton:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  overflow: hidden;
+  max-height: 450px;
+  display: flex;
+  flex-direction: column;
+}
+
+.selectAllRow {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.selectAllButton {
+  background: transparent;
+  border: none;
+  color: #FFB81C;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.selectAllButton:hover {
+  color: #e0a800;
+  text-decoration: underline;
+}
+
+.optionsList {
+  overflow-y: auto;
+  max-height: 380px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.option:hover {
+  background: #f9fafb;
+}
+
+.optionSelected {
+  background: rgba(255, 184, 28, 0.08);
+}
+
+.optionSelected:hover {
+  background: rgba(255, 184, 28, 0.12);
+}
+
+.optionImage {
+  width: 64px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  background: #e5e7eb;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.optionText {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.checkmark {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.checkmarkVisible {
+  background: #FFB81C;
+  color: black;
+}
+
+@media (max-width: 640px) {
+  .optionImage {
+    width: 48px;
+    height: 42px;
+  }
+  
+  .optionText {
+    font-size: 0.85rem;
+  }
+  
+  .dropdown {
+    max-height: 380px;
+  }
+  
+  .optionsList {
+    max-height: 310px;
+  }
+}

@@ -72,7 +72,10 @@
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
-    "deleteHint": "Delete is admin-only"
+    "deleteHint": "Delete is admin-only",
+    "locationSharing": "Location Sharing",
+    "selectProvider": "Select Provider",
+    "chooseProvider": "Choose a provider"
   },
   "hero": {
     "welcome": "Welcome to Saweg",
@@ -230,5 +233,35 @@
     "phoneRequired": "Phone number is required",
     "phoneInvalidCharacters": "Phone number contains invalid characters",
     "phoneInvalidLength": "Phone number must be 8 (Tunisia), 10 (Libya), or 11 (Egypt) digits"
+  },
+  "locationSharing": {
+    "title": "Location Sharing",
+    "startSharing": "Start Sharing",
+    "stopSharing": "Stop Sharing",
+    "sharingEnabled": "Sharing Enabled",
+    "sharingDisabled": "Sharing Disabled",
+    "deactivationWarning": "Clients will no longer see your live position.",
+    "sending": "Sending...",
+    "sent": "Sent",
+    "failed": "Failed",
+    "lastUpdate": "Last update",
+    "updateInterval": "Update every {seconds} seconds",
+    "permissionDenied": "Location permission denied. Please enable location services in your browser settings.",
+    "geolocationNotSupported": "Geolocation is not supported by your browser.",
+    "locationError": "Error getting location. Please try again.",
+    "offlineMode": "Offline mode - updates queued",
+    "batteryWarning": "This feature may drain battery. Disable when not needed."
+  },
+  "activeTrip": {
+    "title": "Active Trip",
+    "subtitle": "Share your location with clients during transport",
+    "loading": "Loading...",
+    "selectProvider": "Select Provider",
+    "currentTrip": "Current Trip",
+    "noDestination": "No destination set",
+    "active": "Active",
+    "inactive": "Inactive",
+    "locationSharing": "Location Sharing",
+    "noProviders": "No providers found"
   }
 }

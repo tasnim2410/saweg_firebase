@@ -1,0 +1,242 @@
+.container {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.container[data-rtl="true"] {
+  direction: rtl;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon {
+  color: #4a90e2;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* Toggle Button */
+.toggleButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggleButton.inactive {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.toggleButton.inactive:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.toggleButton.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.toggleButton.active:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Status Badge */
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statusBadge.enabled {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusBadge.disabled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+.statusBadge.disabled .statusDot {
+  animation: none;
+  opacity: 0.5;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Update Status */
+.updateStatus {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.updateStatus.success {
+  color: #059669;
+}
+
+.updateStatus.error {
+  color: #dc2626;
+}
+
+/* Warning Message */
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 10px;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Active Info */
+.activeInfo {
+  padding: 12px;
+  background: #f0fdf4;
+  border-radius: 10px;
+  border: 1px solid #86efac;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 8px;
+}
+
+.coordinates {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.coords {
+  font-family: monospace;
+  font-size: 12px;
+  color: #059669;
+}
+
+.speed {
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* Error */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: #fee2e2;
+  border-radius: 10px;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.error svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Offline */
+.offline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+/* Battery Hint */
+.batteryHint {
+  margin-top: 12px;
+  padding: 10px;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  font-size: 12px;
+  color: #1e40af;
+  text-align: center;
+}
