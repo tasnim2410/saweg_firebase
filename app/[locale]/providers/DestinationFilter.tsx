@@ -2,6 +2,7 @@
 
 import { useLocale } from 'next-intl';
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { MapPin } from 'lucide-react';
 import styles from './DestinationFilter.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 
@@ -77,28 +78,39 @@ export default function DestinationFilter({ selectedDestinations, onChange, onCl
       : selectedLabels.join(', ');
 
   return (
-    <div className={styles.container} ref={rootRef} data-destination-root="true">
-      <div className={styles.header}>
-        <h3 className={styles.title}>{isRTL ? '📍 الوجهة' : '📍 Destination'}</h3>
+    <div className={styles.filterContainer} ref={rootRef} data-destination-root="true">
+      <div className={styles.filterHeader}>
+        <div className={styles.filterIcon}>
+          <MapPin size={18} />
+        </div>
+        <label className={styles.filterLabel}>
+          {isRTL ? 'الوجهة' : 'Destination'}
+        </label>
+        {selectedDestinations.length > 0 && (
+          <span className={styles.filterBadge}>{selectedDestinations.length}</span>
+        )}
+      </div>
+
+      <div className={styles.controls}>
+        <button
+          type="button"
+          className={`${styles.dropdownButton} ${open ? styles.open : ''}`}
+          aria-haspopup="listbox"
+          aria-expanded={open ? 'true' : 'false'}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className={selectedDestinations.length === 0 ? styles.placeholder : styles.value}>
+            {displayText.length > 40 ? displayText.slice(0, 40) + '...' : displayText}
+          </span>
+          <span className={styles.caret}>{open ? '▲' : '▼'}</span>
+        </button>
+
         {selectedDestinations.length > 0 && (
           <button type="button" className={styles.clearButton} onClick={onClear}>
             {isRTL ? 'مسح' : 'Clear'}
           </button>
         )}
       </div>
-
-      <button
-        type="button"
-        className={`${styles.dropdownButton} ${open ? styles.open : ''}`}
-        aria-haspopup="listbox"
-        aria-expanded={open ? 'true' : 'false'}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span className={selectedDestinations.length === 0 ? styles.placeholder : styles.value}>
-          {displayText.length > 40 ? displayText.slice(0, 40) + '...' : displayText}
-        </span>
-        <span className={styles.caret}>{open ? '▲' : '▼'}</span>
-      </button>
 
       {open && (
         <div className={styles.popover} role="listbox">
@@ -125,14 +137,6 @@ export default function DestinationFilter({ selectedDestinations, onChange, onCl
           ))}
         </div>
       )}
-
-      <div className={styles.count}>
-        {selectedDestinations.length > 0 && (
-          <span>
-            {selectedDestinations.length} {isRTL ? 'مختارة' : 'selected'}
-          </span>
-        )}
-      </div>
     </div>
   );
 }

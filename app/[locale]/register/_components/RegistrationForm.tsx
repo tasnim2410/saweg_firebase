@@ -1,32 +1,19 @@
 'use client';
 
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Upload, Camera } from 'lucide-react';
-import styles from '../register.module.css';
+import { CheckCircle, ArrowLeft, Camera, Upload } from 'lucide-react';
+import styles from './RegistrationForm.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { getLocationOptionGroups } from '@/lib/locations';
+import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
 
 type RegistrationRole = 'shipper' | 'merchant';
 
 const MAX_TRUCK_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
-  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
-  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
-  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
-  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
-  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
-  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
-  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
-  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
-  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
-  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
-  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
-  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
-];
 
 type Props = {
   role: RegistrationRole;
@@ -54,14 +41,6 @@ export default function RegistrationForm({ role }: Props) {
     }>
   >([]);
 
-  const pushToast = (toast: { title: string; message: string }) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    setToasts((prev) => [{ id, ...toast }, ...prev]);
-    window.setTimeout(() => {
-      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
-    }, 5000);
-  };
-
   const titleFor = (kind: 'form' | 'phone' | 'password' | 'image' | 'server' | 'network') => {
     if (locale === 'ar') {
       if (kind === 'form') return 'خطأ في النموذج';
@@ -79,6 +58,14 @@ export default function RegistrationForm({ role }: Props) {
     return 'Server error';
   };
 
+  const pushToast = (toast: { title: string; message: string }) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((tItem) => tItem.id !== id));
+    }, 5000);
+  };
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -92,8 +79,8 @@ export default function RegistrationForm({ role }: Props) {
     trucksNeeded: '',
   });
 
-  const selectedCarKind = CAR_KIND_OPTIONS.find((opt) => opt.value === formData.carKind) ?? null;
-  const selectedTrucksNeeded = CAR_KIND_OPTIONS.find((opt) => opt.value === formData.trucksNeeded) ?? null;
+  const selectedCarKind = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === formData.carKind) ?? null;
+  const selectedTrucksNeeded = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === formData.trucksNeeded) ?? null;
 
   useEffect(() => {
     if (!carKindOpen) return;
@@ -145,7 +132,7 @@ export default function RegistrationForm({ role }: Props) {
     e.preventDefault();
 
     if (role === 'shipper') {
-      if (!CAR_KIND_OPTIONS.some((opt) => opt.value === formData.carKind)) {
+      if (!isValidVehicleType(formData.carKind)) {
         pushToast({
           title: titleFor('form'),
           message: locale === 'ar' ? 'يرجى اختيار نوع المركبة من القائمة' : 'Please choose a vehicle type from the list',
@@ -445,11 +432,11 @@ export default function RegistrationForm({ role }: Props) {
                           <span className={styles.carKindButtonInner}>
                             <img
                               src={selectedCarKind.imagePath}
-                              alt={selectedCarKind.value}
+                              alt={getVehicleLabel(selectedCarKind.id, locale === 'ar' ? 'ar' : 'en')}
                               className={styles.carKindThumb}
                               loading="lazy"
                             />
-                            <span className={styles.carKindButtonLabel}>{selectedCarKind.value}</span>
+                            <span className={styles.carKindButtonLabel}>{getVehicleLabel(selectedCarKind.id, locale === 'ar' ? 'ar' : 'en')}</span>
                           </span>
                         ) : (
                           <span className={styles.carKindPlaceholder}>
@@ -460,25 +447,25 @@ export default function RegistrationForm({ role }: Props) {
 
                       {carKindOpen ? (
                         <div className={styles.carKindPopover} role="listbox">
-                          {CAR_KIND_OPTIONS.map((opt) => (
+                          {VEHICLE_TYPE_CONFIG.map((opt) => (
                             <button
-                              key={opt.value}
+                              key={opt.id}
                               type="button"
                               className={styles.carKindOption}
                               role="option"
-                              aria-selected={opt.value === formData.carKind ? 'true' : 'false'}
+                              aria-selected={opt.id === formData.carKind ? 'true' : 'false'}
                               onClick={() => {
-                                setFormData((prev) => ({ ...prev, carKind: opt.value }));
+                                setFormData((prev) => ({ ...prev, carKind: opt.id }));
                                 setCarKindOpen(false);
                               }}
                             >
                               <img
                                 src={opt.imagePath}
-                                alt={opt.value}
+                                alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
                                 className={styles.carKindOptionThumb}
                                 loading="lazy"
                               />
-                              <span className={styles.carKindOptionLabel}>{opt.value}</span>
+                              <span className={styles.carKindOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
                             </button>
                           ))}
                         </div>
@@ -599,11 +586,11 @@ export default function RegistrationForm({ role }: Props) {
                         <span className={styles.carKindButtonInner}>
                           <img
                             src={selectedTrucksNeeded.imagePath}
-                            alt={selectedTrucksNeeded.value}
+                            alt={getVehicleLabel(selectedTrucksNeeded.id, locale === 'ar' ? 'ar' : 'en')}
                             className={styles.carKindThumb}
                             loading="lazy"
                           />
-                          <span className={styles.carKindButtonLabel}>{selectedTrucksNeeded.value}</span>
+                          <span className={styles.carKindButtonLabel}>{getVehicleLabel(selectedTrucksNeeded.id, locale === 'ar' ? 'ar' : 'en')}</span>
                         </span>
                       ) : (
                         <span className={styles.carKindPlaceholder}>
@@ -614,25 +601,25 @@ export default function RegistrationForm({ role }: Props) {
 
                     {trucksNeededOpen ? (
                       <div className={styles.carKindPopover} role="listbox">
-                        {CAR_KIND_OPTIONS.map((opt) => (
+                        {VEHICLE_TYPE_CONFIG.map((opt) => (
                           <button
-                            key={opt.value}
+                            key={opt.id}
                             type="button"
                             className={styles.carKindOption}
                             role="option"
-                            aria-selected={opt.value === formData.trucksNeeded ? 'true' : 'false'}
+                            aria-selected={opt.id === formData.trucksNeeded ? 'true' : 'false'}
                             onClick={() => {
-                              setFormData((prev) => ({ ...prev, trucksNeeded: opt.value }));
+                              setFormData((prev) => ({ ...prev, trucksNeeded: opt.id }));
                               setTrucksNeededOpen(false);
                             }}
                           >
                             <img
                               src={opt.imagePath}
-                              alt={opt.value}
+                              alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
                               className={styles.carKindOptionThumb}
                               loading="lazy"
                             />
-                            <span className={styles.carKindOptionLabel}>{opt.value}</span>
+                            <span className={styles.carKindOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
                           </button>
                         ))}
                       </div>

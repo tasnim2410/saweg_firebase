@@ -41,6 +41,7 @@ const cityCache: CityCache = {
 
 /**
  * Geocode a city name to get its coordinates using OpenStreetMap Nominatim API
+ * Uses country hints based on the city name to improve accuracy
  */
 export async function geocodeCity(cityName: string): Promise<Coordinates | null> {
   // Check cache first
@@ -48,9 +49,28 @@ export async function geocodeCity(cityName: string): Promise<Coordinates | null>
     return cityCache[cityName];
   }
 
+  // Determine country hint based on city name patterns
+  const normalizedCity = cityName.toLowerCase();
+  let countryHint = '';
+  
+  // Tunisian cities
+  const tunisianCities = ['tunis', 'sfax', 'sousse', 'kairouan', 'bizerte', 'gabès', 'ariana', 'gafsa'];
+  // Egyptian cities
+  const egyptianCities = ['cairo', 'alexandria', 'giza', 'shubra', 'port said', 'suez', 'luxor', 'aswan'];
+  // Libyan cities (default)
+  const libyanCities = ['tripoli', 'benghazi', 'misurata', 'sirte', 'sebha', 'ajdabiya', 'zawiya', 'derna', 'tobruk'];
+  
+  if (tunisianCities.some(c => normalizedCity.includes(c))) {
+    countryHint = ', Tunisia';
+  } else if (egyptianCities.some(c => normalizedCity.includes(c))) {
+    countryHint = ', Egypt';
+  } else if (libyanCities.some(c => normalizedCity.includes(c))) {
+    countryHint = ', Libya';
+  }
+
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + ', Libya')}&limit=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + countryHint)}&limit=1`,
       {
         headers: {
           'User-Agent': 'SawegApp/1.0',
@@ -160,21 +180,31 @@ export async function isWithinDistance(
 }
 
 /**
- * Get user's current location using browser geolocation API
+ * Get user's current location using browser geolocation API with timeout
  */
-export function getCurrentPosition(): Promise<GeolocationPosition> {
+export function getCurrentPosition(timeoutMs = 15000): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported'));
       return;
     }
 
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Location request timed out'));
+    }, timeoutMs);
+
     navigator.geolocation.getCurrentPosition(
-      (position) => resolve(position),
-      (error) => reject(error),
+      (position) => {
+        clearTimeout(timeoutId);
+        resolve(position);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: timeoutMs,
         maximumAge: 60000,
       }
     );

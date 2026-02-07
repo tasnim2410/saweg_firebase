@@ -5,6 +5,7 @@ import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { sendPushToSubscription } from '@/lib/webPush';
+import { isValidVehicleType, normalizeVehicleType } from '@/lib/vehicleTypes';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -19,21 +20,6 @@ const getIdempotencyStore = (): Map<string, { ts: number; promise: Promise<any> 
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const ALLOWED_VEHICLE_TYPES = new Set([
-  'شاحنة صندوقية (Van / Box Truck)',
-  'شاحنة مسطحة (Flatbed Truck)',
-  'شاحنة مبردة (Reefer Truck)',
-  'شاحنة قلابة (Dump Truck / Tipper)',
-  'شاحنة مغطاة (Curtainsider)',
-  'شاحنة صهريج (Tanker Truck)',
-  'شاحنة برافعة خلفية (Tail-lift Truck)',
-  'شاحنة رافعة (Crane Truck)',
-  'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)',
-  'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)',
-  'شاحنة صهريج أغذية (Food Grade Tanker)',
-  'نصف مقطورة مجرورة(semi Trailer)',
-]);
 
 const uploadDir = path.join(process.cwd(), 'public/images/merchant-goods-posts');
 
@@ -160,9 +146,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
     }
 
-    if (!ALLOWED_VEHICLE_TYPES.has(vehicleTypeDesired)) {
+    if (!isValidVehicleType(vehicleTypeDesired)) {
       return NextResponse.json({ error: 'INVALID_VEHICLE_TYPE' }, { status: 400 });
     }
+
+    // Normalize vehicle type to new ID format for storage
+    const normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
 
     const goodsWeight = Number(goodsWeightRaw);
     if (!Number.isFinite(goodsWeight) || goodsWeight <= 0) {

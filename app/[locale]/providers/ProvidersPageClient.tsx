@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
@@ -37,10 +37,24 @@ export default function ProvidersPageClient() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pending filter states (what user has selected but not applied)
+  const [pendingVehicleTypes, setPendingVehicleTypes] = useState<VehicleType[]>([]);
+  const [pendingMaxChargeOptions, setPendingMaxChargeOptions] = useState<MaxChargeValue[]>([]);
+  const [pendingDistance, setPendingDistance] = useState<DistanceValue | null>(null);
+  const [pendingDistanceSource, setPendingDistanceSource] = useState<DistanceSource>('current-location');
+  const [pendingDistanceCity, setPendingDistanceCity] = useState<string | null>(null);
+  const [pendingCurrentLocation, setPendingCurrentLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [pendingClassifiedCity, setPendingClassifiedCity] = useState<string | null>(null);
+  const [pendingDestinations, setPendingDestinations] = useState<string[]>([]);
+  
+  // Applied filter states (what filters are actually active)
   const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<VehicleType[]>([]);
   const [selectedMaxChargeOptions, setSelectedMaxChargeOptions] = useState<MaxChargeValue[]>([]);
+  
+  // Distance filter states
   const [selectedDistance, setSelectedDistance] = useState<DistanceValue | null>(null);
-  const [distanceSource, setDistanceSource] = useState<DistanceSource>('profile');
+  const [distanceSource, setDistanceSource] = useState<DistanceSource>('current-location');
   const [selectedDistanceCity, setSelectedDistanceCity] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [classifiedCity, setClassifiedCity] = useState<string | null>(null);
@@ -48,6 +62,15 @@ export default function ProvidersPageClient() {
   const [merchantCity, setMerchantCity] = useState<string | null>(null);
   const [distanceFilteredProviders, setDistanceFilteredProviders] = useState<Provider[]>([]);
   const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
+  const [appliedDistanceFilter, setAppliedDistanceFilter] = useState<{
+    distance: DistanceValue | null;
+    source: DistanceSource;
+    city: string | null;
+    location: { lat: number; lon: number } | null;
+    classifiedCity: string | null;
+  } | null>(null);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
@@ -60,27 +83,34 @@ export default function ProvidersPageClient() {
             VEHICLE_TYPE_OPTIONS.some(o => o.value === t)
           );
           setSelectedVehicleTypes(validTypes);
+          setPendingVehicleTypes(validTypes);
         }
         if (parsed.selectedMaxCharge && Array.isArray(parsed.selectedMaxCharge)) {
           const validMaxCharge = parsed.selectedMaxCharge.filter((v: string) =>
             MAX_CHARGE_OPTIONS.some(o => o.value === v)
           );
           setSelectedMaxChargeOptions(validMaxCharge);
+          setPendingMaxChargeOptions(validMaxCharge);
         }
         if (parsed.selectedDistance) {
           const validDistance = DISTANCE_OPTIONS.some(o => o.value === parsed.selectedDistance)
             ? parsed.selectedDistance
             : null;
           setSelectedDistance(validDistance);
+          setPendingDistance(validDistance);
         }
         if (parsed.distanceSource) {
           setDistanceSource(parsed.distanceSource as DistanceSource);
+          setPendingDistanceSource(parsed.distanceSource as DistanceSource);
         }
         if (parsed.classifiedCity) {
           setClassifiedCity(parsed.classifiedCity);
+          setPendingClassifiedCity(parsed.classifiedCity);
         }
         if (parsed.selectedDestinations && Array.isArray(parsed.selectedDestinations)) {
-          setSelectedDestinations(parsed.selectedDestinations.filter((d: string) => typeof d === 'string'));
+          const validDests = parsed.selectedDestinations.filter((d: string) => typeof d === 'string');
+          setSelectedDestinations(validDests);
+          setPendingDestinations(validDests);
         }
       }
     } catch {
@@ -144,14 +174,83 @@ export default function ProvidersPageClient() {
     fetchProviders();
   }, []);
 
-  // Calculate distances asynchronously when distance filters change
+  // Calculate distances only when explicitly applied
+  const handleApplyDistanceFilter = useCallback(() => {
+    setAppliedDistanceFilter({
+      distance: selectedDistance,
+      source: distanceSource,
+      city: selectedDistanceCity,
+      location: currentLocation,
+      classifiedCity: classifiedCity,
+    });
+  }, [selectedDistance, distanceSource, selectedDistanceCity, currentLocation, classifiedCity]);
+
+  // Apply all filters at once
+  const handleApplyAllFilters = useCallback(async () => {
+    setIsApplyingFilters(true);
+    // Copy pending states to applied states
+    setSelectedVehicleTypes(pendingVehicleTypes);
+    setSelectedMaxChargeOptions(pendingMaxChargeOptions);
+    setSelectedDestinations(pendingDestinations);
+    
+    // Update distance filter states
+    setSelectedDistance(pendingDistance);
+    setDistanceSource(pendingDistanceSource);
+    setSelectedDistanceCity(pendingDistanceCity);
+    setCurrentLocation(pendingCurrentLocation);
+    setClassifiedCity(pendingClassifiedCity);
+    
+    // Apply distance filter calculation
+    setAppliedDistanceFilter({
+      distance: pendingDistance,
+      source: pendingDistanceSource,
+      city: pendingDistanceCity,
+      location: pendingCurrentLocation,
+      classifiedCity: pendingClassifiedCity,
+    });
+    
+    setHasPendingChanges(false);
+
+    // If distance isn't active, applying finishes immediately (no async distance calculation)
+    if (!pendingDistance || pendingDistance === 'any') {
+      setIsApplyingFilters(false);
+    }
+  }, [pendingVehicleTypes, pendingMaxChargeOptions, pendingDestinations, pendingDistance, pendingDistanceSource, pendingDistanceCity, pendingCurrentLocation, pendingClassifiedCity]);
+
+  const handleClearAllFilters = useCallback(() => {
+    setIsApplyingFilters(false);
+    setPendingVehicleTypes([]);
+    setPendingMaxChargeOptions([]);
+    setPendingDistance(null);
+    setPendingDistanceSource('current-location');
+    setPendingDistanceCity(null);
+    setPendingCurrentLocation(null);
+    setPendingClassifiedCity(null);
+    setPendingDestinations([]);
+    
+    setSelectedVehicleTypes([]);
+    setSelectedMaxChargeOptions([]);
+    setSelectedDistance(null);
+    setDistanceSource('current-location');
+    setSelectedDistanceCity(null);
+    setCurrentLocation(null);
+    setClassifiedCity(null);
+    setSelectedDestinations([]);
+    setAppliedDistanceFilter(null);
+    setHasPendingChanges(false);
+  }, []);
+
+  // Effect to calculate distances when applied filter changes
   useEffect(() => {
     const calculateDistances = async () => {
-      // If no distance filter is active, use all providers
-      if (!selectedDistance || selectedDistance === 'any') {
+      // If no distance filter is applied, use all providers
+      if (!appliedDistanceFilter || !appliedDistanceFilter.distance || appliedDistanceFilter.distance === 'any') {
         setDistanceFilteredProviders(providers);
+        setIsApplyingFilters(false);
         return;
       }
+
+      const { distance, source, city, location, classifiedCity: appliedClassifiedCity } = appliedDistanceFilter;
 
       setIsCalculatingDistances(true);
 
@@ -159,27 +258,22 @@ export default function ProvidersPageClient() {
         // Get reference point based on selected source
         let referenceCoords: { lat: number; lon: number } | null = null;
 
-        if (distanceSource === 'profile' && merchantCity) {
-          const coords = await getLocationCoordinates(merchantCity);
+        if (source === 'selected-city' && city) {
+          const coords = await getLocationCoordinates(city);
           if (coords) referenceCoords = coords;
-        } else if (distanceSource === 'selected-city' && selectedDistanceCity) {
-          const coords = await getLocationCoordinates(selectedDistanceCity);
-          if (coords) referenceCoords = coords;
-        } else if (distanceSource === 'current-location' && currentLocation) {
-          referenceCoords = currentLocation;
+        } else if (source === 'current-location' && location) {
+          referenceCoords = location;
         }
 
         if (!referenceCoords) {
           // Can't calculate distances, fall back to city name matching
-          const refCity = distanceSource === 'profile' ? merchantCity : 
-                         distanceSource === 'current-location' ? classifiedCity : 
-                         selectedDistanceCity;
+          const refCity = source === 'current-location' ? appliedClassifiedCity : city;
           const refCityLower = refCity?.toLowerCase().trim();
           
           const filtered = providers.filter(p => {
             const providerLocation = p.location?.toLowerCase().trim();
             
-            if (selectedDistance === 'same-city') {
+            if (distance === 'same-city') {
               return providerLocation === refCityLower ||
                 providerLocation?.includes(refCityLower || '') ||
                 (refCityLower || '').includes(providerLocation || '');
@@ -194,10 +288,8 @@ export default function ProvidersPageClient() {
         const filtered = await Promise.all(
           providers.map(async (p) => {
             // For same-city, try string matching first
-            if (selectedDistance === 'same-city') {
-              const refCity = distanceSource === 'profile' ? merchantCity : 
-                             distanceSource === 'current-location' ? classifiedCity : 
-                             selectedDistanceCity;
+            if (distance === 'same-city') {
+              const refCity = source === 'current-location' ? appliedClassifiedCity : city;
               const refCityLower = refCity?.toLowerCase().trim();
               const providerLocation = p.location?.toLowerCase().trim();
               
@@ -211,19 +303,25 @@ export default function ProvidersPageClient() {
             // Try to geocode provider location and calculate distance
             const providerCoords = await getLocationCoordinates(p.location);
             if (!providerCoords) {
-              // Can't geocode - include only for nearby filters as fallback
-              return selectedDistance !== 'same-city' ? p : null;
+              // Can't geocode - exclude to avoid false positives (e.g., wrong country)
+              return null;
             }
 
-            const distance = calculateDistance(referenceCoords, providerCoords);
+            const dist = calculateDistance(referenceCoords, providerCoords);
 
-            switch (selectedDistance) {
+            switch (distance) {
               case 'same-city':
-                return distance <= 10 ? p : null;
+                return dist <= 10 ? p : null;
+              case 'nearby-30':
+                return dist <= 30 ? p : null;
               case 'nearby-50':
-                return distance <= 50 ? p : null;
+                return dist <= 50 ? p : null;
               case 'nearby-100':
-                return distance <= 100 ? p : null;
+                return dist <= 100 ? p : null;
+              case 'nearby-150':
+                return dist <= 150 ? p : null;
+              case 'nearby-200':
+                return dist <= 200 ? p : null;
               default:
                 return p;
             }
@@ -233,11 +331,12 @@ export default function ProvidersPageClient() {
         setDistanceFilteredProviders(filtered.filter((p): p is Provider => p !== null));
       } finally {
         setIsCalculatingDistances(false);
+        setIsApplyingFilters(false);
       }
     };
 
     calculateDistances();
-  }, [providers, selectedDistance, distanceSource, merchantCity, selectedDistanceCity, currentLocation, classifiedCity]);
+  }, [providers, appliedDistanceFilter, merchantCity]);
 
   // Combined filter using pre-filtered distance results
   const filteredProviders = useMemo(() => {
@@ -294,17 +393,6 @@ export default function ProvidersPageClient() {
   const totalCount = providers.length;
 
   const hasAnyFilter = selectedVehicleTypes.length > 0 || selectedMaxChargeOptions.length > 0 || selectedDistance !== null || selectedDestinations.length > 0;
-
-  const handleClearAllFilters = () => {
-    setSelectedVehicleTypes([]);
-    setSelectedMaxChargeOptions([]);
-    setSelectedDistance(null);
-    setDistanceSource('profile');
-    setSelectedDistanceCity(null);
-    setCurrentLocation(null);
-    setClassifiedCity(null);
-    setSelectedDestinations([]);
-  };
 
   const toTelHref = (phoneNumber: string) => {
     const normalized = String(phoneNumber || '').replace(/[^+\d]/g, '');
@@ -374,51 +462,118 @@ export default function ProvidersPageClient() {
           </div>
         </div>
 
-        {/* Vehicle Type Filter */}
-        <div className={styles.filtersContainer}>
-          <div className={styles.filterColumn}>
-            <VehicleTypeFilter
-              selectedTypes={selectedVehicleTypes}
-              onChange={setSelectedVehicleTypes}
-              onClear={() => setSelectedVehicleTypes([])}
-            />
+        {/* Filters Section with Apply Button */}
+        <div className={styles.filtersSection}>
+          <div className={styles.filtersHeader}>
+            <h2 className={styles.filtersTitle}>
+              {locale === 'ar' ? 'الفلاتر' : 'Filters'}
+            </h2>
+            <div className={styles.filtersActions}>
+              {hasPendingChanges && (
+                <button 
+                  className={styles.applyFiltersButton}
+                  onClick={handleApplyAllFilters}
+                  disabled={isApplyingFilters || isCalculatingDistances}
+                >
+                  {isApplyingFilters || isCalculatingDistances ? (
+                    <>
+                      <div className={styles.buttonSpinner} />
+                      {locale === 'ar' ? 'جاري التطبيق...' : 'Applying...'}
+                    </>
+                  ) : (
+                    locale === 'ar' ? '🔍 بحث' : '🔍 Search'
+                  )}
+                </button>
+              )}
+              {hasAnyFilter && (
+                <button 
+                  className={styles.clearFiltersButton}
+                  onClick={handleClearAllFilters}
+                >
+                  {locale === 'ar' ? 'مسح الكل' : 'Clear All'}
+                </button>
+              )}
+            </div>
           </div>
-          <div className={styles.filterColumn}>
-            <MaxChargeFilter
-              selectedOptions={selectedMaxChargeOptions}
-              onChange={setSelectedMaxChargeOptions}
-              onClear={() => setSelectedMaxChargeOptions([])}
-            />
-          </div>
-          <div className={styles.filterColumn}>
-            <DistanceFilter
-              selectedOption={selectedDistance}
-              onChange={setSelectedDistance}
-              onClear={() => {
-                setSelectedDistance(null);
-                setDistanceSource('profile');
-                setSelectedDistanceCity(null);
-                setCurrentLocation(null);
-                setClassifiedCity(null);
-              }}
-              merchantCity={merchantCity}
-              distanceSource={distanceSource}
-              onSourceChange={setDistanceSource}
-              selectedCity={selectedDistanceCity}
-              onSelectedCityChange={setSelectedDistanceCity}
-              currentLocation={currentLocation}
-              onCurrentLocationChange={setCurrentLocation}
-              classifiedCity={classifiedCity}
-              onClassifiedCityChange={setClassifiedCity}
-              isCalculating={isCalculatingDistances}
-            />
-          </div>
-          <div className={styles.filterColumn}>
-            <DestinationFilter
-              selectedDestinations={selectedDestinations}
-              onChange={setSelectedDestinations}
-              onClear={() => setSelectedDestinations([])}
-            />
+          
+          <div className={styles.filtersContainer}>
+            <div className={styles.filterColumn}>
+              <VehicleTypeFilter
+                selectedTypes={pendingVehicleTypes}
+                onChange={(types) => {
+                  setPendingVehicleTypes(types);
+                  setHasPendingChanges(true);
+                }}
+                onClear={() => {
+                  setPendingVehicleTypes([]);
+                  setHasPendingChanges(true);
+                }}
+              />
+            </div>
+            <div className={styles.filterColumn}>
+              <MaxChargeFilter
+                selectedOptions={pendingMaxChargeOptions}
+                onChange={(options) => {
+                  setPendingMaxChargeOptions(options);
+                  setHasPendingChanges(true);
+                }}
+                onClear={() => {
+                  setPendingMaxChargeOptions([]);
+                  setHasPendingChanges(true);
+                }}
+              />
+            </div>
+            <div className={styles.filterColumn}>
+              <DistanceFilter
+                selectedOption={pendingDistance}
+                onChange={(value) => {
+                  setPendingDistance(value);
+                  setHasPendingChanges(true);
+                }}
+                onClear={() => {
+                  setPendingDistance(null);
+                  setPendingDistanceSource('current-location');
+                  setPendingDistanceCity(null);
+                  setPendingCurrentLocation(null);
+                  setPendingClassifiedCity(null);
+                  setHasPendingChanges(true);
+                }}
+                merchantCity={merchantCity}
+                distanceSource={pendingDistanceSource}
+                onSourceChange={(source) => {
+                  setPendingDistanceSource(source);
+                  setHasPendingChanges(true);
+                }}
+                selectedCity={pendingDistanceCity}
+                onSelectedCityChange={(city) => {
+                  setPendingDistanceCity(city);
+                  setHasPendingChanges(true);
+                }}
+                currentLocation={pendingCurrentLocation}
+                onCurrentLocationChange={(location) => {
+                  setPendingCurrentLocation(location);
+                  setHasPendingChanges(true);
+                }}
+                classifiedCity={pendingClassifiedCity}
+                onClassifiedCityChange={(city) => {
+                  setPendingClassifiedCity(city);
+                  setHasPendingChanges(true);
+                }}
+              />
+            </div>
+            <div className={styles.filterColumn}>
+              <DestinationFilter
+                selectedDestinations={pendingDestinations}
+                onChange={(dests) => {
+                  setPendingDestinations(dests);
+                  setHasPendingChanges(true);
+                }}
+                onClear={() => {
+                  setPendingDestinations([]);
+                  setHasPendingChanges(true);
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -428,6 +583,11 @@ export default function ProvidersPageClient() {
           <div className={styles.loading}>
             <div className={styles.spinner} />
             <span>{locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
+          </div>
+        ) : isApplyingFilters ? (
+          <div className={styles.loading}>
+            <div className={styles.spinner} />
+            <span>{locale === 'ar' ? 'جاري تطبيق الفلاتر...' : 'Applying filters...'}</span>
           </div>
         ) : filteredProviders.length === 0 ? (
           <div className={styles.empty}>

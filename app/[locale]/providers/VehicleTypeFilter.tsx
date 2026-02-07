@@ -2,21 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
+import { Truck } from 'lucide-react';
 import styles from './VehicleTypeFilter.module.css';
 
 export const VEHICLE_TYPE_OPTIONS = [
-  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
-  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
-  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
-  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
-  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
-  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
-  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
-  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
-  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
-  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
-  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
-  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
+  { value: 'van-box', labelAR: 'شاحنة صندوقية', labelEN: 'Van / Box Truck', imagePath: '/images/van_box_truck.png' },
+  { value: 'flatbed', labelAR: 'شاحنة مسطحة', labelEN: 'Flatbed Truck', imagePath: '/images/flatbed_truck.png' },
+  { value: 'reefer', labelAR: 'شاحنة مبردة', labelEN: 'Reefer Truck', imagePath: '/images/reefer_truck.png' },
+  { value: 'dump', labelAR: 'شاحنة قلابة', labelEN: 'Dump Truck / Tipper', imagePath: '/images/dump_truck_tipper.png' },
+  { value: 'curtainsider', labelAR: 'شاحنة مغطاة', labelEN: 'Curtainsider', imagePath: '/images/curtainsider.png' },
+  { value: 'tanker', labelAR: 'شاحنة صهريج', labelEN: 'Tanker Truck', imagePath: '/images/tanker_truck.png' },
+  { value: 'tail-lift', labelAR: 'شاحنة برافعة خلفية', labelEN: 'Tail-lift Truck', imagePath: '/images/tail_lift_truck.png' },
+  { value: 'crane', labelAR: 'شاحنة رافعة', labelEN: 'Crane Truck', imagePath: '/images/crane_truck.png' },
+  { value: 'drop-side', labelAR: 'شاحنة صندوقية بجوانب قابلة للطي', labelEN: 'Drop-side Truck', imagePath: '/images/drop_side_truck.png' },
+  { value: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck.png' },
+  { value: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tranker.png' },
+  { value: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer.png' },
 ] as const;
 
 export type VehicleType = typeof VEHICLE_TYPE_OPTIONS[number]['value'];
@@ -67,9 +68,17 @@ export default function VehicleTypeFilter({ selectedTypes, onChange, onClear }: 
 
   return (
     <div className={styles.filterContainer} ref={containerRef}>
-      <label className={styles.filterLabel}>
-        {locale === 'ar' ? 'تصفية حسب نوع المركبة' : 'Filter by vehicle type'}
-      </label>
+      <div className={styles.filterHeader}>
+        <div className={styles.filterIcon}>
+          <Truck size={18} />
+        </div>
+        <label className={styles.filterLabel}>
+          {locale === 'ar' ? 'نوع المركبة' : 'Vehicle Type'}
+        </label>
+        {hasSelection && (
+          <span className={styles.filterBadge}>{selectedTypes.length}</span>
+        )}
+      </div>
       
       <div className={styles.controls}>
         <button
@@ -125,11 +134,11 @@ export default function VehicleTypeFilter({ selectedTypes, onChange, onClear }: 
                 >
                   <img
                     src={option.imagePath}
-                    alt={option.value}
+                    alt={locale === 'ar' ? option.labelAR : option.labelEN}
                     className={styles.optionImage}
                     loading="lazy"
                   />
-                  <span className={styles.optionText}>{option.value}</span>
+                  <span className={styles.optionText}>{locale === 'ar' ? option.labelAR : option.labelEN}</span>
                   <span className={`${styles.checkmark} ${isSelected ? styles.checkmarkVisible : ''}`}>
                     ✓
                   </span>

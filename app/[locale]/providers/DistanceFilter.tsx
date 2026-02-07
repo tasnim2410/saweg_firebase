@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
+import { Navigation } from 'lucide-react';
 import styles from './DistanceFilter.module.css';
 import { getLocationOptionGroups, getLocationLabel, LOCATION_OPTIONS } from '@/lib/locations';
 import { getCurrentPosition, findNearestCity } from '@/lib/distance';
 
-export type DistanceValue = 'same-city' | 'nearby-50' | 'nearby-100' | 'any';
-export type DistanceSource = 'profile' | 'current-location' | 'selected-city';
+export type DistanceValue = 'same-city' | 'nearby-30' | 'nearby-50' | 'nearby-100' | 'nearby-150' | 'nearby-200' | 'any';
+export type DistanceSource = 'current-location' | 'selected-city';
 
 export const DISTANCE_OPTIONS: Array<{ value: DistanceValue; labelAR: string; labelEN: string }> = [
   { value: 'same-city', labelAR: 'نفس المدينة', labelEN: 'Same city' },
+  { value: 'nearby-30', labelAR: 'أقل من 30 كم', labelEN: 'Less than 30 km' },
   { value: 'nearby-50', labelAR: 'أقل من 50 كم', labelEN: 'Less than 50 km' },
   { value: 'nearby-100', labelAR: 'أقل من 100 كم', labelEN: 'Less than 100 km' },
+  { value: 'nearby-150', labelAR: 'أقل من 150 كم', labelEN: 'Less than 150 km' },
+  { value: 'nearby-200', labelAR: 'أقل من 200 كم', labelEN: 'Less than 200 km' },
   { value: 'any', labelAR: 'أي مسافة', labelEN: 'Any distance' },
 ];
 
@@ -29,7 +33,6 @@ interface Props {
   onCurrentLocationChange: (location: { lat: number; lon: number } | null) => void;
   classifiedCity: string | null;
   onClassifiedCityChange: (city: string | null) => void;
-  isCalculating?: boolean;
 }
 
 export default function DistanceFilter({
@@ -45,7 +48,6 @@ export default function DistanceFilter({
   onCurrentLocationChange,
   classifiedCity,
   onClassifiedCityChange,
-  isCalculating = false,
 }: Props) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
@@ -99,9 +101,15 @@ export default function DistanceFilter({
       };
       onCurrentLocationChange(coords);
       onSourceChange('current-location');
-      // Find and classify nearest city
-      const nearest = await findNearestCity(coords, LOCATION_OPTIONS);
-      onClassifiedCityChange(nearest);
+      setIsLocating(false);
+      // Find and classify nearest city (async; do not block UI)
+      void findNearestCity(coords, LOCATION_OPTIONS)
+        .then((nearest) => {
+          onClassifiedCityChange(nearest);
+        })
+        .catch(() => {
+          // Ignore classification errors
+        });
     } catch (error) {
       setLocationError(
         isRTL
@@ -123,11 +131,6 @@ export default function DistanceFilter({
     
     let sourceLabel = '';
     switch (distanceSource) {
-      case 'profile':
-        sourceLabel = merchantCity 
-          ? ` (${isRTL ? 'من' : 'from'} ${getLocationLabel(merchantCity, locale as 'ar' | 'en')})`
-          : '';
-        break;
       case 'current-location':
         sourceLabel = classifiedCity
           ? ` (${isRTL ? 'من' : 'from'} ${getLocationLabel(classifiedCity, locale as 'ar' | 'en')})`
@@ -143,8 +146,7 @@ export default function DistanceFilter({
     return (isRTL ? option.labelAR : option.labelEN) + sourceLabel;
   };
 
-  const canFilter = distanceSource === 'profile' ? !!merchantCity : 
-                   distanceSource === 'selected-city' ? !!selectedCity : 
+  const canFilter = distanceSource === 'selected-city' ? !!selectedCity : 
                    distanceSource === 'current-location' ? !!currentLocation : false;
 
   const hasSelection = selectedOption !== null;
@@ -156,9 +158,17 @@ export default function DistanceFilter({
 
   return (
     <div className={styles.filterContainer} ref={containerRef}>
-      <label className={styles.filterLabel}>
-        {isRTL ? '📍 فلتر المسافة' : '📍 Distance Filter'}
-      </label>
+      <div className={styles.filterHeader}>
+        <div className={styles.filterIcon}>
+          <Navigation size={18} />
+        </div>
+        <label className={styles.filterLabel}>
+          {isRTL ? 'المسافة' : 'Distance'}
+        </label>
+        {hasSelection && selectedOption !== 'any' && (
+          <span className={styles.filterBadge}>1</span>
+        )}
+      </div>
       
       <div className={styles.controls}>
         <button
@@ -180,14 +190,6 @@ export default function DistanceFilter({
 
       {isOpen && (
         <div className={styles.dropdown}>
-          {/* Loading State */}
-          {isCalculating && (
-            <div className={styles.loadingState}>
-              <div className={styles.spinner} />
-              <span>{isRTL ? 'جاري حساب المسافات...' : 'Calculating distances...'}</span>
-            </div>
-          )}
-
           {/* Source Selector */}
           <div className={styles.sourceSection}>
             <p className={styles.sourceLabel}>
@@ -195,25 +197,6 @@ export default function DistanceFilter({
             </p>
 
             <div className={styles.sourceOptions}>
-              <label className={styles.sourceOption}>
-                <input
-                  type="radio"
-                  name="distanceSource"
-                  value="profile"
-                  checked={distanceSource === 'profile'}
-                  onChange={() => onSourceChange('profile')}
-                />
-                <span className={styles.sourceRadio} />
-                <span className={styles.sourceText}>
-                  {isRTL ? 'مدينتي (الملف الشخصي)' : 'My city (profile)'}
-                  {merchantCity && (
-                    <span className={styles.sourceDetail}>
-                      {' '}- {getLocationLabel(merchantCity, locale as 'ar' | 'en')}
-                    </span>
-                  )}
-                </span>
-              </label>
-
               <label className={styles.sourceOption}>
                 <input
                   type="radio"
@@ -230,7 +213,7 @@ export default function DistanceFilter({
                     : (isRTL ? 'موقعي الحالي 📍' : 'My current location 📍')}
                   {classifiedCity && distanceSource === 'current-location' && (
                     <span className={styles.sourceDetail}>
-                      {' '}- {isRTL ? 'أقرب مدينة:' : 'Nearest city:'} {getLocationLabel(classifiedCity, locale as 'ar' | 'en')}
+                      {' '} - {isRTL ? 'أقرب مدينة:' : 'Nearest city:'} {getLocationLabel(classifiedCity, locale as 'ar' | 'en')}
                     </span>
                   )}
                 </span>
@@ -281,14 +264,6 @@ export default function DistanceFilter({
           )}
 
           {/* Warning messages */}
-          {!canFilter && distanceSource === 'profile' && !merchantCity && (
-            <p className={styles.noCityWarning}>
-              {isRTL
-                ? 'يرجى تحديث مدينتك في الملف الشخصي أو اختيار مصدر آخر'
-                : 'Please update your city in profile or choose another source'}
-            </p>
-          )}
-
           {!canFilter && distanceSource === 'selected-city' && !selectedCity && (
             <p className={styles.noCityWarning}>
               {isRTL ? 'يرجى اختيار مدينة من القائمة' : 'Please select a city from the list'}
@@ -304,9 +279,6 @@ export default function DistanceFilter({
                 className={`${styles.option} ${selectedOption === option.value ? styles.selected : ''}`}
                 onClick={() => {
                   onChange(option.value === selectedOption ? null : option.value);
-                  if (option.value !== selectedOption) {
-                    setIsOpen(false);
-                  }
                 }}
                 disabled={!canFilter && option.value !== 'any'}
               >

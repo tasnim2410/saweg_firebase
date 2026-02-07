@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/password';
 import { AUTH_COOKIE_NAME, signSessionToken } from '@/lib/session';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { isValidVehicleType, normalizeVehicleType } from '@/lib/vehicleTypes';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -85,6 +86,17 @@ export async function POST(req: Request) {
     if (password.length < 6) return NextResponse.json({ ok: false, error: 'PASSWORD_TOO_SHORT' }, { status: 400 });
     if (!type) return NextResponse.json({ ok: false, error: 'USER_TYPE_REQUIRED' }, { status: 400 });
 
+    // Validate and normalize vehicle types
+    if (type === 'SHIPPER' && carKind && !isValidVehicleType(carKind)) {
+      return NextResponse.json({ ok: false, error: 'INVALID_CAR_KIND' }, { status: 400 });
+    }
+    if (type === 'MERCHANT' && trucksNeeded && !isValidVehicleType(trucksNeeded)) {
+      return NextResponse.json({ ok: false, error: 'INVALID_TRUCKS_NEEDED' }, { status: 400 });
+    }
+
+    const normalizedCarKind = carKind ? normalizeVehicleType(carKind) || carKind : null;
+    const normalizedTrucksNeeded = trucksNeeded ? normalizeVehicleType(trucksNeeded) || trucksNeeded : null;
+
     let phoneE164: string | null = null;
     if (phone) {
       const normalizedPhone = normalizePhoneNumber(phone);
@@ -151,10 +163,10 @@ export async function POST(req: Request) {
         type: type as any,
         merchantCity: type === 'MERCHANT' ? (merchantCity || null) : null,
         shipperCity: type === 'SHIPPER' ? (shipperCity || null) : null,
-        carKind: type === 'SHIPPER' ? (carKind || null) : null,
+        carKind: type === 'SHIPPER' ? normalizedCarKind : null,
         maxCharge: type === 'SHIPPER' ? (maxCharge || null) : null,
         maxChargeUnit: type === 'SHIPPER' ? (maxChargeUnit || null) : null,
-        trucksNeeded: type === 'MERCHANT' ? (trucksNeeded || null) : null,
+        trucksNeeded: type === 'MERCHANT' ? normalizedTrucksNeeded : null,
         placeOfBusiness: type === 'MERCHANT' ? (placeOfBusiness || null) : null,
         truckImage: type === 'SHIPPER' ? truckImagePath : null,
       },

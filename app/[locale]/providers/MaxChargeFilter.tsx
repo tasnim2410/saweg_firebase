@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Scale } from 'lucide-react';
 import styles from './MaxChargeFilter.module.css';
 
 export const MAX_CHARGE_OPTIONS = [
@@ -62,9 +63,17 @@ export default function MaxChargeFilter({ selectedOptions, onChange, onClear }: 
 
   return (
     <div className={styles.filterContainer} ref={containerRef}>
-      <label className={styles.filterLabel}>
-        {locale === 'ar' ? 'تصفية حسب الحمولة القصوى' : 'Filter by max charge'}
-      </label>
+      <div className={styles.filterHeader}>
+        <div className={styles.filterIcon}>
+          <Scale size={18} />
+        </div>
+        <label className={styles.filterLabel}>
+          {locale === 'ar' ? 'الحمولة القصوى' : 'Max Charge'}
+        </label>
+        {hasSelection && (
+          <span className={styles.filterBadge}>{selectedOptions.length}</span>
+        )}
+      </div>
       
       <div className={styles.controls}>
         <button

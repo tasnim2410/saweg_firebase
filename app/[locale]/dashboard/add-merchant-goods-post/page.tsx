@@ -7,23 +7,9 @@ import { useEffect, useState } from 'react';
 import styles from '../add-provider/add-provider.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, normalizeVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const VEHICLE_TYPE_OPTIONS: Array<{ value: string; imagePath: string }> = [
-  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
-  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
-  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
-  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
-  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
-  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
-  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
-  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
-  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
-  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
-  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
-  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
-];
 
 type WeightUnit = 'kg' | 'ton';
 
@@ -63,7 +49,7 @@ export default function AddMerchantGoodsPostPage() {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const selectedVehicleType = VEHICLE_TYPE_OPTIONS.find((opt) => opt.value === vehicleTypeDesired) ?? null;
+  const selectedVehicleType = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === vehicleTypeDesired) ?? null;
 
   const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -205,7 +191,7 @@ export default function AddMerchantGoodsPostPage() {
       return { ok: false as const };
     }
 
-    if (!VEHICLE_TYPE_OPTIONS.some((opt) => opt.value === vehicleTypeDesired)) {
+    if (!isValidVehicleType(vehicleTypeDesired)) {
       pushToast({
         variant: 'error',
         title: titleFor('form'),
@@ -685,11 +671,11 @@ export default function AddMerchantGoodsPostPage() {
                     <span className={styles.vehicleTypeButtonInner}>
                       <img
                         src={selectedVehicleType.imagePath}
-                        alt={selectedVehicleType.value}
+                        alt={getVehicleLabel(selectedVehicleType.id, locale === 'ar' ? 'ar' : 'en')}
                         className={styles.vehicleTypeThumb}
                         loading="lazy"
                       />
-                      <span className={styles.vehicleTypeButtonLabel}>{selectedVehicleType.value}</span>
+                      <span className={styles.vehicleTypeButtonLabel}>{getVehicleLabel(selectedVehicleType.id, locale === 'ar' ? 'ar' : 'en')}</span>
                     </span>
                   ) : (
                     <span className={styles.vehicleTypePlaceholder}>
@@ -700,25 +686,25 @@ export default function AddMerchantGoodsPostPage() {
 
                 {vehicleTypeOpen ? (
                   <div className={styles.vehicleTypePopover} role="listbox">
-                    {VEHICLE_TYPE_OPTIONS.map((opt) => (
+                    {VEHICLE_TYPE_CONFIG.map((opt) => (
                       <button
-                        key={opt.value}
+                        key={opt.id}
                         type="button"
                         className={styles.vehicleTypeOption}
                         role="option"
-                        aria-selected={opt.value === vehicleTypeDesired ? 'true' : 'false'}
+                        aria-selected={opt.id === vehicleTypeDesired ? 'true' : 'false'}
                         onClick={() => {
-                          setVehicleTypeDesired(opt.value);
+                          setVehicleTypeDesired(opt.id);
                           setVehicleTypeOpen(false);
                         }}
                       >
                         <img
                           src={opt.imagePath}
-                          alt={opt.value}
+                          alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
                           className={styles.vehicleTypeOptionThumb}
                           loading="lazy"
                         />
-                        <span className={styles.vehicleTypeOptionLabel}>{opt.value}</span>
+                        <span className={styles.vehicleTypeOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
                       </button>
                     ))}
                   </div>
