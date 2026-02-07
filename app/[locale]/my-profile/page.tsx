@@ -653,52 +653,11 @@ return (
 
               {/* Location Sharing Section */}
               {providers.length > 0 && (
-                <div className={styles.featureRow}>
-                  <div className={styles.featureInfo}>
-                    <MapPin className={styles.featureIcon} size={20} />
-                    <div>
-                      <h3 className={styles.featureTitle}>{locale === 'ar' ? 'مشاركة الموقع' : 'Location Sharing'}</h3>
-                      <p className={styles.featureDescription}>
-                        {locale === 'ar' ? 'أثناء الرحلات' : 'During trips'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.featureButton}
-                    onClick={() => setSelectedProviderId(selectedProviderId ? null : providers[0]?.id ?? null)}
-                  >
-                    {selectedProviderId
-                      ? (locale === 'ar' ? 'إخفاء' : 'Hide')
-                      : (locale === 'ar' ? 'إعداد' : 'Setup')}
-                  </button>
-                </div>
-              )}
-
-              {/* Provider Selector & Location Sharing UI */}
-              {selectedProviderId && (
-                <div className={styles.locationPanel}>
-                  {providersLoading ? (
-                    <div className={styles.loadingSmall}>{locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
-                  ) : (
-                    <>
-                      <select
-                        className={styles.input}
-                        value={selectedProviderId}
-                        onChange={(e) => setSelectedProviderId(parseInt(e.target.value))}
-                      >
-                        {providers.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} - {p.location}
-                          </option>
-                        ))}
-                      </select>
-                      <LocationSharing
-                        providerId={selectedProviderId.toString()}
-                        tripId={selectedProviderId.toString()}
-                      />
-                    </>
-                  )}
+                <div className={styles.locationSharingWrapper}>
+                  <LocationSharing
+                    providerId={providers[0]?.id?.toString()}
+                    tripId={providers[0]?.id?.toString()}
+                  />
                 </div>
               )}
             </div>

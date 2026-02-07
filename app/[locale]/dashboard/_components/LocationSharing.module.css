@@ -12,11 +12,11 @@
   direction: rtl;
 }
 
-.header {
+/* Simple Header Design */
+.simpleHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
 }
 
 .titleRow {
@@ -27,6 +27,76 @@
 
 .icon {
   color: #4a90e2;
+}
+
+.simpleTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Simple Toggle Button */
+.simpleToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.simpleToggle.inactive {
+  background: #10b981;
+  color: white;
+}
+
+.simpleToggle.inactive:hover {
+  background: #059669;
+}
+
+.simpleToggle.active {
+  background: #ef4444;
+  color: white;
+}
+
+.simpleToggle.active:hover {
+  background: #dc2626;
+}
+
+/* Simple Location Display */
+.simpleLocation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  color: #166534;
+  font-size: 13px;
+}
+
+.simpleLocation svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.locationText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Legacy styles for other usages */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .title {
