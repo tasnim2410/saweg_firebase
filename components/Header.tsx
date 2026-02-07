@@ -277,9 +277,13 @@ export default function Header() {
           body: JSON.stringify(sub),
         }).catch(() => null);
       } catch (err) {
-        try {
+        // Silently fail for push service errors - this is a browser/network connectivity issue
+        // and shouldn't be logged as an application error
+        const isPushServiceError = err instanceof Error && 
+          (/push service error/i.test(err.message) || err.name === 'AbortError');
+        
+        if (!isPushServiceError) {
           console.error('Push auto-subscribe failed:', err);
-        } catch {
         }
       } finally {
         if (!cancelled) setCheckingPush(false);
@@ -489,15 +493,20 @@ export default function Header() {
           15000
         );
       } catch (err: any) {
-        try {
-          console.error('Push subscribe failed:', err);
-        } catch {
-        }
         const name = typeof err?.name === 'string' ? err.name : '';
         const message = typeof err?.message === 'string' ? err.message : '';
         const isAbort = name === 'AbortError' || /push service error/i.test(message);
         const isInvalidKey = name === 'InvalidAccessError' || /applicationServerKey/i.test(message);
         const isNotAllowed = name === 'NotAllowedError' || /denied/i.test(message);
+        
+        // Only log non-push-service errors to console
+        if (!isAbort) {
+          try {
+            console.error('Push subscribe failed:', err);
+          } catch {
+          }
+        }
+        
         showPushToast(
           'error',
           isInvalidKey
