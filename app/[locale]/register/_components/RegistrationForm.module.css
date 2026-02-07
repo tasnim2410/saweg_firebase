@@ -1,0 +1,480 @@
+.pageContainer {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.contentWrapper {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: #111827;
+}
+
+.backIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.formCard {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroupFull {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.optionalText {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.input {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.inputGroup .input {
+  flex: 1;
+}
+
+.inputGroup .select {
+  min-width: 80px;
+}
+
+/* Car Kind Dropdown Styles */
+.carKindRoot {
+  position: relative;
+}
+
+.carKindButton {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.carKindButtonInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carKindThumb {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.carKindButtonLabel {
+  font-size: 14px;
+  color: #111827;
+}
+
+.carKindPlaceholder {
+  color: #9ca3af;
+}
+
+.carKindPopover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.carKindOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.carKindOption:hover {
+  background: #f3f4f6;
+}
+
+.carKindOption:first-child {
+  border-radius: 10px 10px 0 0;
+}
+
+.carKindOption:last-child {
+  border-radius: 0 0 10px 10px;
+}
+
+.carKindOptionThumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.carKindOptionLabel {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+/* File Input Styles */
+.fileInputContainer {
+  position: relative;
+}
+
+.fileInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.fileInputLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.fileInputLabel:hover {
+  border-color: #4a90e2;
+  background: #eff6ff;
+}
+
+.fileInputLabel.hasFile {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.fileInputIcon {
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
+}
+
+.fileInputLabel.hasFile .fileInputIcon {
+  color: #10b981;
+}
+
+.fileInputText {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.fileInputSubtext {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* File Preview */
+.filePreview {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.filePreviewImage {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.fileName {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Submit Button */
+.submitButton {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.submitButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+/* Success State */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.successCard {
+  background: white;
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 400px;
+  width: 100%;
+}
+
+.successIconWrapper {
+  width: 64px;
+  height: 64px;
+  background: #d1fae5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.successIcon {
+  width: 32px;
+  height: 32px;
+  color: #10b981;
+}
+
+.successTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: #e5e7eb;
+}
+
+/* Toast Notifications */
+.toastContainer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  max-width: 400px;
+  animation: slideIn 0.3s ease;
+}
+
+.toastError {
+  border-left: 4px solid #ef4444;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toastTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.toastMessage {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.toastClose {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.toastClose:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* RTL Support */
+[dir="rtl"] .toastContainer {
+  right: auto;
+  left: 20px;
+}
+
+[dir="rtl"] .toastClose {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .toastError {
+  border-left: none;
+  border-right: 4px solid #ef4444;
+}
+
+[dir="rtl"] .backIcon {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .carKindButton {
+  text-align: right;
+}
+
+[dir="rtl"] .carKindOption {
+  text-align: right;
+}
