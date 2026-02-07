@@ -163,21 +163,24 @@ export default function LocationSharing({ tripId, providerId, onStatusChange }: 
   };
 
   return (
-    <div className={styles.container} data-rtl={isRTL}>
-      <div className={styles.simpleHeader}>
-        <div className={styles.titleRow}>
-          <MapPin className={styles.icon} size={20} />
-          <span className={styles.simpleTitle}>{t('title')}</span>
+    <div className={styles.featureRow} data-rtl={isRTL}>
+      <div className={styles.featureInfo}>
+        <MapPin className={styles.featureIcon} size={20} />
+        <div>
+          <h3 className={styles.featureTitle}>{t('title')}</h3>
+          <p className={styles.featureDescription}>
+            {locale === 'ar' ? 'شارك موقعك مع العملاء' : 'Share your location with customers'}
+          </p>
         </div>
-        <label className={styles.toggle}>
-          <input
-            type="checkbox"
-            checked={isSharing}
-            onChange={toggleSharing}
-          />
-          <span className={styles.toggleSlider} />
-        </label>
       </div>
+      <label className={styles.toggle}>
+        <input
+          type="checkbox"
+          checked={isSharing}
+          onChange={toggleSharing}
+        />
+        <span className={styles.toggleSlider} />
+      </label>
 
       {isSharing && lastLocation && (
         <div className={styles.simpleLocation}>

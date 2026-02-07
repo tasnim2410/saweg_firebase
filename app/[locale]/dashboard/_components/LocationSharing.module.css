@@ -12,27 +12,48 @@
   direction: rtl;
 }
 
-/* Simple Header Design */
-.simpleHeader {
+/* Feature Row - Same as notification */
+.featureRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
 }
 
-.titleRow {
+.featureRow:last-child {
+  border-bottom: none;
+}
+
+.featureRow[data-rtl="true"] {
+  direction: rtl;
+}
+
+.featureInfo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  flex: 1;
 }
 
-.icon {
+.featureIcon {
   color: #4a90e2;
+  flex-shrink: 0;
 }
 
-.simpleTitle {
-  font-size: 16px;
+.featureTitle {
+  font-size: 15px;
   font-weight: 600;
   color: #111827;
+  margin: 0 0 2px 0;
+}
+
+.featureDescription {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
 }
 
 /* Toggle Switch - Same as notification toggle */
