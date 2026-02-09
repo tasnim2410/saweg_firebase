@@ -18,6 +18,7 @@ export const VEHICLE_TYPE_OPTIONS = [
   { value: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck.png' },
   { value: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tranker.png' },
   { value: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer.png' },
+  { value: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_truck.png' },
 ] as const;
 
 export type VehicleType = typeof VEHICLE_TYPE_OPTIONS[number]['value'];

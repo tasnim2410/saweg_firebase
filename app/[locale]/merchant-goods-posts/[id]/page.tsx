@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import styles from './merchant-goods-posts.module.css';
+import { getVehicleLabel, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 
 type MerchantGoodsPostDetails = {
   id: number;
@@ -256,6 +257,37 @@ export default async function MerchantGoodsPostDetailsPage({
   const startLabel = getLocationLabel(post.startingPoint, locale === 'ar' ? 'ar' : 'en');
   const destLabel = getLocationLabel(post.destination, locale === 'ar' ? 'ar' : 'en');
 
+  // Translate units for Arabic locale
+  const weightUnitDisplay = (unit: string | null) => {
+    if (!unit) return locale === 'ar' ? 'كغ' : 'kg';
+    const normalized = unit.toLowerCase().trim();
+    if (locale === 'ar') {
+      if (normalized === 'kg') return 'كغ';
+      if (normalized === 'tons' || normalized === 'ton') return 'طن';
+    }
+    return unit;
+  };
+
+  const currencyDisplay = (currency: string | null) => {
+    if (!currency) return '';
+    const normalized = currency.toUpperCase().trim();
+    if (locale === 'ar') {
+      if (normalized === 'TND') return 'د.ت';
+      if (normalized === 'USD') return '$';
+      if (normalized === 'EUR') return '€';
+    }
+    return currency;
+  };
+
+  const vehicleLabelDisplay = (vehicleType: string | null) => {
+    if (!vehicleType) return '-';
+    if (locale === 'ar') {
+      const vehicleConfig = VEHICLE_TYPE_CONFIG.find(v => v.id === vehicleType);
+      if (vehicleConfig) return vehicleConfig.labelAR;
+    }
+    return vehicleType;
+  };
+
   const merchantName = (post.name || post.user.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
   const isAdminPost = Boolean(
     (post.user.email && isAdminIdentifier(String(post.user.email))) ||
@@ -312,14 +344,14 @@ export default async function MerchantGoodsPostDetailsPage({
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.weight}</div>
               <div className={styles.infoValue}>
-                {typeof post.goodsWeight === 'number' ? `${post.goodsWeight} ${post.goodsWeightUnit || ''}`.trim() : '-'}
+                {typeof post.goodsWeight === 'number' ? `${post.goodsWeight} ${weightUnitDisplay(post.goodsWeightUnit)}`.trim() : '-'}
               </div>
             </div>
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.budget}</div>
               <div className={styles.infoValue}>
-                {post.budget ? `${post.budget}${post.budgetCurrency ? ` ${post.budgetCurrency}` : ''}` : '-'}
+                {post.budget ? `${post.budget}${post.budgetCurrency ? ` ${currencyDisplay(post.budgetCurrency)}` : ''}` : '-'}
               </div>
             </div>
 
@@ -330,7 +362,7 @@ export default async function MerchantGoodsPostDetailsPage({
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.vehicle}</div>
-              <div className={styles.infoValue}>{post.vehicleTypeDesired || '-'}</div>
+              <div className={styles.infoValue}>{vehicleLabelDisplay(post.vehicleTypeDesired)}</div>
             </div>
 
             <div className={styles.infoBlockFull}>

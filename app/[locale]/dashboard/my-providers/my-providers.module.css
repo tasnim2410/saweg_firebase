@@ -491,3 +491,87 @@
     padding: 2rem;
   }
 }
+
+/* Vehicle Type Dropdown Styles */
+.carKindRoot {
+  position: relative;
+}
+
+.carKindButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.carKindButtonInner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.carKindThumb {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.carKindButtonLabel {
+  font-size: 0.875rem;
+}
+
+.carKindPlaceholder {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.carKindPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  margin-top: 0.25rem;
+}
+
+.carKindOption {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.carKindOption:hover {
+  background-color: #f3f4f6;
+}
+
+.carKindOption[aria-selected='true'] {
+  background-color: #fef3c7;
+}
+
+.carKindOptionThumb {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.carKindOptionLabel {
+  font-size: 0.875rem;
+  color: #111827;
+}

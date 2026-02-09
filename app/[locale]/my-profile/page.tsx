@@ -23,6 +23,7 @@ const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
   { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
   { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
   { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
+  { value: 'أخرى (Other)', imagePath: '/images/other_truck.png' },
 ];
 type User = {
   id: string;

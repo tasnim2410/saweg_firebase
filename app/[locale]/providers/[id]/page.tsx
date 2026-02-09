@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import styles from './providers.module.css';
+import { VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 
 type ProviderDetails = {
   id: number;
@@ -232,6 +233,26 @@ export default async function ProviderDetailsPage({
     ? getLocationLabel(provider.destination, locale === 'ar' ? 'ar' : 'en')
     : '';
 
+  // Translate units and labels for Arabic locale
+  const weightUnitDisplay = (unit: string | null) => {
+    if (!unit) return locale === 'ar' ? 'كغ' : 'kg';
+    const normalized = unit.toLowerCase().trim();
+    if (locale === 'ar') {
+      if (normalized === 'kg') return 'كغ';
+      if (normalized === 'tons' || normalized === 'ton') return 'طن';
+    }
+    return unit;
+  };
+
+  const vehicleLabelDisplay = (vehicleType: string | null) => {
+    if (!vehicleType) return '-';
+    if (locale === 'ar') {
+      const vehicleConfig = VEHICLE_TYPE_CONFIG.find(v => v.id === vehicleType);
+      if (vehicleConfig) return vehicleConfig.labelAR;
+    }
+    return vehicleType;
+  };
+
   const createdAtMs = provider.createdAt ? new Date(provider.createdAt as any).getTime() : NaN;
   const timeAgo = timeAgoLabelFromMs(createdAtMs);
 
@@ -285,14 +306,14 @@ export default async function ProviderDetailsPage({
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{tRegister('carKind')}</div>
-              <div className={styles.infoValue}>{provider.user.carKind || '-'}</div>
+              <div className={styles.infoValue}>{vehicleLabelDisplay(provider.user.carKind)}</div>
             </div>
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{tRegister('maxCharge')}</div>
               <div className={styles.infoValue}>
                 {provider.user.maxCharge
-                  ? `${provider.user.maxCharge}${provider.user.maxChargeUnit ? ` ${provider.user.maxChargeUnit}` : ''}`
+                  ? `${provider.user.maxCharge}${provider.user.maxChargeUnit ? ` ${weightUnitDisplay(provider.user.maxChargeUnit)}` : ''}`
                   : '-'}
               </div>
             </div>

@@ -688,7 +688,9 @@ export default function ProvidersPageClient() {
                           alt="" 
                           className={styles.vehicleBadgeImage}
                         />
-                        <span className={styles.vehicleBadgeText}>{carKind}</span>
+                        <span className={styles.vehicleBadgeText}>
+                          {locale === 'ar' ? vehicleTypeInfo.labelAR : vehicleTypeInfo.labelEN}
+                        </span>
                       </div>
                     )}
 

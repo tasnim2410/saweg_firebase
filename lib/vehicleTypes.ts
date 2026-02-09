@@ -14,6 +14,7 @@ export const VEHICLE_TYPE_CONFIG = [
   { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck.png' },
   { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tranker.png' },
   { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer.png' },
+  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_truck_icon.png' },
 ] as const;
 
 export type VehicleTypeId = typeof VEHICLE_TYPE_CONFIG[number]['id'];

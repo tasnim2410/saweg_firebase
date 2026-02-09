@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import { VEHICLE_TYPE_CONFIG, getVehicleLabel } from '@/lib/vehicleTypes';
 
 type MerchantGoodsPost = {
   id: number;
@@ -53,6 +54,7 @@ export default function AdminMerchantGoodsPostsClient() {
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [removingImageId, setRemovingImageId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, PostEdits>>({});
+  const [vehicleTypeOpen, setVehicleTypeOpen] = useState<Record<number, boolean>>({});
 
   const refresh = async () => {
     setLoading(true);
@@ -543,16 +545,75 @@ export default function AdminMerchantGoodsPostsClient() {
 
                   <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                     <label className={styles.label}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Vehicle needed'}</label>
-                    <input
-                      className={styles.input}
-                      value={e?.vehicleTypeDesired ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], vehicleTypeDesired: ev.target.value },
-                        }))
-                      }
-                    />
+                    <div className={styles.vehicleTypeRoot} data-vehicle-type-root="true">
+                      <button
+                        type="button"
+                        className={`${styles.input} ${styles.vehicleTypeButton}`}
+                        aria-haspopup="listbox"
+                        aria-expanded={vehicleTypeOpen[p.id] ? 'true' : 'false'}
+                        onClick={() =>
+                          setVehicleTypeOpen((prev) => ({ ...prev, [p.id]: !prev[p.id] }))
+                        }
+                      >
+                        {e?.vehicleTypeDesired ? (
+                          (() => {
+                            const selected = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === e.vehicleTypeDesired);
+                            return selected ? (
+                              <span className={styles.vehicleTypeButtonInner}>
+                                <img
+                                  src={selected.imagePath}
+                                  alt={getVehicleLabel(selected.id, locale === 'ar' ? 'ar' : 'en')}
+                                  className={styles.vehicleTypeThumb}
+                                  loading="lazy"
+                                />
+                                <span className={styles.vehicleTypeButtonLabel}>
+                                  {getVehicleLabel(selected.id, locale === 'ar' ? 'ar' : 'en')}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className={styles.vehicleTypePlaceholder}>
+                                {locale === 'ar' ? 'اختر نوع المركبة' : 'Choose vehicle type'}
+                              </span>
+                            );
+                          })()
+                        ) : (
+                          <span className={styles.vehicleTypePlaceholder}>
+                            {locale === 'ar' ? 'اختر نوع المركبة' : 'Choose vehicle type'}
+                          </span>
+                        )}
+                      </button>
+
+                      {vehicleTypeOpen[p.id] ? (
+                        <div className={styles.vehicleTypePopover} role="listbox">
+                          {VEHICLE_TYPE_CONFIG.map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              className={styles.vehicleTypeOption}
+                              role="option"
+                              aria-selected={opt.id === e?.vehicleTypeDesired ? 'true' : 'false'}
+                              onClick={() => {
+                                setEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: { ...prev[p.id], vehicleTypeDesired: opt.id },
+                                }));
+                                setVehicleTypeOpen((prev) => ({ ...prev, [p.id]: false }));
+                              }}
+                            >
+                              <img
+                                src={opt.imagePath}
+                                alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
+                                className={styles.vehicleTypeOptionThumb}
+                                loading="lazy"
+                              />
+                              <span className={styles.vehicleTypeOptionLabel}>
+                                {getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className={`${styles.formRow} ${styles.formRowSpaced}`}>

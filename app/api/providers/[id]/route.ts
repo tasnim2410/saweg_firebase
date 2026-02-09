@@ -231,6 +231,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     data.image = null;
   }
 
+  // Handle carKind update for admin users (stored on User model)
+  let userUpdateData: Record<string, any> | null = null;
+  if (isAdmin) {
+    const carKindRaw = getStr('carKind');
+    if (carKindRaw !== undefined && carKindRaw !== null) {
+      userUpdateData = { carKind: carKindRaw };
+    }
+  }
+
   if (formData) {
     const file = formData.get('image');
     if (file && typeof file !== 'string') {
@@ -272,7 +281,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     }
   }
 
-  if (Object.keys(data).length === 0) {
+  if (Object.keys(data).length === 0 && !userUpdateData) {
     return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
   }
 
@@ -280,6 +289,14 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     where: { id: providerId },
     data: data as any,
   });
+
+  // Update user carKind if admin provided it
+  if (userUpdateData && existing.userId) {
+    await prisma.user.update({
+      where: { id: existing.userId },
+      data: userUpdateData,
+    });
+  }
 
   return NextResponse.json({
     ...updated,
