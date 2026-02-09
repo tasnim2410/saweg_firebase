@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
+import { normalizeVehicleType } from '@/lib/vehicleTypes';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
 
@@ -33,7 +34,11 @@ type MerchantGoodsPost = {
   createdAt?: string | Date;
 };
 
-const CarouselSectionMerchant: React.FC = () => {
+interface CarouselSectionMerchantProps {
+  vehicleTypeFilter?: string | null;
+}
+
+const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehicleTypeFilter }) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
@@ -206,8 +211,19 @@ const CarouselSectionMerchant: React.FC = () => {
   }, []);
 
   const MAX_ITEMS = 10;
-  const hasMore = posts.length > MAX_ITEMS;
-  const visiblePosts = hasMore ? posts.slice(0, MAX_ITEMS) : posts;
+
+  // Filter posts by vehicle type if filter is active
+  const filteredPosts = vehicleTypeFilter
+    ? posts.filter((p) => {
+        const postVehicleType = p.vehicleTypeDesired;
+        if (!postVehicleType) return false;
+        const normalizedPost = normalizeVehicleType(postVehicleType);
+        return normalizedPost === vehicleTypeFilter;
+      })
+    : posts;
+
+  const hasMore = filteredPosts.length > MAX_ITEMS;
+  const visiblePosts = hasMore ? filteredPosts.slice(0, MAX_ITEMS) : filteredPosts;
   const seeMoreHref = `/${locale}/merchant-goods-posts`;
   const seeMoreLabel = locale === 'ar' ? 'عرض المزيد' : 'See all';
 

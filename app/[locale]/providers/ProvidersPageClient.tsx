@@ -72,6 +72,8 @@ export default function ProvidersPageClient() {
   } | null>(null);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
+  const [showFilters, setShowFilters] = useState(false);
+
   // Load saved filters from localStorage on mount
   useEffect(() => {
     try {
@@ -462,7 +464,44 @@ export default function ProvidersPageClient() {
           </div>
         </div>
 
-        {/* Filters Section with Apply Button */}
+        {/* Compact Filters Toggle */}
+        <div className={styles.filtersToggleRow}>
+          <button 
+            className={styles.filtersToggleButton}
+            onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
+          >
+            <span className={styles.filtersToggleIcon}>🔍</span>
+            <span>
+              {showFilters 
+                ? (locale === 'ar' ? 'إخفاء الفلاتر' : 'Hide Filters')
+                : (locale === 'ar' ? 'عرض الفلاتر' : 'Show Filters')}
+            </span>
+            <span className={`${styles.filtersToggleCaret} ${showFilters ? styles.filtersToggleCaretOpen : ''}`}>
+              ▼
+            </span>
+          </button>
+          
+          {hasAnyFilter && (
+            <div className={styles.activeFiltersPreview}>
+              {selectedVehicleTypes.length > 0 && (
+                <span className={styles.filterPill}>{selectedVehicleTypes.length} {locale === 'ar' ? 'نوع' : 'type'}</span>
+              )}
+              {selectedMaxChargeOptions.length > 0 && (
+                <span className={styles.filterPill}>{locale === 'ar' ? 'الحمولة' : 'charge'}</span>
+              )}
+              {selectedDistance && (
+                <span className={styles.filterPill}>{selectedDistance} {locale === 'ar' ? 'كم' : 'km'}</span>
+              )}
+              {selectedDestinations.length > 0 && (
+                <span className={styles.filterPill}>{selectedDestinations.length} {locale === 'ar' ? 'وجهة' : 'dest'}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Collapsible Filters Section */}
+        {showFilters && (
         <div className={styles.filtersSection}>
           <div className={styles.filtersHeader}>
             <h2 className={styles.filtersTitle}>
@@ -576,6 +615,7 @@ export default function ProvidersPageClient() {
             </div>
           </div>
         </div>
+        )}
 
         {error && <div className={styles.error}>{error}</div>}
 

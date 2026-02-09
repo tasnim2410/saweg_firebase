@@ -1,5 +1,9 @@
+'use client';
+
+import { useState } from 'react';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
+import VehicleTypeSlider from '@/components/VehicleTypeSlider';
 import dynamic from 'next/dynamic';
 import styles from './home.module.css';
 
@@ -32,12 +36,18 @@ const Footer = dynamic(() => import('@/components/Footer'), {
 });
 
 export default function HomePage() {
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(null);
+
   return (
     <main className={styles.main}>
       <Header />
       <HeroSection />
-      <CarouselSection />
-      <CarouselSectionMerchant />
+      <VehicleTypeSlider 
+        selectedType={selectedVehicleType} 
+        onSelect={setSelectedVehicleType} 
+      />
+      <CarouselSection vehicleTypeFilter={selectedVehicleType} />
+      <CarouselSectionMerchant vehicleTypeFilter={selectedVehicleType} />
       <FeaturesSection />
       <section id="about">
         <HowToUseSection />

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './CarouselSection.module.css';
+import { normalizeVehicleType, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 import { getLocationLabel } from '@/lib/locations';
 import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
 
@@ -22,9 +23,16 @@ interface Provider {
   destination?: string | null;
   placeOfBusiness?: string | null;
   publishedByAdmin?: boolean;
+  user?: {
+    carKind?: string | null;
+  } | null;
 }
 
-const CarouselSection: React.FC = () => {
+interface CarouselSectionProps {
+  vehicleTypeFilter?: string | null;
+}
+
+const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
@@ -171,8 +179,19 @@ const CarouselSection: React.FC = () => {
 
   const MAX_ITEMS = 10;
   const MAX_DESCRIPTION_CHARS = 55;
-  const hasMore = providers.length > MAX_ITEMS;
-  const visibleProviders = hasMore ? providers.slice(0, MAX_ITEMS) : providers;
+
+  // Filter providers by vehicle type if filter is active
+  const filteredProviders = vehicleTypeFilter
+    ? providers.filter((p) => {
+        const providerCarKind = p.user?.carKind;
+        if (!providerCarKind) return false;
+        const normalizedProvider = normalizeVehicleType(providerCarKind);
+        return normalizedProvider === vehicleTypeFilter;
+      })
+    : providers;
+
+  const hasMore = filteredProviders.length > MAX_ITEMS;
+  const visibleProviders = hasMore ? filteredProviders.slice(0, MAX_ITEMS) : filteredProviders;
   const seeMoreOffersHref = `/${locale}/providers`;
   const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد' : 'See more    ';
 
