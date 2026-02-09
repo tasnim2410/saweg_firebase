@@ -25,17 +25,17 @@
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 500;
-  color: #afe24ab5;
+  color: #FFB81C;
   background: transparent;
-  border: 1px solid #afe24ab5;
+  border: 1px solid #FFB81C;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .clearButton:hover {
-  background: #dfe24a ;
-  color: white;
+  background: #FFB81C;
+  color: #111827;
 }
 
 .sliderWrapper {
@@ -79,9 +79,9 @@
 }
 
 .arrow:hover {
-  background: #dfe24a ;
-  color: white;
-  border-color: #dfe24a ;
+  background: #FFB81C;
+  color: #111827;
+  border-color: #FFB81C;
   transform: scale(1.05);
 }
 
@@ -124,9 +124,9 @@
 }
 
 .vehicleCard.selected {
-  border-color: #4a90e2;
-  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+  border-color: #FFB81C;
+  background: linear-gradient(135deg, #fff8e6 0%, #ffffff 100%);
+  box-shadow: 0 4px 15px rgba(255, 184, 28, 0.25);
 }
 
 .iconWrapper {
@@ -141,11 +141,11 @@
 }
 
 .vehicleCard:hover .iconWrapper {
-  background: linear-gradient(135deg, #dfe24a 0%, #dfe24a 100%);
+  background: linear-gradient(135deg, #FFB81C 0%, #e6a517 100%);
 }
 
 .vehicleCard.selected .iconWrapper {
-  background: linear-gradient(135deg, #dfe24a 0%, #dfe24a 100%);
+  background: linear-gradient(135deg, #FFB81C 0%, #e6a517 100%);
 }
 
 .vehicleIcon {
@@ -171,7 +171,7 @@
 
 .vehicleCard:hover .vehicleLabel,
 .vehicleCard.selected .vehicleLabel {
-  color: #bce24a;
+  color: #e6a517;
   font-weight: 600;
 }
 
