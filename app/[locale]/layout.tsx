@@ -10,10 +10,7 @@ const locales = ['en', 'ar'];
 export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/icons/icon-192x192.png?v=2', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512x512.png?v=2', sizes: '512x512', type: 'image/png' },
-    ],
+    icon: [{ url: '/images/browser_icon.png', type: 'image/png' }],
     apple: [{ url: '/icons/icon-512x512.png?v=2', sizes: '512x512', type: 'image/png' }],
   },
   appleWebApp: {

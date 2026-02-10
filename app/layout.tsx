@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     images: ["/images/logo.png"],
   },
   icons: {
-    icon: "/images/logo.png",
+    icon: "/images/browser_icon.png", // Browser tab icon (transparent, no background)
+    shortcut: "/images/browser_icon.png",
   },
 };
 
