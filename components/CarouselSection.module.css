@@ -557,6 +557,38 @@
   background-color: #f9fafb;
 }
 
+/* Call menu styles */
+.callMenu {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 140px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.callMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.callMenuItem:hover {
+  background-color: #f9fafb;
+}
+
 .seeMoreCard {
   background-color: #e6f2fd;
   border-color: #c2e0fa;

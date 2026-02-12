@@ -8,7 +8,7 @@ import styles from './CarouselSection.module.css';
 import { getLocationLabel } from '@/lib/locations';
 import { normalizeVehicleType } from '@/lib/vehicleTypes';
 import { normalizePhoneNumber } from '@/lib/phone';
-import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
+import { Share2, Phone, MapPin, Truck, Plus, MessageCircle } from 'lucide-react';
 
 type MerchantGoodsPost = {
   id: number;
@@ -48,8 +48,10 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+  const [openCallForId, setOpenCallForId] = useState<number | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
+  const callPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
@@ -128,6 +130,29 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [openShareForId]);
+
+  useEffect(() => {
+    if (openCallForId === null) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (callPopoverRef.current && !callPopoverRef.current.contains(target)) {
+        setOpenCallForId(null);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenCallForId(null);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openCallForId]);
 
   const MAX_DESCRIPTION_CHARS = 55;
 
@@ -249,6 +274,15 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const toTelHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
+  };
+
+  const toWhatsAppHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^\d]/g, '');
+    return `https://wa.me/${normalized}`;
+  };
+
+  const handleCallClick = (postId: number) => {
+    setOpenCallForId((prev) => (prev === postId ? null : postId));
   };
 
   if (loading) {
@@ -438,15 +472,46 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
 
                   <div className={styles.actionContainer}>
                     {phoneNumber ? (
-                      <a
-                        className={`${styles.callButton} ${statusClass}`}
-                        href={toTelHref(phoneNumber)}
-                        aria-label={t('call') || 'Call'}
-                        title={t('call') || 'Call'}
-                      >
-                        <Phone size={16} className={styles.callIcon} />
-                        <span className={styles.callText}>{t('call') || 'Call'}</span>
-                      </a>
+                      <>
+                        <button
+                          type="button"
+                          className={`${styles.callButton} ${statusClass}`}
+                          onClick={() => handleCallClick(post.id)}
+                          aria-label={t('call') || 'Call'}
+                          title={t('call') || 'Call'}
+                        >
+                          <Phone size={16} className={styles.callIcon} />
+                          <span className={styles.callText}>{t('call') || 'Call'}</span>
+                        </button>
+
+                        {openCallForId === post.id && (
+                          <div
+                            ref={callPopoverRef}
+                            className={styles.callMenu}
+                            role="menu"
+                            aria-label="Call options"
+                          >
+                            <a
+                              href={toTelHref(phoneNumber)}
+                              className={styles.callMenuItem}
+                              role="menuitem"
+                            >
+                              <Phone size={14} />
+                              <span>{locale === 'ar' ? 'اتصال' : 'Phone Call'}</span>
+                            </a>
+                            <a
+                              href={toWhatsAppHref(phoneNumber)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.callMenuItem}
+                              role="menuitem"
+                            >
+                              <MessageCircle size={14} />
+                              <span>WhatsApp</span>
+                            </a>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <span className={`${styles.callButton} ${styles.statusInactive}`}>-</span>
                     )}

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './CarouselSection.module.css';
 import { normalizeVehicleType, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 import { getLocationLabel } from '@/lib/locations';
-import { Share2, Phone, MapPin, Truck, Plus } from 'lucide-react';
+import { Share2, Phone, MapPin, Truck, Plus, MessageCircle } from 'lucide-react';
 
 interface Provider {
   id: number;
@@ -42,8 +42,10 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
   const [error, setError] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
+  const [openCallForId, setOpenCallForId] = useState<number | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
+  const callPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const endpoint = '/api/providers';
   const addHref = `/${locale}/dashboard/add-provider`;
@@ -123,6 +125,29 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [openShareForId]);
+
+  useEffect(() => {
+    if (openCallForId === null) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (callPopoverRef.current && !callPopoverRef.current.contains(target)) {
+        setOpenCallForId(null);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenCallForId(null);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openCallForId]);
 
   // Fetch providers on mount
   useEffect(() => {
@@ -210,6 +235,15 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
   const toTelHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
+  };
+
+  const toWhatsAppHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^\d]/g, '');
+    return `https://wa.me/${normalized}`;
+  };
+
+  const handleCallClick = (providerId: number) => {
+    setOpenCallForId((prev) => (prev === providerId ? null : providerId));
   };
 
   const trackCall = (providerId: number) => {
@@ -444,16 +478,45 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
                   </div>
 
                   <div className={styles.actionContainer}>
-                    <a
+                    <button
+                      type="button"
                       className={`${styles.callButton} ${statusClass}`}
-                      href={toTelHref(provider.phone)}
-                      onClick={() => trackCall(provider.id)}
+                      onClick={() => handleCallClick(provider.id)}
                       aria-label={t('call') || 'Call'}
                       title={t('call') || 'Call'}
                     >
                       <Phone size={16} className={styles.callIcon} />
                       <span className={styles.callText}>{t('call') || 'Call'}</span>
-                    </a>
+                    </button>
+
+                    {openCallForId === provider.id && (
+                      <div
+                        ref={callPopoverRef}
+                        className={styles.callMenu}
+                        role="menu"
+                        aria-label="Call options"
+                      >
+                        <a
+                          href={toTelHref(provider.phone)}
+                          onClick={() => trackCall(provider.id)}
+                          className={styles.callMenuItem}
+                          role="menuitem"
+                        >
+                          <Phone size={14} />
+                          <span>{locale === 'ar' ? 'اتصال' : 'Phone Call'}</span>
+                        </a>
+                        <a
+                          href={toWhatsAppHref(provider.phone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.callMenuItem}
+                          role="menuitem"
+                        >
+                          <MessageCircle size={14} />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
