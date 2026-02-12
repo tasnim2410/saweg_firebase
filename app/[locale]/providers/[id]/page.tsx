@@ -97,10 +97,12 @@ export async function generateMetadata({
     };
   }
 
-  const title = 'Saweg';
   const rawDescription = String(provider.description || '').trim();
   const routePart = [provider.location, provider.destination].filter(Boolean).join(' → ');
-  const description = (rawDescription || routePart || defaultDescription).slice(0, 200);
+  const descriptionText = (rawDescription || routePart || defaultDescription).slice(0, 200);
+
+  const title = rawDescription.slice(0, 100) || routePart.slice(0, 100) || 'Saweg';
+  const description = routePart || '';
   const imageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
 
   return {

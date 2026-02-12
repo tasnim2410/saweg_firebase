@@ -98,12 +98,13 @@ export async function generateMetadata({
     };
   }
 
-  const title = 'Saweg';
-
   const rawDescription = String(post.description || '').trim();
   const routePart = `${post.startingPoint || ''} → ${post.destination || ''}`.trim();
   const fallbackDesc = [post.goodsType, routePart].filter(Boolean).join(' • ');
-  const description = (rawDescription || fallbackDesc || defaultDescription).slice(0, 200);
+  const descriptionText = (rawDescription || fallbackDesc || defaultDescription).slice(0, 200);
+
+  const title = rawDescription.slice(0, 100) || fallbackDesc.slice(0, 100) || 'Saweg';
+  const description = routePart || post.goodsType || '';
 
   const imageUrl = post.image || '/images/logo.png';
 
