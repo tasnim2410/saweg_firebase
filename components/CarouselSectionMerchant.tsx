@@ -327,9 +327,8 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
               post.user?.fullName ||
               (locale === 'ar' ? 'تاجر' : 'Merchant');
 
-            const imageSrc = brokenImages[post.id]
-              ? '/images/logo.png'
-              : post.image || '/images/logo.png';
+            const imageSrc = post.image || '';
+            const isImageBroken = brokenImages[post.id] || !post.image;
 
             const phoneCandidate =
               (typeof post.phone === 'string' && post.phone.trim()) ||
@@ -362,6 +361,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                     aria-label={merchantName}
                     className={styles.imageLink}
                   >
+                  {!isImageBroken ? (
                     <Image
                       src={imageSrc}
                       alt={merchantName}
@@ -369,11 +369,15 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                       sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
                       className={styles.productImage}
                       loading="lazy"
-                      style={!post.image || brokenImages[post.id] ? { filter: 'grayscale(100%)' } : undefined}
                       onError={() => {
                         setBrokenImages((prev) => (prev[post.id] ? prev : { ...prev, [post.id]: true }));
                       }}
                     />
+                  ) : (
+                    <div className={styles.imageError}>
+                      {locale === 'ar' ? 'تعذر تحميل الصورة' : 'Could not load image'}
+                    </div>
+                  )}
                   </Link>
 
                   {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}

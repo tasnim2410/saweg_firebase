@@ -338,9 +338,8 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
                 ? `${description.slice(0, MAX_DESCRIPTION_CHARS)}...`
                 : description;
 
-            const imageSrc = brokenImages[provider.id]
-              ? '/images/truck.png'
-              : provider.image || '/images/truck.png';
+            const imageSrc = provider.image || '';
+            const isImageBroken = brokenImages[provider.id] || !provider.image;
 
             return (
               <div key={provider.id} className={styles.carouselItem}>
@@ -350,17 +349,23 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
                     aria-label={provider.name}
                     className={styles.imageLink}
                   >
-                    <Image
-                      src={imageSrc}
-                      alt={provider.name}
-                      fill
-                      sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
-                      className={styles.productImage}
-                      loading="lazy"
-                      onError={() => {
-                        setBrokenImages((prev) => (prev[provider.id] ? prev : { ...prev, [provider.id]: true }));
-                      }}
-                    />
+                    {!isImageBroken ? (
+                      <Image
+                        src={imageSrc}
+                        alt={provider.name}
+                        fill
+                        sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
+                        className={styles.productImage}
+                        loading="lazy"
+                        onError={() => {
+                          setBrokenImages((prev) => (prev[provider.id] ? prev : { ...prev, [provider.id]: true }));
+                        }}
+                      />
+                    ) : (
+                      <div className={styles.imageError}>
+                        {locale === 'ar' ? 'تعذر تحميل الصورة' : 'Could not load image'}
+                      </div>
+                    )}
                   </Link>
 
                   {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
