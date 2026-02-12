@@ -88,10 +88,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
 
   const handleShare = async (post: MerchantGoodsPost) => {
     const shareUrl = buildShareUrlForPost(post.id);
-    const shareTitle =
-      (typeof post.name === 'string' && post.name.trim()) ||
-      post.user?.fullName ||
-      (locale === 'ar' ? 'تاجر' : 'Merchant');
+    const shareTitle = locale === 'ar' ? 'Saweg' : 'Saweg';
 
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {

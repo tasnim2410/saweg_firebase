@@ -97,7 +97,7 @@ export async function generateMetadata({
     };
   }
 
-  const title = locale === 'ar' ? `Saweg - ${provider.name}` : `Saweg - ${provider.name}`;
+  const title = 'Saweg';
   const rawDescription = String(provider.description || '').trim();
   const routePart = [provider.location, provider.destination].filter(Boolean).join(' → ');
   const description = (rawDescription || routePart || defaultDescription).slice(0, 200);

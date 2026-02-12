@@ -83,7 +83,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
 
   const handleShare = async (provider: Provider) => {
     const shareUrl = buildShareUrlForProvider(provider.id);
-    const shareTitle = provider.name;
+    const shareTitle = locale === 'ar' ? 'Saweg' : 'Saweg';
 
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {

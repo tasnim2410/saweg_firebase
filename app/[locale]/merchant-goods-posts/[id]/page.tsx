@@ -98,8 +98,7 @@ export async function generateMetadata({
     };
   }
 
-  const merchantName = (post.name || post.user?.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
-  const title = locale === 'ar' ? `Saweg - ${merchantName}` : `Saweg - ${merchantName}`;
+  const title = 'Saweg';
 
   const rawDescription = String(post.description || '').trim();
   const routePart = `${post.startingPoint || ''} → ${post.destination || ''}`.trim();
