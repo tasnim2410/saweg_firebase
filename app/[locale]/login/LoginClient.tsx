@@ -154,6 +154,11 @@ export default function LoginClient() {
             {t('signupTitle')}
           </Link>
         </div>
+        <div className={styles.linkRow}>
+          <Link className={styles.link} href={`/${locale}/forgot-password`}>
+            {locale === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+          </Link>
+        </div>
       </div>
     </div>
   );
