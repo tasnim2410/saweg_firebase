@@ -436,7 +436,15 @@ export default function ProvidersPageClient() {
 
       <VehicleTypeSlider 
         selectedType={selectedVehicleTypeSlider} 
-        onSelect={setSelectedVehicleTypeSlider} 
+        onSelect={(type) => {
+          setSelectedVehicleTypeSlider(type);
+          // Convert string type to VehicleType array for filtering
+          if (type) {
+            setSelectedVehicleTypes([type as VehicleType]);
+          } else {
+            setSelectedVehicleTypes([]);
+          }
+        }} 
       />
 
       {/* Advanced Filters - Non-sticky, below car type */}
