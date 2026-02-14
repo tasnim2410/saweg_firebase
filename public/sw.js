@@ -398,8 +398,8 @@ const processQueue = async () => {
 
       await self.registration.showNotification('Saweg', {
         body,
-        icon: '/icons/icon-192x192.png?v=2',
-        badge: '/icons/icon-192x192.png?v=2',
+        icon: '/images/logo.png',
+        badge: '/images/logo.png',
         data: { url: '/ar' },
         tag: 'saweg-sync-success',
       });
@@ -430,8 +430,8 @@ const processQueue = async () => {
 
           await self.registration.showNotification('Saweg', {
             body: 'Pending post could not be synced. Open the app to finish.',
-            icon: '/icons/icon-192x192.png?v=2',
-            badge: '/icons/icon-192x192.png?v=2',
+            icon: '/images/logo.png',
+            badge: '/images/logo.png',
             data: { url: '/ar' },
             tag: 'saweg-sync-pending',
           });
@@ -593,8 +593,8 @@ self.addEventListener('push', (event) => {
 
       await self.registration.showNotification(title, {
         body,
-        icon: '/icons/icon-192x192.png?v=2',
-        badge: '/icons/icon-192x192.png?v=2',
+        icon: '/images/logo.png',
+        badge: '/images/logo.png',
         data: { url },
       });
     })()

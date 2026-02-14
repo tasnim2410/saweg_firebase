@@ -255,7 +255,7 @@ export async function POST(req: NextRequest) {
         });
 
         const title = 'Saweg';
-        const body = `New offer: ${post.startingPoint} to ${post.destination}`;
+        const body = `مطلوب شاحنة من "${post.startingPoint}" الي "${post.destination}"`;
         const url = '/ar/merchant-goods-posts';
 
         for (const sub of subs) {
