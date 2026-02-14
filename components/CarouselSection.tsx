@@ -73,7 +73,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const endpoint = '/api/providers';
   const addHref = `/${locale}/dashboard/add-provider`;
   const callsEndpointFor = (id: number) => `/api/providers/${id}/calls`;
-  const title = locale === 'ar' ? 'عروض السوّاق' : 'Shippers offers';
+  const title = locale === 'ar' ? 'عروض السوّاقين' : 'Shippers offers';
 
   const buildShareUrlForProvider = (providerId: number) => {
     if (typeof window === 'undefined') return `/${locale}/providers/${providerId}`;

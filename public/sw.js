@@ -580,23 +580,48 @@ self.addEventListener('periodicsync', (event) => {
 self.addEventListener('push', (event) => {
   event.waitUntil(
     (async () => {
-      let data = {};
       try {
-        data = event.data ? event.data.json() : {};
-      } catch {
-        data = { title: 'Saweg', body: event.data ? String(event.data.text()) : '' };
+        let data = {};
+        try {
+          data = event.data ? event.data.json() : {};
+        } catch {
+          data = { title: 'Saweg', body: event.data ? String(event.data.text()) : '' };
+        }
+
+        const title = data.title || 'Saweg';
+        const body = data.body || '';
+        const url = data.url || '/ar';
+        const tag = data.tag || 'saweg-notification';
+
+        // Show notification with tag to prevent duplicates
+        await self.registration.showNotification(title, {
+          body,
+          icon: '/icons/icon-192x192.png?v=2',
+          badge: '/icons/logo_icon.svg',
+          tag,
+          requireInteraction: false,
+          data: { url, timestamp: Date.now() },
+        });
+
+        // Broadcast to all clients that a notification was received
+        await broadcastMessage({
+          type: 'PUSH_NOTIFICATION_RECEIVED',
+          data: { title, body, url, timestamp: Date.now() },
+        });
+      } catch (err) {
+        // Fallback: show a generic notification if anything fails
+        try {
+          await self.registration.showNotification('Saweg', {
+            body: 'You have a new notification',
+            icon: '/icons/icon-192x192.png?v=2',
+            badge: '/icons/logo_icon.svg',
+            tag: 'saweg-fallback-notification',
+            data: { url: '/ar', timestamp: Date.now() },
+          });
+        } catch {
+          // Silent fail if even fallback fails
+        }
       }
-
-      const title = data.title || 'Saweg';
-      const body = data.body || '';
-      const url = data.url || '/ar';
-
-      await self.registration.showNotification(title, {
-        body,
-        icon: '/icons/icon-192x192.png?v=2',
-        badge: '/icons/logo_icon.svg',
-        data: { url },
-      });
     })()
   );
 });
@@ -617,6 +642,13 @@ self.addEventListener('notificationclick', (event) => {
       return self.clients.openWindow(url);
     })()
   );
+});
+
+// Keep-alive handler: respond to pings from clients to keep SW active
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'PING') {
+    event.ports[0].postMessage({ type: 'PONG', timestamp: Date.now() });
+  }
 });
 
 self.addEventListener('fetch', (event) => {

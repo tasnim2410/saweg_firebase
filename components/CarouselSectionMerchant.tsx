@@ -55,7 +55,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
 
   const endpoint = '/api/merchant-goods-posts';
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
-  const title = locale === 'ar' ? 'عروض الشاحنين' : 'Merchants requests';
+  const title = locale === 'ar' ? 'عروض التجار' : 'Merchants requests';
 
   const buildShareUrlForPost = (postId: number) => {
     if (typeof window === 'undefined') return `/${locale}/merchant-goods-posts/${postId}`;

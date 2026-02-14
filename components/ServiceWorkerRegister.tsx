@@ -431,12 +431,32 @@ export default function ServiceWorkerRegister() {
 
         requestQueueProcess();
 
+        // Keep-alive mechanism: periodically ping the service worker to keep it active
+        // This helps ensure push notifications are received even when the app is backgrounded
+        const keepAliveIntervalId = window.setInterval(() => {
+          try {
+            const ctrl = navigator.serviceWorker.controller;
+            if (ctrl) {
+              const channel = new MessageChannel();
+              ctrl.postMessage({ type: 'PING' }, [channel.port2]);
+              // Optional: listen for PONG response
+              channel.port1.onmessage = () => {
+                // SW is alive and responsive
+              };
+              channel.port1.start();
+            }
+          } catch {
+            // Ignore errors - SW might not be ready
+          }
+        }, 30000); // Ping every 30 seconds
+
         dispose = () => {
           try {
             window.removeEventListener('focus', onUpdateCheck);
             window.removeEventListener('online', onUpdateCheck);
             window.removeEventListener('saweg:warmup', onWarmup as EventListener);
             window.clearInterval(intervalId);
+            window.clearInterval(keepAliveIntervalId);
           } catch {
           }
 
