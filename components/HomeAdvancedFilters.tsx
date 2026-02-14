@@ -21,9 +21,10 @@ interface HomeAdvancedFiltersProps {
     classifiedCity: string | null;
     destinations: string[];
   }) => void;
+  sticky?: boolean; // Default true for sticky behavior, false for inline
 }
 
-export default function HomeAdvancedFilters({ onFiltersChange }: HomeAdvancedFiltersProps) {
+export default function HomeAdvancedFilters({ onFiltersChange, sticky = true }: HomeAdvancedFiltersProps) {
   const locale = useLocale();
 
   const [pendingMaxChargeOptions, setPendingMaxChargeOptions] = useState<MaxChargeValue[]>([]);
@@ -72,7 +73,10 @@ export default function HomeAdvancedFilters({ onFiltersChange }: HomeAdvancedFil
     return () => window.removeEventListener("resize", updateOffset);
   }, []);
 
+  // Only handle scroll hide/show when sticky
   useEffect(() => {
+    if (!sticky) return;
+    
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
@@ -87,7 +91,7 @@ export default function HomeAdvancedFilters({ onFiltersChange }: HomeAdvancedFil
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [sticky]);
 
   const hasAnyFilter =
     pendingMaxChargeOptions.length > 0 ||
@@ -140,10 +144,10 @@ export default function HomeAdvancedFilters({ onFiltersChange }: HomeAdvancedFil
 
   return (
     <>
-      {/* Sticky Toggle Button */}
+      {/* Toggle Button - Sticky or Inline based on prop */}
       <div
-        className={`${styles.stickyBar} ${open ? styles.stickyBarHidden : ''} ${!showStickyBar ? styles.stickyBarHidden : ''}`}
-        style={{ top: headerOffset }}
+        className={`${sticky ? styles.stickyBar : styles.inlineBar} ${open ? styles.stickyBarHidden : ''} ${!showStickyBar && sticky ? styles.stickyBarHidden : ''}`}
+        style={sticky ? { top: headerOffset } : undefined}
       >
         <div className={styles.stickyBarInner}>
           <button

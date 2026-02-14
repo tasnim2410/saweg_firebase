@@ -10,6 +10,15 @@
   opacity: 1;
 }
 
+/* Inline Bar (non-sticky) - positioned below content */
+.inlineBar {
+  position: relative;
+  width: 100%;
+  z-index: 10;
+  margin-top: 0.1rem;
+  margin-bottom: 1rem;
+}
+
 .stickyBarHidden {
   transform: translateY(-100%);
   opacity: 0;

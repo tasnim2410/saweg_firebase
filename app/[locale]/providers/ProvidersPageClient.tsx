@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import HomeAdvancedFilters from '@/components/HomeAdvancedFilters';
+import VehicleTypeSlider from '@/components/VehicleTypeSlider';
 import styles from './ProvidersPage.module.css';
-import VehicleTypeFilter, { VehicleType, VEHICLE_TYPE_OPTIONS } from './VehicleTypeFilter';
-import MaxChargeFilter, { MaxChargeValue, MAX_CHARGE_OPTIONS } from './MaxChargeFilter';
-import DistanceFilter, { DistanceValue, DistanceSource, DISTANCE_OPTIONS } from './DistanceFilter';
+import { VehicleType, VEHICLE_TYPE_OPTIONS } from './VehicleTypeFilter';
+import { MaxChargeValue, MAX_CHARGE_OPTIONS } from './MaxChargeFilter';
+import { DistanceValue, DistanceSource, DISTANCE_OPTIONS } from './DistanceFilter';
 import { getLocationCoordinates, calculateDistance, isWithinDistance } from '@/lib/distance';
-import DestinationFilter from './DestinationFilter';
 
 interface Provider {
   id: number;
@@ -37,6 +38,9 @@ export default function ProvidersPageClient() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Vehicle type slider selection
+  const [selectedVehicleTypeSlider, setSelectedVehicleTypeSlider] = useState<string | null>(null);
   
   // Pending filter states (what user has selected but not applied)
   const [pendingVehicleTypes, setPendingVehicleTypes] = useState<VehicleType[]>([]);
@@ -71,8 +75,6 @@ export default function ProvidersPageClient() {
     classifiedCity: string | null;
   } | null>(null);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
-
-  const [showFilters, setShowFilters] = useState(false);
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
@@ -432,6 +434,14 @@ export default function ProvidersPageClient() {
         {arrow}
       </Link>
 
+      <VehicleTypeSlider 
+        selectedType={selectedVehicleTypeSlider} 
+        onSelect={setSelectedVehicleTypeSlider} 
+      />
+
+      {/* Advanced Filters - Non-sticky, below car type */}
+      <HomeAdvancedFilters sticky={false} />
+
       <div className={styles.pageContainer}>
         <div className={styles.header}>
           <h1 className={styles.title}>{title}</h1>
@@ -463,161 +473,6 @@ export default function ProvidersPageClient() {
             )}
           </div>
         </div>
-
-        {/* Compact Filters Toggle */}
-        <div className={styles.filtersToggleRow}>
-          <button 
-            className={styles.filtersToggleButton}
-            onClick={() => setShowFilters(!showFilters)}
-            aria-expanded={showFilters}
-          >
-            <span className={styles.filtersToggleIcon}>🔍</span>
-            <span>
-              {showFilters 
-                ? (locale === 'ar' ? 'إخفاء الفلاتر' : 'Hide Filters')
-                : (locale === 'ar' ? 'عرض الفلاتر' : 'Show Filters')}
-            </span>
-            <span className={`${styles.filtersToggleCaret} ${showFilters ? styles.filtersToggleCaretOpen : ''}`}>
-              ▼
-            </span>
-          </button>
-          
-          {hasAnyFilter && (
-            <div className={styles.activeFiltersPreview}>
-              {selectedVehicleTypes.length > 0 && (
-                <span className={styles.filterPill}>{selectedVehicleTypes.length} {locale === 'ar' ? 'نوع' : 'type'}</span>
-              )}
-              {selectedMaxChargeOptions.length > 0 && (
-                <span className={styles.filterPill}>{locale === 'ar' ? 'الحمولة' : 'charge'}</span>
-              )}
-              {selectedDistance && (
-                <span className={styles.filterPill}>{selectedDistance} {locale === 'ar' ? 'كم' : 'km'}</span>
-              )}
-              {selectedDestinations.length > 0 && (
-                <span className={styles.filterPill}>{selectedDestinations.length} {locale === 'ar' ? 'وجهة' : 'dest'}</span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Collapsible Filters Section */}
-        {showFilters && (
-        <div className={styles.filtersSection}>
-          <div className={styles.filtersHeader}>
-            <h2 className={styles.filtersTitle}>
-              {locale === 'ar' ? 'الفلاتر' : 'Filters'}
-            </h2>
-            <div className={styles.filtersActions}>
-              {hasPendingChanges && (
-                <button 
-                  className={styles.applyFiltersButton}
-                  onClick={handleApplyAllFilters}
-                  disabled={isApplyingFilters || isCalculatingDistances}
-                >
-                  {isApplyingFilters || isCalculatingDistances ? (
-                    <>
-                      <div className={styles.buttonSpinner} />
-                      {locale === 'ar' ? 'جاري التطبيق...' : 'Applying...'}
-                    </>
-                  ) : (
-                    locale === 'ar' ? '🔍 بحث' : '🔍 Search'
-                  )}
-                </button>
-              )}
-              {hasAnyFilter && (
-                <button 
-                  className={styles.clearFiltersButton}
-                  onClick={handleClearAllFilters}
-                >
-                  {locale === 'ar' ? 'مسح الكل' : 'Clear All'}
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <div className={styles.filtersContainer}>
-            <div className={styles.filterColumn}>
-              <VehicleTypeFilter
-                selectedTypes={pendingVehicleTypes}
-                onChange={(types) => {
-                  setPendingVehicleTypes(types);
-                  setHasPendingChanges(true);
-                }}
-                onClear={() => {
-                  setPendingVehicleTypes([]);
-                  setHasPendingChanges(true);
-                }}
-              />
-            </div>
-            <div className={styles.filterColumn}>
-              <MaxChargeFilter
-                selectedOptions={pendingMaxChargeOptions}
-                onChange={(options) => {
-                  setPendingMaxChargeOptions(options);
-                  setHasPendingChanges(true);
-                }}
-                onClear={() => {
-                  setPendingMaxChargeOptions([]);
-                  setHasPendingChanges(true);
-                }}
-              />
-            </div>
-            <div className={styles.filterColumn}>
-              <DistanceFilter
-                selectedOption={pendingDistance}
-                onChange={(value) => {
-                  setPendingDistance(value);
-                  setHasPendingChanges(true);
-                }}
-                onClear={() => {
-                  setPendingDistance(null);
-                  setPendingDistanceSource('current-location');
-                  setPendingDistanceCity(null);
-                  setPendingCurrentLocation(null);
-                  setPendingClassifiedCity(null);
-                  setHasPendingChanges(true);
-                }}
-                merchantCity={merchantCity}
-                distanceSource={pendingDistanceSource}
-                onSourceChange={(source) => {
-                  setPendingDistanceSource(source);
-                  setHasPendingChanges(true);
-                }}
-                selectedCity={pendingDistanceCity}
-                onSelectedCityChange={(city) => {
-                  setPendingDistanceCity(city);
-                  setHasPendingChanges(true);
-                }}
-                currentLocation={pendingCurrentLocation}
-                onCurrentLocationChange={(location) => {
-                  setPendingCurrentLocation(location);
-                  setHasPendingChanges(true);
-                }}
-                classifiedCity={pendingClassifiedCity}
-                onClassifiedCityChange={(city) => {
-                  setPendingClassifiedCity(city);
-                  setHasPendingChanges(true);
-                }}
-              />
-            </div>
-            <div className={styles.filterColumn}>
-              <DestinationFilter
-                selectedDestinations={pendingDestinations}
-                onChange={(dests) => {
-                  setPendingDestinations(dests);
-                  setHasPendingChanges(true);
-                }}
-                onClear={() => {
-                  setPendingDestinations([]);
-                  setHasPendingChanges(true);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        )}
-
-        {error && <div className={styles.error}>{error}</div>}
 
         {loading ? (
           <div className={styles.loading}>
