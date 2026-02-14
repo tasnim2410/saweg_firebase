@@ -96,19 +96,22 @@ export async function getFormattedLocationName(
   }
   
   // Parse the full address to get components
-  // Nominatim returns: "road, suburb, neighbourhood, city/town/village, county, state, country"
+  // Nominatim returns: "road, suburb, neighbourhood, city/town/village, county, state, country, postcode"
   const parts = result.fullAddress.split(',').map(p => p.trim()).filter(Boolean);
   
   // Find country (usually last)
   const country = parts[parts.length - 1] || '';
   
-  // Find state/county (usually second to last or third to last)
-  const stateOrCounty = parts[parts.length - 2] || parts[parts.length - 3] || '';
+  // Filter out postal codes (numeric-only parts)
+  const nonNumericParts = parts.filter(p => !/^\d+$/.test(p.trim()));
+  
+  // Find state/county from non-numeric parts (usually second to last or third to last before country)
+  const stateOrCounty = nonNumericParts[nonNumericParts.length - 2] || nonNumericParts[nonNumericParts.length - 3] || '';
   
   // Find city/town (look for common patterns, usually before state/county)
   let cityOrTown = '';
-  for (let i = parts.length - 3; i >= 0; i--) {
-    const part = parts[i];
+  for (let i = nonNumericParts.length - 3; i >= 0; i--) {
+    const part = nonNumericParts[i];
     // Skip road names (usually contain numbers or are long)
     if (part.length > 3 && !/^\d/.test(part)) {
       cityOrTown = part;

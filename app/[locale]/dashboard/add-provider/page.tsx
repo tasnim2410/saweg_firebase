@@ -129,6 +129,65 @@ export default function AddProviderPage() {
     };
   }, [confirmOpen]);
 
+  // Periodically update location when using current location (every hour)
+  useEffect(() => {
+    if (!useCurrentLocation || !coords) return;
+
+    const LOCATION_UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
+
+    const updateLocation = async () => {
+      if (!navigator.geolocation) return;
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // Only update if location has changed significantly (more than 100 meters)
+          const distance = calculateDistance(coords.latitude, coords.longitude, lat, lng);
+          if (distance > 0.1) { // 0.1 km = 100 meters
+            setCoords({ latitude: lat, longitude: lng });
+            
+            try {
+              const locationName = await getFormattedLocationName(lat, lng);
+              setCurrentLocationName(locationName);
+              await saveLocationToDatabase(lat, lng, locationName);
+            } catch {
+              await saveLocationToDatabase(lat, lng, null);
+            }
+          }
+        },
+        () => {
+          // Silently fail on error
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+
+    // Update immediately when checkbox is checked
+    updateLocation();
+
+    // Set up periodic updates
+    const intervalId = setInterval(updateLocation, LOCATION_UPDATE_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [useCurrentLocation, coords]);
+
+  // Calculate distance between two coordinates in km using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const validateForSubmit = () => {
     if (imageFile && imageFile.size > MAX_PROVIDER_IMAGE_BYTES) {
       pushToast({
@@ -202,8 +261,10 @@ export default function AddProviderPage() {
         try {
           const locationName = await getFormattedLocationName(lat, lng);
           setCurrentLocationName(locationName);
+          
+          // Save location to database for live tracking
+          await saveLocationToDatabase(lat, lng, locationName);
         } catch {
-          // If geocoding fails, just use coordinates as fallback
           setCurrentLocationName(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         }
         
@@ -223,6 +284,24 @@ export default function AddProviderPage() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  };
+
+  // Save location to database for live tracking
+  const saveLocationToDatabase = async (lat: number, lng: number, address: string | null) => {
+    try {
+      await fetch('/api/location/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lng,
+          timestamp: Date.now(),
+          address,
+        }),
+      });
+    } catch {
+      // Silently fail - location is optional
+    }
   };
 
   const locationDisplayValue = useCurrentLocation
