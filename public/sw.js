@@ -594,7 +594,7 @@ self.addEventListener('push', (event) => {
       await self.registration.showNotification(title, {
         body,
         icon: '/icons/icon-192x192.png?v=2',
-        badge: '/images/logo.png',
+        badge: '/icons/logo_icon.svg',
         data: { url },
       });
     })()

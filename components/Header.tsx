@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Globe, ChevronDown, Menu, X, Loader2 } from 'lucide-react';
+import { Globe, ChevronDown, Menu, X, Bell, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useRouter, usePathname } from 'next/navigation';
@@ -616,7 +616,7 @@ export default function Header() {
           <div className={styles.pushBanner} role="region" aria-label={locale === 'ar' ? 'تنبيه الإشعارات' : 'Notifications banner'}>
             <div className={styles.pushBannerInner}>
               <div className={styles.pushBannerText}>
-                <img src="/icons/logo_icon.svg" alt="" className={styles.pushBannerIcon} />
+                <Bell className={styles.pushBannerIcon} size={16} />
                 <span>
                   {locale === 'ar'
                     ? 'فعّل الإشعارات لتصلك العروض الجديدة فوراً.'
