@@ -118,8 +118,9 @@
 
 @media (min-width: 1024px) {
   .overlayContent {
-    width: calc(100vw / 3.8);
-    padding: 1rem 1.5rem;
+    width: 100%;
+    padding: 2rem;
+    max-width: 100%;
   }
 }
 
@@ -188,6 +189,18 @@
 
 .filterCol {
   width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .filtersGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .filterCol {
+    width: 100%;
+  }
 }
 
 /* Overlay Footer */
