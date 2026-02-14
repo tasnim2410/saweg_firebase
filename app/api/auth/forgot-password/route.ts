@@ -69,10 +69,12 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Forgot password error:', err);
+    console.error('Error message:', err?.message);
+    console.error('Error code:', err?.code);
     return NextResponse.json(
-      { ok: false, error: 'INTERNAL_ERROR' },
+      { ok: false, error: 'INTERNAL_ERROR', details: err?.message },
       { status: 500 }
     );
   }
