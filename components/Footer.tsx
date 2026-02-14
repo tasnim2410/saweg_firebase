@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Youtube, Phone } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Footer.module.css';
@@ -108,7 +108,7 @@ export default function Footer() {
             <h3 className={styles.columnTitle}>Contact</h3>
             <ul className={styles.contactList}>
               <li>Email: Contact.saweg@gmail.com</li>
-              {/* <li>Phone: +1 234 567 890</li> */}
+              <li>Phone: +218 930755020</li>
               {/* <li>Address: 123 Street, City, Country</li> */}
             </ul>
           </div>

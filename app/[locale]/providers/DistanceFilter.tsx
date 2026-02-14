@@ -10,14 +10,14 @@ import { getCurrentPosition, findNearestCity } from '@/lib/distance';
 export type DistanceValue = 'same-city' | 'nearby-30' | 'nearby-50' | 'nearby-100' | 'nearby-150' | 'nearby-200' | 'any';
 export type DistanceSource = 'current-location' | 'selected-city';
 
-export const DISTANCE_OPTIONS: Array<{ value: DistanceValue; labelAR: string; labelEN: string }> = [
-  { value: 'same-city', labelAR: 'نفس المدينة', labelEN: 'Same city' },
-  { value: 'nearby-30', labelAR: 'أقل من 30 كم', labelEN: 'Less than 30 km' },
-  { value: 'nearby-50', labelAR: 'أقل من 50 كم', labelEN: 'Less than 50 km' },
-  { value: 'nearby-100', labelAR: 'أقل من 100 كم', labelEN: 'Less than 100 km' },
-  { value: 'nearby-150', labelAR: 'أقل من 150 كم', labelEN: 'Less than 150 km' },
-  { value: 'nearby-200', labelAR: 'أقل من 200 كم', labelEN: 'Less than 200 km' },
-  { value: 'any', labelAR: 'أي مسافة', labelEN: 'Any distance' },
+export const DISTANCE_OPTIONS: Array<{ value: DistanceValue; labelAR: string; labelEN: string; km: number }> = [
+  { value: 'same-city', labelAR: 'نفس المدينة', labelEN: 'Same city', km: 0 },
+  { value: 'nearby-30', labelAR: '30 كم', labelEN: '30 km', km: 30 },
+  { value: 'nearby-50', labelAR: '50 كم', labelEN: '50 km', km: 50 },
+  { value: 'nearby-100', labelAR: '100 كم', labelEN: '100 km', km: 100 },
+  { value: 'nearby-150', labelAR: '150 كم', labelEN: '150 km', km: 150 },
+  { value: 'nearby-200', labelAR: '200 كم', labelEN: '200 km', km: 200 },
+  { value: 'any', labelAR: 'أي مسافة', labelEN: 'Any distance', km: 999 },
 ];
 
 interface Props {
@@ -201,6 +201,20 @@ export default function DistanceFilter({
                 <input
                   type="radio"
                   name="distanceSource"
+                  value="selected-city"
+                  checked={distanceSource === 'selected-city'}
+                  onChange={() => onSourceChange('selected-city')}
+                />
+                <span className={styles.sourceRadio} />
+                <span className={styles.sourceText}>
+                  {isRTL ? 'مدينة محددة' : 'Specific city'}
+                </span>
+              </label>
+
+              <label className={styles.sourceOption}>
+                <input
+                  type="radio"
+                  name="distanceSource"
                   value="current-location"
                   checked={distanceSource === 'current-location'}
                   onChange={handleGetCurrentLocation}
@@ -216,20 +230,6 @@ export default function DistanceFilter({
                       {' '} - {isRTL ? 'أقرب مدينة:' : 'Nearest city:'} {getLocationLabel(classifiedCity, locale as 'ar' | 'en')}
                     </span>
                   )}
-                </span>
-              </label>
-
-              <label className={styles.sourceOption}>
-                <input
-                  type="radio"
-                  name="distanceSource"
-                  value="selected-city"
-                  checked={distanceSource === 'selected-city'}
-                  onChange={() => onSourceChange('selected-city')}
-                />
-                <span className={styles.sourceRadio} />
-                <span className={styles.sourceText}>
-                  {isRTL ? 'مدينة محددة' : 'Specific city'}
                 </span>
               </label>
             </div>
@@ -270,26 +270,33 @@ export default function DistanceFilter({
             </p>
           )}
 
-          {/* Distance Options */}
-          <div className={styles.optionsGrid}>
-            {DISTANCE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`${styles.option} ${selectedOption === option.value ? styles.selected : ''}`}
-                onClick={() => {
-                  onChange(option.value === selectedOption ? null : option.value);
-                }}
-                disabled={!canFilter && option.value !== 'any'}
-              >
-                <span className={styles.check}>
-                  {selectedOption === option.value ? '✓' : ''}
-                </span>
-                <span className={styles.label}>
-                  {isRTL ? option.labelAR : option.labelEN}
-                </span>
-              </button>
-            ))}
+          {/* Distance Slider */}
+          <div className={styles.sliderSection}>
+            <label className={styles.sliderLabel}>
+              {isRTL ? 'نطاق المسافة' : 'Distance range'}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="6"
+              step="1"
+              value={DISTANCE_OPTIONS.findIndex(opt => opt.value === selectedOption) || 0}
+              onChange={(e) => {
+                const index = parseInt(e.target.value);
+                onChange(DISTANCE_OPTIONS[index].value);
+              }}
+              disabled={!canFilter}
+              className={styles.slider}
+            />
+            <div className={styles.sliderLabels}>
+              <span>{isRTL ? 'نفس المدينة' : 'Same city'}</span>
+              <span>{isRTL ? 'أي مسافة' : 'Any distance'}</span>
+            </div>
+            {selectedOption && (
+              <div className={styles.sliderValue}>
+                {isRTL ? DISTANCE_OPTIONS.find(o => o.value === selectedOption)?.labelAR : DISTANCE_OPTIONS.find(o => o.value === selectedOption)?.labelEN}
+              </div>
+            )}
           </div>
         </div>
       )}

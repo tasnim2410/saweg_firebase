@@ -7,6 +7,10 @@ import Image from 'next/image';
 import styles from './CarouselSection.module.css';
 import { normalizeVehicleType, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 import { getLocationLabel } from '@/lib/locations';
+import { getLocationCoordinates, calculateDistance } from '@/lib/distance';
+import type { MaxChargeValue } from '@/app/[locale]/providers/MaxChargeFilter';
+import { MAX_CHARGE_OPTIONS } from '@/app/[locale]/providers/MaxChargeFilter';
+import type { DistanceSource, DistanceValue } from '@/app/[locale]/providers/DistanceFilter';
 import { Share2, Phone, MapPin, Truck, Plus, MessageCircle } from 'lucide-react';
 
 interface Provider {
@@ -25,14 +29,31 @@ interface Provider {
   publishedByAdmin?: boolean;
   user?: {
     carKind?: string | null;
+    maxCharge?: string | null;
+    maxChargeUnit?: string | null;
   } | null;
 }
 
 interface CarouselSectionProps {
   vehicleTypeFilter?: string | null;
+  maxChargeFilter?: MaxChargeValue[] | null;
+  destinationsFilter?: string[] | null;
+  distanceFilter?: {
+    distance: DistanceValue | null;
+    source: DistanceSource;
+    city: string | null;
+    location: { lat: number; lon: number } | null;
+    classifiedCity: string | null;
+  } | null;
 }
 
-const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) => {
+const CarouselSection: React.FC<CarouselSectionProps> = ({
+  vehicleTypeFilter,
+  maxChargeFilter,
+  destinationsFilter,
+  distanceFilter,
+}) => {
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('carousel');
   const locale = useLocale();
@@ -44,6 +65,8 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
   const [openCallForId, setOpenCallForId] = useState<number | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
+  const [distanceFilteredProviders, setDistanceFilteredProviders] = useState<Provider[]>([]);
+
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
   const callPopoverRef = useRef<HTMLDivElement | null>(null);
 
@@ -104,53 +127,6 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
   };
 
   useEffect(() => {
-    if (openShareForId === null) return;
-
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (sharePopoverRef.current && !sharePopoverRef.current.contains(target)) {
-        setOpenShareForId(null);
-      }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenShareForId(null);
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [openShareForId]);
-
-  useEffect(() => {
-    if (openCallForId === null) return;
-
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (callPopoverRef.current && !callPopoverRef.current.contains(target)) {
-        setOpenCallForId(null);
-      }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenCallForId(null);
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [openCallForId]);
-
-  // Fetch providers on mount
-  useEffect(() => {
     let cancelled = false;
 
     const loadAuth = async () => {
@@ -195,6 +171,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
 
     loadAuth();
     fetchProviders();
+
     window.addEventListener('online', onOnline);
     return () => {
       cancelled = true;
@@ -205,15 +182,146 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ vehicleTypeFilter }) 
   const MAX_ITEMS = 10;
   const MAX_DESCRIPTION_CHARS = 55;
 
-  // Filter providers by vehicle type if filter is active
-  const filteredProviders = vehicleTypeFilter
-    ? providers.filter((p) => {
-        const providerCarKind = p.user?.carKind;
-        if (!providerCarKind) return false;
-        const normalizedProvider = normalizeVehicleType(providerCarKind);
-        return normalizedProvider === vehicleTypeFilter;
-      })
+  useEffect(() => {
+    const applyDistanceFilter = async () => {
+      if (!distanceFilter || !distanceFilter.distance || distanceFilter.distance === 'any') {
+        setDistanceFilteredProviders(providers);
+        return;
+      }
+
+      const { distance, source, city, location, classifiedCity } = distanceFilter;
+
+      let referenceCoords: { lat: number; lon: number } | null = null;
+
+      if (source === 'selected-city' && city) {
+        const coords = await getLocationCoordinates(city);
+        if (coords) referenceCoords = coords;
+      } else if (source === 'current-location' && location) {
+        referenceCoords = location;
+      }
+
+      if (!referenceCoords) {
+        const refCity = source === 'current-location' ? classifiedCity : city;
+        const refCityLower = refCity?.toLowerCase().trim();
+
+        if (!refCityLower || distance !== 'same-city') {
+          setDistanceFilteredProviders(providers);
+          return;
+        }
+
+        const filteredByCity = providers.filter((p) => {
+          const providerLocation = p.location?.toLowerCase().trim();
+          if (!providerLocation) return false;
+          return (
+            providerLocation === refCityLower ||
+            providerLocation.includes(refCityLower) ||
+            refCityLower.includes(providerLocation)
+          );
+        });
+
+        setDistanceFilteredProviders(filteredByCity);
+        return;
+      }
+
+      const filtered = await Promise.all(
+        providers.map(async (p) => {
+          if (distance === 'same-city') {
+            const refCity = source === 'current-location' ? classifiedCity : city;
+            const refCityLower = refCity?.toLowerCase().trim();
+            const providerLocation = p.location?.toLowerCase().trim();
+
+            if (
+              refCityLower &&
+              providerLocation &&
+              (providerLocation === refCityLower ||
+                providerLocation.includes(refCityLower) ||
+                refCityLower.includes(providerLocation))
+            ) {
+              return p;
+            }
+          }
+
+          const providerCoords = await getLocationCoordinates(p.location);
+          if (!providerCoords) {
+            return null;
+          }
+
+          const distKm = calculateDistance(referenceCoords!, providerCoords);
+
+          switch (distance) {
+            case 'same-city':
+              return distKm <= 10 ? p : null;
+            case 'nearby-30':
+              return distKm <= 30 ? p : null;
+            case 'nearby-50':
+              return distKm <= 50 ? p : null;
+            case 'nearby-100':
+              return distKm <= 100 ? p : null;
+            case 'nearby-150':
+              return distKm <= 150 ? p : null;
+            case 'nearby-200':
+              return distKm <= 200 ? p : null;
+            default:
+              return p;
+          }
+        })
+      );
+
+      setDistanceFilteredProviders(filtered.filter((p): p is Provider => p !== null));
+    };
+
+    applyDistanceFilter();
+  }, [providers, distanceFilter]);
+
+  const baseList = distanceFilteredProviders.length > 0 || (distanceFilter && distanceFilter.distance)
+    ? distanceFilteredProviders
     : providers;
+
+  const filteredProviders = baseList.filter((p) => {
+    if (vehicleTypeFilter) {
+      const providerCarKind = p.user?.carKind;
+      if (!providerCarKind) return false;
+      const normalizedProvider = normalizeVehicleType(providerCarKind);
+      if (normalizedProvider !== vehicleTypeFilter) return false;
+    }
+
+    if (maxChargeFilter && maxChargeFilter.length > 0) {
+      const providerMaxCharge = p.user?.maxCharge;
+      if (!providerMaxCharge) return false;
+
+      const chargeValue = parseFloat(providerMaxCharge);
+      if (Number.isNaN(chargeValue)) return false;
+
+      const unit = p.user?.maxChargeUnit?.toLowerCase() || 'kg';
+      const chargeInKg = unit.includes('ton') ? chargeValue * 1000 : chargeValue;
+
+      const matchesAnyRange = maxChargeFilter.some((optionValue) => {
+        const option = MAX_CHARGE_OPTIONS.find((o) => o.value === optionValue);
+        if (!option) return false;
+        return chargeInKg >= option.min && chargeInKg < option.max;
+      });
+
+      if (!matchesAnyRange) return false;
+    }
+
+    if (destinationsFilter && destinationsFilter.length > 0) {
+      const providerDestination = (p.destination ?? p.placeOfBusiness)?.toLowerCase().trim();
+      if (!providerDestination) return false;
+
+      const matchesDestination = destinationsFilter.some((destValue) => {
+        const v = destValue.toLowerCase();
+        return (
+          providerDestination === v ||
+          providerDestination.includes(v) ||
+          v.includes(providerDestination)
+        );
+      });
+
+      if (!matchesDestination) return false;
+    }
+
+    return true;
+  });
 
   const hasMore = filteredProviders.length > MAX_ITEMS;
   const visibleProviders = hasMore ? filteredProviders.slice(0, MAX_ITEMS) : filteredProviders;
