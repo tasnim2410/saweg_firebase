@@ -6,6 +6,7 @@ import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { sendPushToSubscription } from '@/lib/webPush';
 import { isValidVehicleType, normalizeVehicleType } from '@/lib/vehicleTypes';
+import { getLocationLabel } from '@/lib/locations';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -255,7 +256,9 @@ export async function POST(req: NextRequest) {
         });
 
         const title = 'Saweg';
-        const body = `مطلوب شاحنة من "${post.startingPoint}" الي "${post.destination}"`;
+        const startingPointAr = getLocationLabel(post.startingPoint, 'ar');
+        const destinationAr = getLocationLabel(post.destination, 'ar');
+        const body = `مطلوب شاحنة من "${startingPointAr}" الي "${destinationAr}"`;
         const url = '/ar/merchant-goods-posts';
 
         for (const sub of subs) {

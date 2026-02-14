@@ -42,7 +42,7 @@ export default function AddMerchantGoodsPostPage() {
   const [goodsWeight, setGoodsWeight] = useState<string>('');
   const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('kg');
   const [budget, setBudget] = useState<string>('');
-  const [budgetCurrency, setBudgetCurrency] = useState<string>('');
+  const [budgetCurrency, setBudgetCurrency] = useState<string>('LYD');
   const [loadingDate, setLoadingDate] = useState('');
   const [vehicleTypeDesired, setVehicleTypeDesired] = useState('');
   const [vehicleTypeOpen, setVehicleTypeOpen] = useState(false);
@@ -651,6 +651,7 @@ export default function AddMerchantGoodsPostPage() {
               className={styles.input}
               type="date"
               value={loadingDate}
+              min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setLoadingDate(e.target.value)}
               required
             />
