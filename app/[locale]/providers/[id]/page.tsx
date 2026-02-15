@@ -302,7 +302,10 @@ export default async function ProviderDetailsPage({
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{locale === 'ar' ? 'المسار' : 'Route'}</div>
               <div className={styles.infoValue}>
-                {locLabel || '-'} → {destLabel || '-'}
+                {locale === 'ar' 
+                  ? `من ${locLabel || '-'} إلى ${destLabel || '-'}`
+                  : `From ${locLabel || '-'} to ${destLabel || '-'}`
+                }
               </div>
             </div>
 

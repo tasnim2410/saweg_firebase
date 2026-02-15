@@ -331,9 +331,12 @@ export default async function MerchantGoodsPostDetailsPage({
 
             
             <div className={styles.infoBlockFull}>
-              <div className={styles.infoLabel}>{labels.route}</div>
+              <div className={styles.infoLabel}>{locale === 'ar' ? 'المسار' : 'Route'}</div>
               <div className={styles.infoValue}>
-                {startLabel} → {destLabel}
+                {locale === 'ar' 
+                  ? `من ${startLabel || '-'} إلى ${destLabel || '-'}`
+                  : `From ${startLabel || '-'} to ${destLabel || '-'}`
+                }
               </div>
             </div>
 
