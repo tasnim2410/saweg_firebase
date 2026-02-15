@@ -160,6 +160,12 @@
   filter: brightness(0) invert(1);
 }
 
+/* Smaller icon for "Other" vehicle type */
+.vehicleCard:has(img[alt*="Other"]) .vehicleIcon {
+  width: 36px;
+  height: 36px;
+}
+
 .vehicleLabel {
   font-size: 12px;
   font-weight: 500;

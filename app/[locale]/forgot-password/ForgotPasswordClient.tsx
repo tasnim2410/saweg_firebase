@@ -225,7 +225,7 @@ export default function ForgotPasswordClient() {
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
+                placeholder={isAr ? '••••••' : '••••••'}
                 maxLength={6}
                 required
               />

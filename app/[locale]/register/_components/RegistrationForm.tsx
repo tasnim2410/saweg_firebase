@@ -417,13 +417,14 @@ export default function RegistrationForm({ role }: Props) {
               <>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>{t('carKind')}</label>
+                    <label className={styles.label}>{t('carKind')} <span className={styles.required}></span></label>
                     <div className={styles.carKindRoot} data-car-kind-root="true">
                       <button
                         type="button"
                         className={`${styles.input} ${styles.carKindButton}`}
                         aria-haspopup="listbox"
                         aria-expanded={carKindOpen ? 'true' : 'false'}
+                        aria-required="true"
                         onClick={() => setCarKindOpen((v) => !v)}
                       >
                         {selectedCarKind ? (
@@ -469,7 +470,7 @@ export default function RegistrationForm({ role }: Props) {
                         </div>
                       ) : null}
 
-                      <input type="hidden" name="carKind" value={formData.carKind} />
+                      <input type="hidden" name="carKind" value={formData.carKind} required />
                     </div>
                   </div>
 

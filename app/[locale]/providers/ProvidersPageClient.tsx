@@ -41,6 +41,21 @@ export default function ProvidersPageClient() {
   
   // Vehicle type slider selection
   const [selectedVehicleTypeSlider, setSelectedVehicleTypeSlider] = useState<string | null>(null);
+
+  // Handle vehicle type slider changes
+  useEffect(() => {
+    if (selectedVehicleTypeSlider) {
+      // When a vehicle type is selected from slider, add it to pending filters
+      if (!pendingVehicleTypes.includes(selectedVehicleTypeSlider as VehicleType)) {
+        setPendingVehicleTypes([selectedVehicleTypeSlider as VehicleType]);
+        setHasPendingChanges(true);
+      }
+    } else {
+      // When cleared, remove from pending filters
+      setPendingVehicleTypes([]);
+      setHasPendingChanges(true);
+    }
+  }, [selectedVehicleTypeSlider]);
   
   // Pending filter states (what user has selected but not applied)
   const [pendingVehicleTypes, setPendingVehicleTypes] = useState<VehicleType[]>([]);
@@ -398,6 +413,17 @@ export default function ProvidersPageClient() {
 
   const hasAnyFilter = selectedVehicleTypes.length > 0 || selectedMaxChargeOptions.length > 0 || selectedDistance !== null || selectedDestinations.length > 0;
 
+  // Auto-apply filters when pending changes exist
+  useEffect(() => {
+    if (hasPendingChanges) {
+      // Auto-apply after a short delay to batch rapid changes
+      const timer = setTimeout(() => {
+        handleApplyAllFilters();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasPendingChanges, handleApplyAllFilters]);
+
   const toTelHref = (phoneNumber: string) => {
     const normalized = String(phoneNumber || '').replace(/[^+\d]/g, '');
     return `tel:${normalized}`;
@@ -440,7 +466,19 @@ export default function ProvidersPageClient() {
       />
 
       {/* Advanced Filters - Non-sticky, below car type */}
-      <HomeAdvancedFilters sticky={false} />
+      <HomeAdvancedFilters 
+        sticky={false}
+        onFiltersChange={(filters) => {
+          setPendingMaxChargeOptions(filters.maxChargeOptions);
+          setPendingDistance(filters.distance);
+          setPendingDistanceSource(filters.distanceSource);
+          setPendingDistanceCity(filters.distanceCity);
+          setPendingCurrentLocation(filters.currentLocation);
+          setPendingClassifiedCity(filters.classifiedCity);
+          setPendingDestinations(filters.destinations);
+          setHasPendingChanges(true);
+        }}
+      />
 
       <div className={styles.pageContainer}>
         <div className={styles.header}>
