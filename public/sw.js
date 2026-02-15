@@ -596,7 +596,7 @@ self.addEventListener('push', (event) => {
         // Show notification with tag to prevent duplicates
         await self.registration.showNotification(title, {
           body,
-          icon: '/icons/icon-192x192.png?v=2',
+          icon: '/icons/logo_icon.svg',
           badge: '/icons/logo_icon.svg',
           tag,
           requireInteraction: false,
@@ -613,7 +613,7 @@ self.addEventListener('push', (event) => {
         try {
           await self.registration.showNotification('Saweg', {
             body: 'You have a new notification',
-            icon: '/icons/icon-192x192.png?v=2',
+            icon: '/icons/logo_icon.svg',
             badge: '/icons/logo_icon.svg',
             tag: 'saweg-fallback-notification',
             data: { url: '/ar', timestamp: Date.now() },
