@@ -552,7 +552,7 @@ export default function AddMerchantGoodsPostPage() {
 
           
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'مكان التحميل' : 'Loading location'}</label>
             <select
               className={styles.input}
               value={startingPoint}
@@ -572,7 +572,7 @@ export default function AddMerchantGoodsPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'مكان التنزيل' : 'Unloading location'}</label>
             <select className={styles.input} value={destination} onChange={(e) => setDestination(e.target.value)}>
               <option value="" />
               {locationOptionGroups.map((group) => (

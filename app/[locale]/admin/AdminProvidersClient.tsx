@@ -25,6 +25,7 @@ type ProviderEdits = {
   location: string;
   phone: string;
   destination: string;
+  placeOfBusiness: string;
   description: string;
   active: boolean;
 };
@@ -165,7 +166,8 @@ export default function AdminProvidersClient() {
         name: p.name,
         location: p.location,
         phone: p.phone,
-        destination: (p.destination ?? p.placeOfBusiness) ?? '',
+        destination: p.destination ?? '',
+        placeOfBusiness: p.placeOfBusiness ?? '',
         description: p.description ?? '',
         active: p.active,
       };
@@ -196,8 +198,12 @@ export default function AdminProvidersClient() {
     if (nextPhone && nextPhone !== original.phone) payload.phone = nextPhone;
 
     const dest = current.destination.trim();
-    const originalDest = (original.destination ?? original.placeOfBusiness) ?? '';
+    const originalDest = original.destination ?? '';
     if (dest !== originalDest) payload.destination = dest || null;
+
+    const placeOfBiz = current.placeOfBusiness.trim();
+    const originalPlaceOfBiz = original.placeOfBusiness ?? '';
+    if (placeOfBiz !== originalPlaceOfBiz) payload.placeOfBusiness = placeOfBiz || null;
 
     const desc = current.description.trim();
     if (desc !== (original.description ?? '')) payload.description = desc || null;
@@ -436,6 +442,21 @@ export default function AdminProvidersClient() {
                         </optgroup>
                       ))}
                     </select>
+                  </div>
+
+                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                    <label className={styles.label}>{tForm('placeOfBusiness')}</label>
+                    <input
+                      className={styles.input}
+                      value={e?.placeOfBusiness ?? ''}
+                      onChange={(ev) =>
+                        setEdits((prev) => ({
+                          ...prev,
+                          [p.id]: { ...prev[p.id], placeOfBusiness: ev.target.value },
+                        }))
+                      }
+                      placeholder={locale === 'ar' ? 'أدخل مجال العمل' : 'Enter place of business'}
+                    />
                   </div>
 
                   <div className={`${styles.formRow} ${styles.formRowSpaced}`}>

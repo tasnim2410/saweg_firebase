@@ -559,6 +559,7 @@ export default function AddProviderPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              required
             />
           </div>
 

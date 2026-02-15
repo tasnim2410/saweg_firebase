@@ -74,7 +74,7 @@ export default function RegistrationForm({ role }: Props) {
     shipperCity: '',
     carKind: '',
     maxCharge: '',
-    maxChargeUnit: 'kg',
+    maxChargeUnit: 'ton',
     placeOfBusiness: '',
     trucksNeeded: '',
   });
