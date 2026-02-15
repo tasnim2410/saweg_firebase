@@ -362,7 +362,6 @@ export default function RegistrationForm({ role }: Props) {
                     name="merchantCity"
                     value={formData.merchantCity}
                     onChange={handleChange}
-                    required
                   >
                     <option value="">
                       {locale === 'ar' ? 'اختر مدينتك' : 'Choose your city'}
@@ -383,7 +382,6 @@ export default function RegistrationForm({ role }: Props) {
                     name="shipperCity"
                     value={formData.shipperCity}
                     onChange={handleChange}
-                    required
                     className={styles.input}
                     placeholder={locale === 'ar' ? 'أدخل مكان عملك' : 'Enter your place of work'}
                   />
@@ -566,12 +564,12 @@ export default function RegistrationForm({ role }: Props) {
                     name="placeOfBusiness"
                     value={formData.placeOfBusiness}
                     onChange={handleChange}
-                    required
                     className={styles.input}
                     placeholder={locale === 'ar' ? 'وصف مجال العمل' : 'Job description'}
                   />
                 </div>
 
+                {/*
                 <div className={styles.formGroup}>
                   <label className={styles.label}>{t('trucksNeeded')}</label>
                   <div className={styles.carKindRoot} data-trucks-needed-root="true">
@@ -628,6 +626,8 @@ export default function RegistrationForm({ role }: Props) {
                     <input type="hidden" name="trucksNeeded" value={formData.trucksNeeded} />
                   </div>
                 </div>
+                */}
+
               </div>
             )}
 
