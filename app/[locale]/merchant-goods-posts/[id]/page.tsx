@@ -54,14 +54,12 @@ export async function generateMetadata({
       openGraph: {
         title: defaultTitle,
         description: defaultDescription,
-        images: [{ url: '/images/logo.png' }],
         type: 'article',
       },
       twitter: {
-        card: 'summary_large_image',
+        card: 'summary',
         title: defaultTitle,
         description: defaultDescription,
-        images: ['/images/logo.png'],
       },
     };
   }
@@ -87,14 +85,12 @@ export async function generateMetadata({
       openGraph: {
         title: defaultTitle,
         description: defaultDescription,
-        images: [{ url: '/images/logo.png' }],
         type: 'article',
       },
       twitter: {
-        card: 'summary_large_image',
+        card: 'summary',
         title: defaultTitle,
         description: defaultDescription,
-        images: ['/images/logo.png'],
       },
     };
   }
