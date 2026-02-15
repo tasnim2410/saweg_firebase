@@ -109,7 +109,7 @@ export async function generateMetadata({
 
   // Only include image if post has one
   const imageUrl = post.image ? post.image : null;
-  const images = imageUrl ? [{ url: imageUrl }] : [{ url: '/images/logo.png' }];
+  const images = imageUrl ? [{ url: imageUrl }] : undefined;
 
   return {
     title,
@@ -117,14 +117,14 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images,
+      ...(images && { images }),
       type: 'article',
     },
     twitter: {
-      card: 'summary_large_image',
+      card: imageUrl ? 'summary_large_image' : 'summary',
       title,
       description,
-      images: imageUrl ? [imageUrl] : ['/images/logo.png'],
+      ...(imageUrl && { images: [imageUrl] }),
     },
   };
 }
