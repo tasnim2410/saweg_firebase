@@ -168,7 +168,7 @@
     "placeOfBusiness": "Place of business",
     "trucksNeeded": "Trucks you usually need",
     "submit": "Complete Registration",
-    "success": "Thank you for registering! We'll notify you when the app launches.",
+    "success": "Registration successful! Welcome to Saweg.",
     "errors": {
       "passwordTooShort": "Password must be at least 6 characters",
       "passwordsDoNotMatch": "Passwords do not match",
