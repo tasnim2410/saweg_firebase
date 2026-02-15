@@ -7,6 +7,7 @@ import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import styles from './merchant-goods-posts.module.css';
 import { getVehicleLabel, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
+import PhoneDisplay from './PhoneDisplay';
 
 type MerchantGoodsPostDetails = {
   id: number;
@@ -203,6 +204,11 @@ export default async function MerchantGoodsPostDetailsPage({
     return `tel:${normalized}`;
   };
 
+  const toWhatsAppHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^\d]/g, '');
+    return `https://wa.me/${normalized}`;
+  };
+
   const timeAgoLabelFromMs = (ms: number) => {
     if (!Number.isFinite(ms)) return '';
     const diffMs = Date.now() - ms;
@@ -372,19 +378,13 @@ export default async function MerchantGoodsPostDetailsPage({
 
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{labels.phone}</div>
-              {post.phone ? (
-                <a className={styles.callButton} href={toTelHref(post.phone)} title={tCarousel('call')}>
-                  <span dir="ltr" className={styles.phoneNumberLtr}>
-                    {formatPhoneForDisplay(post.phone)}
-                  </span>
-                </a>
-              ) : (
-                <span className={`${styles.callButton} ${styles.callButtonDisabled}`}>
-                  <span dir="ltr" className={styles.phoneNumberLtr}>
-                    -
-                  </span>
-                </span>
-              )}
+              <PhoneDisplay
+                phone={post.phone}
+                locale={locale}
+                callButtonClass={styles.callButton}
+                callButtonDisabledClass={styles.callButtonDisabled}
+                phoneNumberLtrClass={styles.phoneNumberLtr}
+              />
             </div>
           </div>
         </div>

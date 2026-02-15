@@ -6,6 +6,7 @@ import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import styles from './providers.module.css';
 import { VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
+import PhoneDisplay from './PhoneDisplay';
 
 type ProviderDetails = {
   id: number;
@@ -200,6 +201,11 @@ export default async function ProviderDetailsPage({
     return `tel:${normalized}`;
   };
 
+  const toWhatsAppHref = (phoneNumber: string) => {
+    const normalized = phoneNumber.replace(/[^\d]/g, '');
+    return `https://wa.me/${normalized}`;
+  };
+
   const timeAgoLabelFromMs = (ms: number) => {
     if (!Number.isFinite(ms)) return '';
     const diffMs = Date.now() - ms;
@@ -325,19 +331,14 @@ export default async function ProviderDetailsPage({
 
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{tForm('phone')}</div>
-              {canCall ? (
-                <a className={styles.callButton} href={toTelHref(provider.phone)} title={tCarousel('call')}>
-                  <span dir="ltr" className={styles.phoneNumberLtr}>
-                    {formatPhoneForDisplay(provider.phone)}
-                  </span>
-                </a>
-              ) : (
-                <span className={`${styles.callButton} ${styles.callButtonDisabled}`}>
-                  <span dir="ltr" className={styles.phoneNumberLtr}>
-                    {formatPhoneForDisplay(provider.phone)}
-                  </span>
-                </span>
-              )}
+              <PhoneDisplay
+                phone={provider.phone}
+                locale={locale}
+                canCall={canCall}
+                callButtonClass={styles.callButton}
+                callButtonDisabledClass={styles.callButtonDisabled}
+                phoneNumberLtrClass={styles.phoneNumberLtr}
+              />
             </div>
           </div>
         </div>
