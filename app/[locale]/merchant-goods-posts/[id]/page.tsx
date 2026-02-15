@@ -107,7 +107,9 @@ export async function generateMetadata({
   const title = rawDescription.slice(0, 100) || fallbackDesc.slice(0, 100) || 'Saweg';
   const description = routePart || post.goodsType || '';
 
-  const imageUrl = post.image || '/images/logo.png';
+  // Only include image if post has one
+  const imageUrl = post.image ? post.image : null;
+  const images = imageUrl ? [{ url: imageUrl }] : [{ url: '/images/logo.png' }];
 
   return {
     title,
@@ -115,14 +117,14 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: imageUrl }],
+      images,
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [imageUrl],
+      images: imageUrl ? [imageUrl] : ['/images/logo.png'],
     },
   };
 }
