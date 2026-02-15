@@ -191,46 +191,37 @@ export default function AddMerchantGoodsPostPage() {
       return { ok: false as const };
     }
 
-    if (!isValidVehicleType(vehicleTypeDesired)) {
-      pushToast({
-        variant: 'error',
-        title: titleFor('form'),
-        message: locale === 'ar' ? 'يرجى اختيار نوع المركبة من القائمة' : 'Please choose a vehicle type from the list',
-      });
-      return { ok: false as const };
-    }
-
     if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
       pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(MAX_IMAGE_BYTES) });
       return { ok: false as const };
     }
 
-    if (
-      !startingPoint.trim() ||
-      !destination.trim() ||
-      !goodsType.trim() ||
-      !goodsWeight.trim() ||
-      !loadingDate.trim() ||
-      !vehicleTypeDesired.trim()
-    ) {
+    // Validate description is required
+    if (!description.trim()) {
       pushToast({
         variant: 'error',
         title: titleFor('form'),
-        message: locale === 'ar' ? 'يرجى إدخال كل الحقول المطلوبة' : 'Please fill all required fields',
+        message: locale === 'ar' ? 'يرجى إدخال الوصف' : 'Description is required',
       });
       return { ok: false as const };
     }
 
-    const weightNum = Number(goodsWeight);
-    if (!Number.isFinite(weightNum) || weightNum <= 0) {
-      pushToast({
-        variant: 'error',
-        title: titleFor('form'),
-        message: locale === 'ar' ? 'الوزن غير صحيح' : 'Invalid weight',
-      });
-      return { ok: false as const };
+    // Validate weight only if provided
+    let weightNum: number | null = null;
+    if (goodsWeight.trim()) {
+      const parsedWeight = Number(goodsWeight);
+      if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+        pushToast({
+          variant: 'error',
+          title: titleFor('form'),
+          message: locale === 'ar' ? 'الوزن غير صحيح' : 'Invalid weight',
+        });
+        return { ok: false as const };
+      }
+      weightNum = parsedWeight;
     }
 
+    // Validate budget only if provided
     const trimmedBudget = (budget || '').trim();
     const trimmedCurrency = (budgetCurrency || '').trim();
     let budgetNum: number | null = null;
@@ -266,25 +257,27 @@ export default function AddMerchantGoodsPostPage() {
 
   const submitNow = async (
     normalizedPhoneE164: string,
-    weightNum: number,
+    weightNum: number | null,
     budgetNum: number | null,
     budgetCurrencyValue: string | null
   ) => {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('phone', normalizedPhoneE164);
-    payload.append('startingPoint', startingPoint);
-    payload.append('destination', destination);
-    payload.append('goodsType', goodsType);
-    payload.append('goodsWeight', String(weightNum));
-    payload.append('goodsWeightUnit', goodsWeightUnit);
+    if (startingPoint.trim()) payload.append('startingPoint', startingPoint);
+    if (destination.trim()) payload.append('destination', destination);
+    if (goodsType.trim()) payload.append('goodsType', goodsType);
+    if (weightNum !== null) {
+      payload.append('goodsWeight', String(weightNum));
+      payload.append('goodsWeightUnit', goodsWeightUnit);
+    }
     if (budgetNum !== null) {
       payload.append('budget', String(budgetNum));
       if (budgetCurrencyValue) payload.append('budgetCurrency', budgetCurrencyValue);
     }
-    payload.append('loadingDate', loadingDate);
-    payload.append('vehicleTypeDesired', vehicleTypeDesired);
-    if (description.trim()) payload.append('description', description);
+    if (loadingDate) payload.append('loadingDate', loadingDate);
+    if (vehicleTypeDesired) payload.append('vehicleTypeDesired', vehicleTypeDesired);
+    payload.append('description', description);
     if (imageFile) payload.append('image', imageFile);
 
     setSubmitting(true);
@@ -532,6 +525,7 @@ export default function AddMerchantGoodsPostPage() {
         </div>
 
         <form className={styles.form} onSubmit={onSubmit}>
+          
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'الاسم' : 'Name'}</label>
             <input
@@ -539,9 +533,9 @@ export default function AddMerchantGoodsPostPage() {
               value={name}
               disabled={!isAdmin}
               onChange={(e) => setName(e.target.value)}
-              required
             />
           </div>
+         
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'رقم الهاتف' : 'Phone number'}</label>
@@ -554,13 +548,13 @@ export default function AddMerchantGoodsPostPage() {
             />
           </div>
 
+          {/*
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</label>
             <select
               className={styles.input}
               value={startingPoint}
               onChange={(e) => setStartingPoint(e.target.value)}
-              required
             >
               <option value="" />
               {locationOptionGroups.map((group) => (
@@ -577,7 +571,7 @@ export default function AddMerchantGoodsPostPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</label>
-            <select className={styles.input} value={destination} onChange={(e) => setDestination(e.target.value)} required>
+            <select className={styles.input} value={destination} onChange={(e) => setDestination(e.target.value)}>
               <option value="" />
               {locationOptionGroups.map((group) => (
                 <optgroup key={group.label} label={group.label}>
@@ -593,7 +587,7 @@ export default function AddMerchantGoodsPostPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نوع البضاعة' : 'Type of goods'}</label>
-            <input className={styles.input} value={goodsType} onChange={(e) => setGoodsType(e.target.value)} required />
+            <input className={styles.input} value={goodsType} onChange={(e) => setGoodsType(e.target.value)} />
           </div>
 
           <div className={styles.row}>
@@ -606,7 +600,6 @@ export default function AddMerchantGoodsPostPage() {
                 onChange={(e) => setGoodsWeight(e.target.value)}
                 min={0}
                 step={0.1}
-                required
               />
               <select
                 className={styles.input}
@@ -653,7 +646,6 @@ export default function AddMerchantGoodsPostPage() {
               value={loadingDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setLoadingDate(e.target.value)}
-              required
             />
           </div>
 
@@ -712,17 +704,19 @@ export default function AddMerchantGoodsPostPage() {
                 ) : null}
               </div>
             ) : (
-              <input className={styles.input} value={vehicleTypeDesired} readOnly required />
+              <input className={styles.input} value={vehicleTypeDesired} readOnly />
             )}
           </div>
+          */}
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'الوصف (اختياري)' : 'Description (optional)'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'الوصف' : 'Description'}</label>
             <textarea
               className={styles.textarea}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              required
             />
           </div>
 
