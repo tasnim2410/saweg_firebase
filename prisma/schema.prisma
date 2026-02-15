@@ -83,13 +83,13 @@ model MerchantGoodsPost {
   id                 Int      @id @default(autoincrement())
   name               String   @default("")
   phone              String   @default("")
-  startingPoint      String
-  destination        String
-  goodsType          String
-  goodsWeight        Float
-  goodsWeightUnit    String
-  loadingDate        DateTime
-  vehicleTypeDesired String
+  startingPoint      String?
+  destination        String?
+  goodsType          String?
+  goodsWeight        Float?
+  goodsWeightUnit    String?
+  loadingDate        DateTime?
+  vehicleTypeDesired String?
   budget             Float?
   budgetCurrency     BudgetCurrency?
   image              String?

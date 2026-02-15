@@ -413,6 +413,7 @@ export default function AddMerchantGoodsPostPage() {
                   {phone || '-'}
                 </div>
               </div>
+              {/*
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</div>
                 <div className={styles.modalValue}>{startingPoint || '-'}</div>
@@ -445,6 +446,7 @@ export default function AddMerchantGoodsPostPage() {
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</div>
                 <div className={styles.modalValue}>{vehicleTypeDesired || '-'}</div>
               </div>
+              */}
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'الوصف' : 'Description'}</div>
                 <div className={styles.modalValue}>{description || '-'}</div>

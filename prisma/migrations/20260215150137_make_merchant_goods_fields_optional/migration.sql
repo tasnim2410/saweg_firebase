@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "MerchantGoodsPost" ALTER COLUMN "startingPoint" DROP NOT NULL,
+ALTER COLUMN "destination" DROP NOT NULL,
+ALTER COLUMN "goodsType" DROP NOT NULL,
+ALTER COLUMN "goodsWeight" DROP NOT NULL,
+ALTER COLUMN "goodsWeightUnit" DROP NOT NULL,
+ALTER COLUMN "loadingDate" DROP NOT NULL,
+ALTER COLUMN "vehicleTypeDesired" DROP NOT NULL;

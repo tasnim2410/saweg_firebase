@@ -143,30 +143,44 @@ export async function POST(req: NextRequest) {
     const budgetRaw = typeof formData.get('budget') === 'string' ? String(formData.get('budget')).trim() : '';
     const budgetCurrencyRaw = typeof formData.get('budgetCurrency') === 'string' ? String(formData.get('budgetCurrency')).trim() : '';
 
-    if (!startingPoint || !destination || !goodsType || !goodsWeightRaw || !loadingDateRaw || !vehicleTypeDesired) {
+    if (!description) {
       return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
     }
 
-    if (!isValidVehicleType(vehicleTypeDesired)) {
-      return NextResponse.json({ error: 'INVALID_VEHICLE_TYPE' }, { status: 400 });
+    // Validate vehicle type only if provided
+    let normalizedVehicleType: string | null = null;
+    if (vehicleTypeDesired) {
+      if (!isValidVehicleType(vehicleTypeDesired)) {
+        return NextResponse.json({ error: 'INVALID_VEHICLE_TYPE' }, { status: 400 });
+      }
+      normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
     }
 
-    // Normalize vehicle type to new ID format for storage
-    const normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
+    // Validate weight only if provided
+    let goodsWeight: number | null = null;
+    let normalizedUnit: string | null = null;
+    if (goodsWeightRaw) {
+      const parsedWeight = Number(goodsWeightRaw);
+      if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+        return NextResponse.json({ error: 'INVALID_WEIGHT' }, { status: 400 });
+      }
+      goodsWeight = parsedWeight;
 
-    const goodsWeight = Number(goodsWeightRaw);
-    if (!Number.isFinite(goodsWeight) || goodsWeight <= 0) {
-      return NextResponse.json({ error: 'INVALID_WEIGHT' }, { status: 400 });
+      const unitLower = goodsWeightUnit.toLowerCase();
+      if (unitLower !== 'kg' && unitLower !== 'ton') {
+        return NextResponse.json({ error: 'INVALID_WEIGHT_UNIT' }, { status: 400 });
+      }
+      normalizedUnit = unitLower;
     }
 
-    const normalizedUnit = goodsWeightUnit.toLowerCase();
-    if (normalizedUnit !== 'kg' && normalizedUnit !== 'ton') {
-      return NextResponse.json({ error: 'INVALID_WEIGHT_UNIT' }, { status: 400 });
-    }
-
-    const loadingDate = new Date(loadingDateRaw);
-    if (Number.isNaN(loadingDate.getTime())) {
-      return NextResponse.json({ error: 'INVALID_LOADING_DATE' }, { status: 400 });
+    // Validate loading date only if provided
+    let loadingDate: Date | null = null;
+    if (loadingDateRaw) {
+      const parsedDate = new Date(loadingDateRaw);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return NextResponse.json({ error: 'INVALID_LOADING_DATE' }, { status: 400 });
+      }
+      loadingDate = parsedDate;
     }
 
     let budget: number | null = null;
@@ -222,13 +236,13 @@ export async function POST(req: NextRequest) {
         data: {
           name: isAdmin && nameFromForm ? nameFromForm : user.fullName,
           phone: normalizedPhone.e164,
-          startingPoint,
-          destination,
-          goodsType,
-          goodsWeight,
+          startingPoint: startingPoint || null,
+          destination: destination || null,
+          goodsType: goodsType || null,
+          goodsWeight: goodsWeight,
           goodsWeightUnit: normalizedUnit,
-          loadingDate,
-          vehicleTypeDesired,
+          loadingDate: loadingDate,
+          vehicleTypeDesired: normalizedVehicleType,
           budget,
           budgetCurrency,
           image: imagePath,
@@ -256,9 +270,11 @@ export async function POST(req: NextRequest) {
         });
 
         const title = 'Saweg';
-        const startingPointAr = getLocationLabel(post.startingPoint, 'ar');
-        const destinationAr = getLocationLabel(post.destination, 'ar');
-        const body = `مطلوب شاحنة من "${startingPointAr}" الي "${destinationAr}"`;
+        const startingPointAr = post.startingPoint ? getLocationLabel(post.startingPoint, 'ar') : '';
+        const destinationAr = post.destination ? getLocationLabel(post.destination, 'ar') : '';
+        const body = startingPointAr && destinationAr 
+          ? `مطلوب شاحنة من "${startingPointAr}" الي "${destinationAr}"`
+          : 'طلب جديد من تاجر';
         const url = '/ar/merchant-goods-posts';
 
         for (const sub of subs) {

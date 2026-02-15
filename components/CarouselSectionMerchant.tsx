@@ -362,7 +362,8 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
               (locale === 'ar' ? 'تاجر' : 'Merchant');
 
             const imageSrc = post.image || '';
-            const isImageBroken = brokenImages[post.id] || !post.image;
+            const hasImage = !!post.image;
+            const isImageBroken = brokenImages[post.id];
 
             const phoneCandidate =
               (typeof post.phone === 'string' && post.phone.trim()) ||
@@ -395,23 +396,25 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                     aria-label={merchantName}
                     className={styles.imageLink}
                   >
-                  {!isImageBroken ? (
-                    <Image
-                      src={imageSrc}
-                      alt={merchantName}
-                      fill
-                      sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
-                      className={styles.productImage}
-                      loading="lazy"
-                      onError={() => {
-                        setBrokenImages((prev) => (prev[post.id] ? prev : { ...prev, [post.id]: true }));
-                      }}
-                    />
-                  ) : (
-                    <div className={styles.imageError}>
-                      {locale === 'ar' ? 'تعذر تحميل الصورة' : 'Could not load image'}
-                    </div>
-                  )}
+                  {hasImage ? (
+                    !isImageBroken ? (
+                      <Image
+                        src={imageSrc}
+                        alt={merchantName}
+                        fill
+                        sizes="(max-width: 480px) 210px, (max-width: 768px) 250px, 280px"
+                        className={styles.productImage}
+                        loading="lazy"
+                        onError={() => {
+                          setBrokenImages((prev) => (prev[post.id] ? prev : { ...prev, [post.id]: true }));
+                        }}
+                      />
+                    ) : (
+                      <div className={styles.imageError}>
+                        {locale === 'ar' ? 'فشل تحميل الصورة' : 'Failed to upload'}
+                      </div>
+                    )
+                  ) : null}
                   </Link>
 
                   {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
