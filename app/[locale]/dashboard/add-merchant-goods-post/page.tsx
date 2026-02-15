@@ -413,7 +413,7 @@ export default function AddMerchantGoodsPostPage() {
                   {phone || '-'}
                 </div>
               </div>
-              {/*
+              
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</div>
                 <div className={styles.modalValue}>{startingPoint || '-'}</div>
@@ -438,15 +438,15 @@ export default function AddMerchantGoodsPostPage() {
                   {budget.trim() ? `${budget.trim()}${budgetCurrency.trim() ? ` ${budgetCurrency.trim()}` : ''}` : '-'}
                 </div>
               </div>
-              <div className={styles.modalRow}>
+              {/* <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'تاريخ التحميل' : 'Loading date'}</div>
                 <div className={styles.modalValue}>{loadingDate || '-'}</div>
-              </div>
+              </div> */}
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</div>
                 <div className={styles.modalValue}>{vehicleTypeDesired || '-'}</div>
               </div>
-              */}
+             
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'الوصف' : 'Description'}</div>
                 <div className={styles.modalValue}>{description || '-'}</div>
@@ -550,7 +550,7 @@ export default function AddMerchantGoodsPostPage() {
             />
           </div>
 
-          {/*
+          
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</label>
             <select
@@ -640,7 +640,7 @@ export default function AddMerchantGoodsPostPage() {
             </div>
           </div>
 
-          <div className={styles.row}>
+          {/* <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'تاريخ التحميل' : 'Loading date'}</label>
             <input
               className={styles.input}
@@ -649,7 +649,7 @@ export default function AddMerchantGoodsPostPage() {
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setLoadingDate(e.target.value)}
             />
-          </div>
+          </div> */}
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</label>
@@ -709,7 +709,7 @@ export default function AddMerchantGoodsPostPage() {
               <input className={styles.input} value={vehicleTypeDesired} readOnly />
             )}
           </div>
-          */}
+         
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'الوصف' : 'Description'}</label>

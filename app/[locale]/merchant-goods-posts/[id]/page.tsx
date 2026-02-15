@@ -329,6 +329,7 @@ export default async function MerchantGoodsPostDetailsPage({
               <div className={styles.infoValue}>{post.description || '-'}</div>
             </div>
 
+            
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{labels.route}</div>
               <div className={styles.infoValue}>
@@ -355,15 +356,16 @@ export default async function MerchantGoodsPostDetailsPage({
               </div>
             </div>
 
-            <div className={styles.infoBlock}>
+            {/* <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.loadingDate}</div>
               <div className={styles.infoValue}>{formatDate(post.loadingDate)}</div>
-            </div>
+            </div> */}
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.vehicle}</div>
               <div className={styles.infoValue}>{vehicleLabelDisplay(post.vehicleTypeDesired)}</div>
             </div>
+           
 
             <div className={styles.infoBlockFull}>
               <div className={styles.infoLabel}>{labels.phone}</div>
