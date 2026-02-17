@@ -119,7 +119,7 @@ export default function InstallPrompt() {
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 600, fontSize: '15px', marginBottom: '2px' }}>
-          {isAr ? 'تثبيت تطبيق ساوج' : 'Install Saweg App'}
+          {isAr ? 'تثبيت تطبيق سواق' : 'Install Saweg'}
         </div>
         <div style={{ fontSize: '13px', color: '#94a3b8' }}>
           {isIOS
