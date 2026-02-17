@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import "../globals.css";
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import InstallPrompt from '@/components/InstallPrompt';
 
 const locales = ['en', 'ar'];
 
@@ -65,6 +66,7 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <ServiceWorkerRegister />
+          <InstallPrompt />
           {children}
         </NextIntlClientProvider>
       </body>
