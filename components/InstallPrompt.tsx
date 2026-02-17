@@ -58,22 +58,27 @@ export default function InstallPrompt() {
     }
 
     // For Android/Desktop Chrome/Edge - listen for beforeinstallprompt
+    let promptFired = false;
     const handler = (e: Event) => {
       e.preventDefault();
+      promptFired = true;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setTimeout(() => setShowBanner(true), 2000);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Fallback: Show banner on localhost for testing (beforeinstallprompt doesn't fire on http://)
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocalhost) {
-      setTimeout(() => setShowBanner(true), 2000);
-    }
+    // Fallback: Show banner after 5 seconds if beforeinstallprompt hasn't fired
+    // This ensures the banner shows on desktop even if the event doesn't fire
+    const fallbackTimer = setTimeout(() => {
+      if (!promptFired) {
+        setShowBanner(true);
+      }
+    }, 5000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      clearTimeout(fallbackTimer);
     };
   }, [mounted]);
 
