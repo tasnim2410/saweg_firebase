@@ -49,11 +49,8 @@ export default function InstallPrompt() {
 
     // For iOS, show the banner with manual instructions (no beforeinstallprompt on Safari)
     if (isiOS) {
-      // Only show on Safari
-      const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
-      if (isSafari) {
-        setTimeout(() => setShowBanner(true), 3000);
-      }
+      // Show on all iOS browsers (Safari, Chrome, Firefox, etc.)
+      setTimeout(() => setShowBanner(true), 3000);
       return;
     }
 
@@ -138,19 +135,21 @@ export default function InstallPrompt() {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-        {!isIOS && deferredPrompt && (
+        {!isIOS && (
           <button
             onClick={handleInstall}
+            disabled={!deferredPrompt}
             style={{
-              background: '#FFB81C',
+              background: deferredPrompt ? '#FFB81C' : '#94a3b8',
               color: '#111827',
               border: 'none',
               borderRadius: '8px',
               padding: '8px 16px',
               fontWeight: 600,
               fontSize: '14px',
-              cursor: 'pointer',
+              cursor: deferredPrompt ? 'pointer' : 'not-allowed',
               whiteSpace: 'nowrap',
+              opacity: deferredPrompt ? 1 : 0.6,
             }}
           >
             {isAr ? 'تثبيت' : 'Install'}
