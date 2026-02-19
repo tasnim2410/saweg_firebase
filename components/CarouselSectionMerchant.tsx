@@ -50,6 +50,8 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const [openShareForId, setOpenShareForId] = useState<number | null>(null);
   const [openCallForId, setOpenCallForId] = useState<number | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
   const callPopoverRef = useRef<HTMLDivElement | null>(null);
 
@@ -249,6 +251,26 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const seeMoreHref = `/${locale}/merchant-goods-posts`;
   const seeMoreLabel = locale === 'ar' ? 'عرض المزيد' : 'See all';
 
+
+  const checkScrollButtons = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('scroll', checkScrollButtons);
+      window.addEventListener('resize', checkScrollButtons);
+      return () => {
+        carousel.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', checkScrollButtons);
+      };
+    }
+  }, [visiblePosts]);
   const scrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -300, behavior: 'smooth' });
@@ -346,13 +368,15 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
       </div>
 
       <div className={styles.carouselWrapper}>
-        <button
-          className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
-          onClick={scrollLeft}
-          aria-label={t('scrollLeft')}
-        >
-          ›
-        </button>
+        {canScrollLeft && (
+          <button
+            className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
+            onClick={scrollLeft}
+            aria-label={t('scrollLeft')}
+          >
+            ›
+          </button>
+        )}
 
         <div className={styles.carousel} ref={carouselRef}>
           {visiblePosts.map((post) => {

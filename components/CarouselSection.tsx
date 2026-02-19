@@ -66,6 +66,8 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const [openCallForId, setOpenCallForId] = useState<number | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const [distanceFilteredProviders, setDistanceFilteredProviders] = useState<Provider[]>([]);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const sharePopoverRef = useRef<HTMLDivElement | null>(null);
   const callPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -326,7 +328,26 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const hasMore = filteredProviders.length > MAX_ITEMS;
   const visibleProviders = hasMore ? filteredProviders.slice(0, MAX_ITEMS) : filteredProviders;
   const seeMoreOffersHref = `/${locale}/providers`;
-  const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد' : 'See more    ';
+  
+  const checkScrollButtons = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('scroll', checkScrollButtons);
+      window.addEventListener('resize', checkScrollButtons);
+      return () => {
+        carousel.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', checkScrollButtons);
+      };
+    }
+  }, [visibleProviders]);
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -452,13 +473,15 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
       </div>
 
       <div className={styles.carouselWrapper}>
-        <button
-          className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
-          onClick={scrollLeft}
-          aria-label={t('scrollLeft')}
-        >
-          ›
-        </button>
+        {canScrollLeft && (
+          <button
+            className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}
+            onClick={scrollLeft}
+            aria-label={t('scrollLeft')}
+          >
+            ›
+          </button>
+        )}
 
         <div className={styles.carousel} ref={carouselRef}>
           {visibleProviders.map((provider) => {
@@ -650,13 +673,15 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
           ) : null}
         </div>
 
-        <button
-          className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
-          onClick={scrollRight}
-          aria-label={t('scrollRight')}
-        >
-          ‹
-        </button>
+        {canScrollRight && (
+          <button
+            className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
+            onClick={scrollRight}
+            aria-label={t('scrollRight')}
+          >
+            ‹
+          </button>
+        )}
       </div>
     </section>
   );
