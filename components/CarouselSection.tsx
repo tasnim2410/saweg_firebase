@@ -328,7 +328,8 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const hasMore = filteredProviders.length > MAX_ITEMS;
   const visibleProviders = hasMore ? filteredProviders.slice(0, MAX_ITEMS) : filteredProviders;
   const seeMoreOffersHref = `/${locale}/providers`;
-  
+  const seeMoreOffersLabel = locale === 'ar' ? 'عرض المزيد' : 'See more';
+
   const checkScrollButtons = () => {
     if (!carouselRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
