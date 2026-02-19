@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Navigation } from 'lucide-react';
 import styles from './DistanceFilter.module.css';
-import { getLocationOptionGroups, getLocationLabel, LOCATION_OPTIONS } from '@/lib/locations';
+import { getLocationLabel, LOCATION_OPTIONS } from '@/lib/locations';
 import { getCurrentPosition, findNearestCity } from '@/lib/distance';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 
 export type DistanceValue = 'same-city' | 'nearby-30' | 'nearby-50' | 'nearby-100' | 'nearby-150' | 'nearby-200' | 'any';
 export type DistanceSource = 'current-location' | 'selected-city';
@@ -56,7 +57,6 @@ export default function DistanceFilter({
   const [locationError, setLocationError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const locationOptionGroups = getLocationOptionGroups(locale as 'ar' | 'en');
 
   // Close on outside click
   useEffect(() => {
@@ -242,24 +242,12 @@ export default function DistanceFilter({
           {/* City Selector (when selected-city is chosen) */}
           {distanceSource === 'selected-city' && (
             <div className={styles.citySelector}>
-              <select
-                className={styles.citySelect}
-                value={selectedCity || ''}
-                onChange={(e) => onSelectedCityChange(e.target.value || null)}
-              >
-                <option value="">
-                  {isRTL ? 'اختر مدينة...' : 'Select a city...'}
-                </option>
-                {locationOptionGroups.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.options.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <SearchableCitySelect
+                value={selectedCity}
+                onChange={onSelectedCityChange}
+                locale={locale as 'ar' | 'en'}
+                placeholder={isRTL ? 'ابحث عن مدينة...' : 'Search for a city...'}
+              />
             </div>
           )}
 

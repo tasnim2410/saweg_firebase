@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './add-provider.module.css';
-import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { getFormattedLocationName } from '@/lib/geocoding';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 
 const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -17,8 +17,6 @@ export default function AddProviderPage() {
   const t = useTranslations('providerForm');
   const locale = useLocale();
   const router = useRouter();
-
-  const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -33,9 +31,9 @@ export default function AddProviderPage() {
   >([]);
 
   const [name, setName] = useState('');
-  const [destination, setDestination] = useState('');
+  const [destination, setDestination] = useState<string | null>(null);
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -149,7 +147,7 @@ export default function AddProviderPage() {
             setCoords({ latitude: lat, longitude: lng });
             
             try {
-              const locationName = await getFormattedLocationName(lat, lng);
+              const locationName = await getFormattedLocationName(lat, lng, locale as 'ar' | 'en');
               setCurrentLocationName(locationName);
               await saveLocationToDatabase(lat, lng, locationName);
             } catch {
@@ -198,8 +196,8 @@ export default function AddProviderPage() {
       return { ok: false as const };
     }
 
-    if (!location.trim() || !phone.trim()) {
-      if (!useCurrentLocation && !location.trim()) {
+    if ((!location || !location.trim()) || !phone.trim()) {
+      if (!useCurrentLocation && (!location || !location.trim())) {
         pushToast({
           variant: 'error',
           title: titleFor('form'),
@@ -259,12 +257,14 @@ export default function AddProviderPage() {
         
         // Get location name from coordinates
         try {
-          const locationName = await getFormattedLocationName(lat, lng);
+          const locationName = await getFormattedLocationName(lat, lng, locale as 'ar' | 'en');
           setCurrentLocationName(locationName);
           
           // Save location to database for live tracking
           await saveLocationToDatabase(lat, lng, locationName);
-        } catch {
+        } catch (error) {
+          // Fallback to coordinates if geocoding fails (e.g., API unavailable)
+          console.warn('Geocoding failed, using coordinates:', error);
           setCurrentLocationName(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         }
         
@@ -314,10 +314,12 @@ export default function AddProviderPage() {
       : location;
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
-    payload.append('destination', destination);
-    payload.append('placeOfBusiness', destination);
+    if (destination) {
+      payload.append('destination', destination);
+      payload.append('placeOfBusiness', destination);
+    }
     payload.append('description', description);
-    payload.append('location', finalLocation);
+    if (finalLocation) payload.append('location', finalLocation);
     payload.append('phone', normalizedPhoneE164);
     payload.append('active', 'true');
     if (imageFile) payload.append('image', imageFile);
@@ -533,23 +535,12 @@ export default function AddProviderPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{t('destination')}</label>
-            <select
-              className={styles.input}
+            <SearchableCitySelect
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            
-            >
-              <option value="" />
-              {locationOptionGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              onChange={setDestination}
+              locale={locale as 'ar' | 'en'}
+              placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+            />
           </div>
 
           <div className={styles.row}>
@@ -615,23 +606,12 @@ export default function AddProviderPage() {
                 </button>
               </div>
             ) : (
-              <select
-                className={styles.input}
+              <SearchableCitySelect
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required={!useCurrentLocation}
-              >
-                <option value="" />
-                {locationOptionGroups.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.options.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                onChange={setLocation}
+                locale={locale as 'ar' | 'en'}
+                placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+              />
             )}
           </div>
 

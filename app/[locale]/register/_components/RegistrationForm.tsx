@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react';
 import { CheckCircle, ArrowLeft, Camera, Upload } from 'lucide-react';
 import styles from './RegistrationForm.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
-import { getLocationOptionGroups } from '@/lib/locations';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 
 type RegistrationRole = 'shipper' | 'merchant';
 
@@ -357,25 +357,12 @@ export default function RegistrationForm({ role }: Props) {
                   {role === 'shipper' ? t('shipperCity') : t('merchantCity')}
                 </label>
                 {role === 'merchant' ? (
-                  <select
-                    className={styles.input}
-                    name="merchantCity"
+                  <SearchableCitySelect
                     value={formData.merchantCity}
-                    onChange={handleChange}
-                  >
-                    <option value="">
-                      {locale === 'ar' ? 'اختر مدينتك' : 'Choose your city'}
-                    </option>
-                    {getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en').map((group) => (
-                      <optgroup key={group.label} label={group.label}>
-                        {group.options.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, merchantCity: value || '' })}
+                    locale={locale as 'ar' | 'en'}
+                    placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+                  />
                 ) : (
                   <input
                     type="text"

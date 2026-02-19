@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from '../add-provider/add-provider.module.css';
-import { getLocationOptionGroups } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, normalizeVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -16,8 +16,6 @@ type WeightUnit = 'kg' | 'ton';
 export default function AddMerchantGoodsPostPage() {
   const locale = useLocale();
   const router = useRouter();
-
-  const locationOptionGroups = getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en');
 
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -36,8 +34,8 @@ export default function AddMerchantGoodsPostPage() {
   >([]);
 
   const [name, setName] = useState('');
-  const [startingPoint, setStartingPoint] = useState('');
-  const [destination, setDestination] = useState('');
+  const [startingPoint, setStartingPoint] = useState<string | null>(null);
+  const [destination, setDestination] = useState<string | null>(null);
   const [goodsType, setGoodsType] = useState('');
   const [goodsWeight, setGoodsWeight] = useState<string>('');
   const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('kg');
@@ -264,8 +262,8 @@ export default function AddMerchantGoodsPostPage() {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('phone', normalizedPhoneE164);
-    if (startingPoint.trim()) payload.append('startingPoint', startingPoint);
-    if (destination.trim()) payload.append('destination', destination);
+    if (startingPoint && startingPoint.trim()) payload.append('startingPoint', startingPoint);
+    if (destination && destination.trim()) payload.append('destination', destination);
     if (goodsType.trim()) payload.append('goodsType', goodsType);
     if (weightNum !== null) {
       payload.append('goodsWeight', String(weightNum));
@@ -553,38 +551,22 @@ export default function AddMerchantGoodsPostPage() {
           
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'مكان التحميل' : 'Loading location'}</label>
-            <select
-              className={styles.input}
+            <SearchableCitySelect
               value={startingPoint}
-              onChange={(e) => setStartingPoint(e.target.value)}
-            >
-              <option value="" />
-              {locationOptionGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              onChange={setStartingPoint}
+              locale={locale as 'ar' | 'en'}
+              placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+            />
           </div>
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'مكان التنزيل' : 'Unloading location'}</label>
-            <select className={styles.input} value={destination} onChange={(e) => setDestination(e.target.value)}>
-              <option value="" />
-              {locationOptionGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            <SearchableCitySelect
+              value={destination}
+              onChange={setDestination}
+              locale={locale as 'ar' | 'en'}
+              placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+            />
           </div>
 
           <div className={styles.row}>

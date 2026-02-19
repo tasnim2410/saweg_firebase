@@ -2,9 +2,10 @@
 
 import { useLocale } from 'next-intl';
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 import styles from './DestinationFilter.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 
 interface Props {
   selectedDestinations: string[];
@@ -15,8 +16,8 @@ interface Props {
 export default function DestinationFilter({ selectedDestinations, onChange, onClear }: Props) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
-  const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [tempSelection, setTempSelection] = useState<string | null>(null);
 
   const locationGroups = useMemo(() => getLocationOptionGroups(locale === 'ar' ? 'ar' : 'en'), [locale]);
 
@@ -38,44 +39,16 @@ export default function DestinationFilter({ selectedDestinations, onChange, onCl
       .filter(Boolean) as string[];
   }, [selectedDestinations, allOptions]);
 
-  // Close dropdown on outside click and Escape
-  useEffect(() => {
-    if (!open) return;
-
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-      if (!target.closest('[data-destination-root="true"]')) {
-        setOpen(false);
-      }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  const toggleDestination = (value: string) => {
-    if (selectedDestinations.includes(value)) {
-      onChange(selectedDestinations.filter((v) => v !== value));
-    } else {
+  const handleAddDestination = (value: string | null) => {
+    if (value && !selectedDestinations.includes(value)) {
       onChange([...selectedDestinations, value]);
+      setTempSelection(null);
     }
   };
 
-  const displayText =
-    selectedDestinations.length === 0
-      ? isRTL
-        ? 'اختر الوجهة'
-        : 'Choose destination'
-      : selectedLabels.join(', ');
+  const handleRemoveDestination = (value: string) => {
+    onChange(selectedDestinations.filter((v) => v !== value));
+  };
 
   return (
     <div className={styles.filterContainer} ref={rootRef} data-destination-root="true">
@@ -92,18 +65,14 @@ export default function DestinationFilter({ selectedDestinations, onChange, onCl
       </div>
 
       <div className={styles.controls}>
-        <button
-          type="button"
-          className={`${styles.dropdownButton} ${open ? styles.open : ''}`}
-          aria-haspopup="listbox"
-          aria-expanded={open ? 'true' : 'false'}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className={selectedDestinations.length === 0 ? styles.placeholder : styles.value}>
-            {displayText.length > 40 ? displayText.slice(0, 40) + '...' : displayText}
-          </span>
-          <span className={styles.caret}>{open ? '▲' : '▼'}</span>
-        </button>
+        <div className={styles.searchContainer}>
+          <SearchableCitySelect
+            value={tempSelection}
+            onChange={handleAddDestination}
+            locale={locale as 'ar' | 'en'}
+            placeholder={isRTL ? 'ابحث وأضف مدينة...' : 'Search and add a city...'}
+          />
+        </div>
 
         {selectedDestinations.length > 0 && (
           <button type="button" className={styles.clearButton} onClick={onClear}>
@@ -112,29 +81,24 @@ export default function DestinationFilter({ selectedDestinations, onChange, onCl
         )}
       </div>
 
-      {open && (
-        <div className={styles.popover} role="listbox">
-          {locationGroups.map((group) => (
-            <div key={group.label} className={styles.group}>
-              <div className={styles.groupLabel}>{group.label}</div>
-              {group.options.map((opt) => {
-                const isSelected = selectedDestinations.includes(opt.value);
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    className={`${styles.option} ${isSelected ? styles.selected : ''}`}
-                    role="option"
-                    aria-selected={isSelected ? 'true' : 'false'}
-                    onClick={() => toggleDestination(opt.value)}
-                  >
-                    <span className={styles.check}>{isSelected ? '✓' : ''}</span>
-                    <span className={styles.label}>{opt.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+      {selectedDestinations.length > 0 && (
+        <div className={styles.selectedTags}>
+          {selectedDestinations.map((value) => {
+            const label = allOptions.find((o) => o.value === value)?.label || value;
+            return (
+              <div key={value} className={styles.tag}>
+                <span className={styles.tagLabel}>{label}</span>
+                <button
+                  type="button"
+                  className={styles.tagRemove}
+                  onClick={() => handleRemoveDestination(value)}
+                  aria-label={isRTL ? 'إزالة' : 'Remove'}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

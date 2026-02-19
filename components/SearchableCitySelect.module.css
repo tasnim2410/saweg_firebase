@@ -1,0 +1,139 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trigger:hover:not(.triggerDisabled) {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.triggerOpen {
+  border-color: #FFB81C;
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.1);
+}
+
+.triggerDisabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  min-width: 0;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.clearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.clearButton:hover {
+  color: #111827;
+}
+
+.caret {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.caretOpen {
+  transform: rotate(180deg);
+  color: #FFB81C;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.15s ease;
+}
+
+.option:hover {
+  background-color: #f3f4f6;
+}
+
+.optionSelected {
+  background-color: #fef3c7;
+  color: #111827;
+  font-weight: 500;
+}
+
+.optionSelected:hover {
+  background-color: #fde68a;
+}
+
+.noResults {
+  padding: 16px 12px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* RTL support */
+[dir="rtl"] .input {
+  text-align: right;
+}
+
+[dir="rtl"] .option {
+  text-align: right;
+}
+
+[dir="rtl"] .noResults {
+  text-align: right;
+}
