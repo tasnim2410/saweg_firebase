@@ -65,17 +65,11 @@ export default function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Fallback: Show banner after 5 seconds if beforeinstallprompt hasn't fired
-    // This ensures the banner shows on desktop even if the event doesn't fire
-    const fallbackTimer = setTimeout(() => {
-      if (!promptFired) {
-        setShowBanner(true);
-      }
-    }, 5000);
+    // Don't show fallback banner on desktop - only show if beforeinstallprompt fires
+    // This prevents the yellow banner from appearing on browsers that don't support PWA install
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
-      clearTimeout(fallbackTimer);
     };
   }, [mounted]);
 
@@ -106,24 +100,28 @@ export default function InstallPrompt() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 10000,
+        zIndex: 9999,
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         color: '#fff',
-        padding: '16px 20px',
+        padding: '12px 16px',
         display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
         direction: isAr ? 'rtl' : 'ltr',
         fontFamily: 'system-ui, -apple-system, sans-serif',
+        minHeight: 'auto',
+        maxHeight: '120px',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: '15px', marginBottom: '2px' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px', lineHeight: '1.2' }}>
           {isAr ? 'تثبيت تطبيق سواق' : 'Install Saweg'}
         </div>
-        <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+        <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.3' }}>
           {isIOS
             ? (isAr
                 ? 'اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"'
@@ -134,7 +132,7 @@ export default function InstallPrompt() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: '8px', flexShrink: 0, alignItems: 'center' }}>
         {!isIOS && (
           <button
             onClick={handleInstall}
@@ -143,13 +141,15 @@ export default function InstallPrompt() {
               background: deferredPrompt ? '#FFB81C' : '#94a3b8',
               color: '#111827',
               border: 'none',
-              borderRadius: '8px',
-              padding: '8px 16px',
+              borderRadius: '6px',
+              padding: '8px 14px',
               fontWeight: 600,
-              fontSize: '14px',
+              fontSize: '13px',
               cursor: deferredPrompt ? 'pointer' : 'not-allowed',
               whiteSpace: 'nowrap',
               opacity: deferredPrompt ? 1 : 0.6,
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
             }}
           >
             {isAr ? 'تثبيت' : 'Install'}
@@ -161,11 +161,21 @@ export default function InstallPrompt() {
             background: 'transparent',
             color: '#94a3b8',
             border: '1px solid #334155',
-            borderRadius: '8px',
+            borderRadius: '6px',
             padding: '8px 12px',
-            fontSize: '14px',
+            fontSize: '13px',
             cursor: 'pointer',
             whiteSpace: 'nowrap',
+            transition: 'all 0.2s ease',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#475569';
+            e.currentTarget.style.color = '#cbd5e1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = '#334155';
+            e.currentTarget.style.color = '#94a3b8';
           }}
         >
           {isAr ? 'لاحقاً' : 'Later'}
