@@ -582,13 +582,15 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
           ) : null}
         </div>
 
-        <button
-          className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
-          onClick={scrollRight}
-          aria-label={t('scrollRight')}
-        >
-          {locale === 'ar' ? '‹' : '›'}
-        </button>
+        {canScrollRight && (
+          <button
+            className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}
+            onClick={scrollRight}
+            aria-label={t('scrollRight')}
+          >
+            {locale === 'ar' ? '‹' : '›'}
+          </button>
+        )}
       </div>
     </section>
   );
