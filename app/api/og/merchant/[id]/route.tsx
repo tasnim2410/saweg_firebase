@@ -24,8 +24,11 @@ export async function GET(
         goodsType: true,
         image: true,
         description: true,
-        weight: true,
-        weightUnit: true,
+        goodsWeight: true,
+        goodsWeightUnit: true,
+        budget: true,
+        budgetCurrency: true,
+        vehicleTypeDesired: true,
         user: { select: { fullName: true } },
       },
     });
@@ -35,117 +38,90 @@ export async function GET(
     }
 
     const imageUrl = post.image || '';
-    const title = post.description || post.name || 'طلب تاجر';
+    const title = (post.description || post.name || 'طلب تاجر').slice(0, 60);
     const startPoint = post.startingPoint || '';
     const endPoint = post.destination || '';
-    const route = endPoint ? `من ${startPoint} إلى ${endPoint}` : `من ${startPoint}`;
-    
-    const weight = post.weight;
-    const weightUnit = post.weightUnit || 'طن';
-    const weightText = weight ? `الوزن: ${weight} ${weightUnit}` : '';
+    const route = endPoint && startPoint
+      ? `من ${startPoint} إلى ${endPoint}`
+      : startPoint
+        ? `من ${startPoint}`
+        : endPoint
+          ? `إلى ${endPoint}`
+          : '';
+
+    const currencyMap: Record<string, string> = { LYD: 'دينار ليبي', TND: 'دينار تونسي', EGP: 'جنيه مصري' };
+    const budget = post.budget;
+    const currency = post.budgetCurrency ? (currencyMap[post.budgetCurrency] || post.budgetCurrency) : '';
+    const budgetText = budget ? `الأجرة: ${budget} ${currency}` : '';
+
+    const weight = post.goodsWeight;
+    const weightUnit = post.goodsWeightUnit || 'طن';
+    const vehicleType = post.vehicleTypeDesired || '';
+    const subtitleParts = [
+      vehicleType ? `🚚  ${vehicleType}` : '',
+      weight ? `لنقل ${weight} ${weightUnit}` : '',
+    ].filter(Boolean).join(' ');
+
+    const children: React.ReactNode[] = [];
+
+    if (imageUrl) {
+      children.push(
+        <div key="img" style={{ width: '100%', height: '300px', display: 'flex', overflow: 'hidden' }}>
+          <img src={imageUrl} width={600} height={300} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
+        </div>
+      );
+    }
+
+    const textRows: React.ReactNode[] = [];
+
+    if (subtitleParts) {
+      textRows.push(
+        <div key="sub" style={{ fontSize: 26, color: '#6b7280', display: 'flex', textAlign: 'center', justifyContent: 'center' }}>
+          {subtitleParts}
+        </div>
+      );
+    }
+
+    textRows.push(
+      <div key="title" style={{ fontSize: 32, fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'center', justifyContent: 'center' }}>
+        {'⭐  ' + title}
+      </div>
+    );
+
+    if (route) {
+      textRows.push(
+        <div key="route" style={{ fontSize: 24, color: '#6b7280', display: 'flex', textAlign: 'center', justifyContent: 'center' }}>
+          {'📍  ' + route}
+        </div>
+      );
+    }
+
+    if (budgetText) {
+      textRows.push(
+        <div key="budget" style={{ fontSize: 24, color: '#6b7280', display: 'flex', textAlign: 'center', justifyContent: 'center' }}>
+          {'💰  ' + budgetText}
+        </div>
+      );
+    }
+
+    children.push(
+      <div key="text" style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {textRows}
+      </div>
+    );
 
     return new ImageResponse(
       (
-        <div
-          style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#f3f4f6',
-            padding: '40px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: 'white',
-              borderRadius: '24px',
-              overflow: 'hidden',
-              width: '600px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            {imageUrl && (
-              <div
-                style={{
-                  width: '100%',
-                  height: '300px',
-                  display: 'flex',
-                  overflow: 'hidden',
-                }}
-              >
-                <img
-                  src={imageUrl}
-                  alt=""
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                />
-              </div>
-            )}
-            <div
-              style={{
-                padding: '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '32px',
-                  fontWeight: 'bold',
-                  color: '#111827',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                ⭐ {title.slice(0, 60)}
-              </div>
-              {route && (
-                <div
-                  style={{
-                    fontSize: '24px',
-                    color: '#6b7280',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  📍 {route}
-                </div>
-              )}
-              {weightText && (
-                <div
-                  style={{
-                    fontSize: '24px',
-                    color: '#6b7280',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  💰 {weightText}
-                </div>
-              )}
-            </div>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', padding: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', width: 600, boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
+            {children}
           </div>
         </div>
       ),
-      {
-        width: 1200,
-        height: 630,
-      }
+      { width: 1200, height: 630 }
     );
   } catch (error) {
-    console.error('Error generating OG image:', error);
+    console.error('Error generating merchant OG image:', error);
     return new Response('Error generating image', { status: 500 });
   }
 }
