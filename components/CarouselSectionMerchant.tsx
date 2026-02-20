@@ -254,9 +254,27 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
 
   const checkScrollButtons = () => {
     if (!carouselRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    const carousel = carouselRef.current;
+    const items = Array.from(carousel.children) as HTMLElement[];
+    if (items.length === 0) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+
+    const containerRect = carousel.getBoundingClientRect();
+    let minLeft = Number.POSITIVE_INFINITY;
+    let maxRight = Number.NEGATIVE_INFINITY;
+
+    for (const item of items) {
+      const rect = item.getBoundingClientRect();
+      minLeft = Math.min(minLeft, rect.left);
+      maxRight = Math.max(maxRight, rect.right);
+    }
+
+    const threshold = 2;
+    setCanScrollLeft(minLeft < containerRect.left - threshold);
+    setCanScrollRight(maxRight > containerRect.right + threshold);
   };
 
   useEffect(() => {
@@ -374,7 +392,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
             onClick={scrollLeft}
             aria-label={t('scrollLeft')}
           >
-            ›
+            {locale === 'ar' ? '›' : '‹'}
           </button>
         )}
 
@@ -569,7 +587,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
           onClick={scrollRight}
           aria-label={t('scrollRight')}
         >
-          ‹ 
+          {locale === 'ar' ? '‹' : '›'}
         </button>
       </div>
     </section>
