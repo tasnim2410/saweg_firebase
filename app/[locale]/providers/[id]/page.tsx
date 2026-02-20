@@ -104,7 +104,8 @@ export async function generateMetadata({
 
   const title = rawDescription.slice(0, 100) || routePart.slice(0, 100) || 'Saweg';
   const description = routePart || '';
-  const ogImageUrl = `/api/og/provider/${providerId}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
+  const ogImageUrl = `${baseUrl}/api/og/provider/${providerId}`;
 
   return {
     title,

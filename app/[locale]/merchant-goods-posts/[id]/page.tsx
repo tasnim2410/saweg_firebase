@@ -102,7 +102,8 @@ export async function generateMetadata({
 
   const title = rawDescription.slice(0, 100) || fallbackDesc.slice(0, 100) || 'Saweg';
   const description = routePart || post.goodsType || '';
-  const ogImageUrl = `/api/og/merchant/${postId}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
+  const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
 
   return {
     title,
