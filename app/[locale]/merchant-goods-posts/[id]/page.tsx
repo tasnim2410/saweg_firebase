@@ -102,10 +102,7 @@ export async function generateMetadata({
 
   const title = rawDescription.slice(0, 100) || fallbackDesc.slice(0, 100) || 'Saweg';
   const description = routePart || post.goodsType || '';
-
-  // Only include image if post has one
-  const imageUrl = post.image ? post.image : null;
-  const images = imageUrl ? [{ url: imageUrl }] : undefined;
+  const ogImageUrl = `/api/og/merchant/${postId}`;
 
   return {
     title,
@@ -113,14 +110,14 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      ...(images && { images }),
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       type: 'article',
     },
     twitter: {
-      card: imageUrl ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      ...(imageUrl && { images: [imageUrl] }),
+      images: [ogImageUrl],
     },
   };
 }

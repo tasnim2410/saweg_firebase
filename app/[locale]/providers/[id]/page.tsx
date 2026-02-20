@@ -104,7 +104,7 @@ export async function generateMetadata({
 
   const title = rawDescription.slice(0, 100) || routePart.slice(0, 100) || 'Saweg';
   const description = routePart || '';
-  const imageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
+  const ogImageUrl = `/api/og/provider/${providerId}`;
 
   return {
     title,
@@ -112,14 +112,14 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: imageUrl }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [imageUrl],
+      images: [ogImageUrl],
     },
   };
 }
