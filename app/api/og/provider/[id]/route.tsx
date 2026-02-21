@@ -1,22 +1,8 @@
-import { NextRequest } from 'next/server';
-
-// OG image generation — work in progress, re-enable when ready
-/*
 import { ImageResponse } from 'next/og';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-async function loadArabicFont(): Promise<ArrayBuffer | null> {
-  try {
-    const res = await fetch(
-      'https://fonts.gstatic.com/s/notosansarabic/v18/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvu3CBFQLaig.woff',
-      { next: { revalidate: 86400 } }
-    );
-    if (!res.ok) return null;
-    return res.arrayBuffer();
-  } catch {
-    return null;
-  }
-}
+import { readFile } from 'fs/promises';
+import path from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -67,10 +53,9 @@ export async function GET(
     const maxChargeUnit = provider.user?.maxChargeUnit || 'طن';
     const chargeText = maxCharge ? `الحمولة: ${maxCharge} ${maxChargeUnit}` : '';
 
-    const fontData = await loadArabicFont();
-    const fonts = fontData
-      ? [{ name: 'NotoArabic', data: fontData, style: 'normal' as const }]
-      : [];
+    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'NotoSansArabic.ttf');
+    const fontData = await readFile(fontPath);
+    const fonts = [{ name: 'NotoArabic', data: fontData.buffer, style: 'normal' as const }];
 
     return new ImageResponse(
       (
@@ -107,12 +92,4 @@ export async function GET(
     console.error('Error generating provider OG image:', error);
     return new Response('Error generating image', { status: 500 });
   }
-}
-*/
-
-export async function GET(
-  _request: NextRequest,
-  _context: { params: Promise<{ id: string }> }
-) {
-  return new Response('Not found', { status: 404 });
 }

@@ -1,22 +1,8 @@
-import { NextRequest } from 'next/server';
-
-// OG image generation — work in progress, re-enable when ready
-/*
 import { ImageResponse } from 'next/og';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-async function loadArabicFont(): Promise<ArrayBuffer | null> {
-  try {
-    const res = await fetch(
-      'https://fonts.gstatic.com/s/notosansarabic/v18/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvu3CBFQLaig.woff',
-      { next: { revalidate: 86400 } }
-    );
-    if (!res.ok) return null;
-    return res.arrayBuffer();
-  } catch {
-    return null;
-  }
-}
+import { readFile } from 'fs/promises';
+import path from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -58,30 +44,29 @@ export async function GET(
     const startPoint = post.startingPoint || '';
     const endPoint = post.destination || '';
     const route = endPoint && startPoint
-      ? `من ${startPoint} إلى ${endPoint}`
+      ? `من ${startPoint} الى ${endPoint}`
       : startPoint
         ? `من ${startPoint}`
         : endPoint
-          ? `إلى ${endPoint}`
+          ? `الى ${endPoint}`
           : '';
 
     const currencyMap: Record<string, string> = { LYD: 'دينار ليبي', TND: 'دينار تونسي', EGP: 'جنيه مصري' };
     const budget = post.budget;
     const currency = post.budgetCurrency ? (currencyMap[post.budgetCurrency] || post.budgetCurrency) : '';
-    const budgetText = budget ? `الأجرة: ${budget} ${currency}` : '';
+    const budgetText = budget ? `الاجرة: ${budget} ${currency}` : '';
 
     const weight = post.goodsWeight;
     const weightUnit = post.goodsWeightUnit || 'طن';
     const vehicleType = post.vehicleTypeDesired || '';
     const subtitleParts = [
-      vehicleType ? vehicleType : '',
+      vehicleType,
       weight ? `لنقل ${weight} ${weightUnit}` : '',
     ].filter(Boolean).join(' - ');
 
-    const fontData = await loadArabicFont();
-    const fonts = fontData
-      ? [{ name: 'NotoArabic', data: fontData, style: 'normal' as const }]
-      : [];
+    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'NotoSansArabic.ttf');
+    const fontData = await readFile(fontPath);
+    const fonts = [{ name: 'NotoArabic', data: fontData.buffer, style: 'normal' as const }];
 
     return new ImageResponse(
       (
@@ -123,12 +108,4 @@ export async function GET(
     console.error('Error generating merchant OG image:', error);
     return new Response('Error generating image', { status: 500 });
   }
-}
-*/
-
-export async function GET(
-  _request: NextRequest,
-  _context: { params: Promise<{ id: string }> }
-) {
-  return new Response('Not found', { status: 404 });
 }
