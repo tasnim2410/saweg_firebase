@@ -71,13 +71,13 @@ export async function GET(
             <div style={{ display: 'flex', borderRadius: '28px', width: '900px', height: '200px', backgroundColor: '#e5e7eb', border: '6px solid #d1d5db', flexShrink: 0 }} />
           )}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
-            <div style={{ fontSize: '38px', fontWeight: 700, color: '#1f2937', textAlign: 'center', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '1000px' }}>
-              {title}
+            <div style={{ display: 'flex', justifyContent: 'center', maxWidth: '1000px' }}>
+              <span style={{ fontSize: '38px', fontWeight: 700, color: '#1f2937', textAlign: 'center' }}>{title}</span>
             </div>
             {route ? (
-              <div style={{ fontSize: '28px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📍</span>
-                <span>{route}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '28px' }}>📍</span>
+                <span style={{ fontSize: '28px', color: '#4b5563' }}>{route}</span>
               </div>
             ) : null}
           </div>
