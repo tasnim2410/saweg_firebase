@@ -69,7 +69,13 @@ export async function GET(
     const fontData = await readFile(fontPath);
     const fonts = [{ name: 'ArabicFont', data: fontData.buffer, style: 'normal' as const }];
 
-    const rtl = (s: string) => s.split(' ').reverse().join(' ');
+    const Words = ({ text, fontSize, fontWeight, color }: { text: string; fontSize: string; fontWeight?: number; color: string }) => (
+      <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', gap: '6px' }}>
+        {text.split(' ').map((w, i) => (
+          <span key={i} style={{ fontSize, fontWeight: fontWeight || 400, color }}>{w}</span>
+        ))}
+      </div>
+    );
 
     return new ImageResponse(
       (
@@ -82,19 +88,21 @@ export async function GET(
             <div style={{ display: 'flex', borderRadius: '28px', width: '900px', height: '200px', backgroundColor: '#e5e7eb', border: '6px solid #d1d5db', flexShrink: 0 }} />
           )}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
-            <div style={{ fontSize: '36px', fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'center' }}>
-              {rtl(title)}
-            </div>
+            <Words text={title} fontSize='36px' fontWeight={700} color='#1f2937' />
             {route ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>{rtl(route)}</span>
-                <span>📍</span>
+              <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                {route.split(' ').map((w, i) => (
+                  <span key={i} style={{ fontSize: '26px', color: '#4b5563' }}>{w}</span>
+                ))}
+                <span style={{ fontSize: '26px' }}>📍</span>
               </div>
             ) : null}
             {budgetText ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>{rtl(budgetText)}</span>
-                <span>💰</span>
+              <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                {budgetText.split(' ').map((w, i) => (
+                  <span key={i} style={{ fontSize: '26px', color: '#4b5563' }}>{w}</span>
+                ))}
+                <span style={{ fontSize: '26px' }}>💰</span>
               </div>
             ) : null}
           </div>
