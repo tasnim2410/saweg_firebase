@@ -58,24 +58,26 @@ export async function GET(
     const fontData = await readFile(fontPath);
     const fonts = [{ name: 'ArabicFont', data: fontData.buffer, style: 'normal' as const }];
 
+    const rtl = (s: string) => s.split(' ').reverse().join(' ');
+
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f0f2f5', fontFamily: 'ArabicFont, sans-serif' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '40px 60px', gap: '28px' }}>
           {imageUrl ? (
-            <div style={{ width: '100%', height: '380px', display: 'flex', overflow: 'hidden', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }}>
-              <img src={imageUrl} width={1200} height={380} style={{ width: '100%', height: '380px', objectFit: 'cover' }} />
+            <div style={{ display: 'flex', borderRadius: '28px', overflow: 'hidden', border: '6px solid #e5e7eb', width: '900px', height: '340px', flexShrink: 0 }}>
+              <img src={imageUrl} width={900} height={340} style={{ width: '900px', height: '340px', objectFit: 'cover' }} />
             </div>
           ) : (
-            <div style={{ width: '100%', height: '200px', display: 'flex', backgroundColor: '#d1d5db', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }} />
+            <div style={{ display: 'flex', borderRadius: '28px', width: '900px', height: '200px', backgroundColor: '#e5e7eb', border: '6px solid #d1d5db', flexShrink: 0 }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', flexGrow: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'right', direction: 'rtl', width: '100%' }}>
-              {title}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
+            <div style={{ fontSize: '38px', fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'center' }}>
+              {rtl(title)}
             </div>
             {route ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px', direction: 'rtl', width: '100%' }}>
+              <div style={{ fontSize: '28px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>{rtl(route)}</span>
                 <span>📍</span>
-                <span>{route}</span>
               </div>
             ) : null}
           </div>
