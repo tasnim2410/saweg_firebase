@@ -70,35 +70,30 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', padding: '40px', fontFamily: 'ArabicFont, sans-serif' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', width: '600px', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
-            {imageUrl ? (
-              <div style={{ width: '100%', height: '300px', display: 'flex', overflow: 'hidden' }}>
-                <img src={imageUrl} width={600} height={300} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
-              </div>
-            ) : (
-              <div style={{ width: '100%', height: '120px', display: 'flex', backgroundColor: '#e5e7eb' }} />
-            )}
-            <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '14px', direction: 'rtl' }}>
-              {subtitleParts ? (
-                <div style={{ fontSize: '22px', color: '#6b7280', display: 'flex' }}>
-                  {subtitleParts}
-                </div>
-              ) : null}
-              <div style={{ fontSize: '30px', fontWeight: 700, color: '#1f2937', display: 'flex' }}>
-                {title}
-              </div>
-              {route ? (
-                <div style={{ fontSize: '22px', color: '#6b7280', display: 'flex' }}>
-                  {route}
-                </div>
-              ) : null}
-              {budgetText ? (
-                <div style={{ fontSize: '22px', color: '#6b7280', display: 'flex' }}>
-                  {budgetText}
-                </div>
-              ) : null}
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f0f2f5', fontFamily: 'ArabicFont, sans-serif' }}>
+          {imageUrl ? (
+            <div style={{ width: '100%', height: '380px', display: 'flex', overflow: 'hidden', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }}>
+              <img src={imageUrl} width={1200} height={380} style={{ width: '100%', height: '380px', objectFit: 'cover' }} />
             </div>
+          ) : (
+            <div style={{ width: '100%', height: '200px', display: 'flex', backgroundColor: '#d1d5db', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }} />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', direction: 'rtl', flexGrow: 1, justifyContent: 'center' }}>
+            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex' }}>
+              {title}
+            </div>
+            {route ? (
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📍</span>
+                <span>{route}</span>
+              </div>
+            ) : null}
+            {budgetText ? (
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>💰</span>
+                <span>{budgetText}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       ),
