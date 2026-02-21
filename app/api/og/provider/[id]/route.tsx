@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getLocationLabel } from '@/lib/locations';
 
 export async function GET(
   request: NextRequest,
@@ -41,12 +42,12 @@ export async function GET(
 
     const imageUrl = provider.image || provider.user?.truckImage || '';
     const title = (provider.description || provider.name || 'عرض سوّاق').slice(0, 60);
-    const location = provider.location || '';
-    const destination = provider.destination || '';
-    const route = destination
-      ? `من ${location} الى ${destination}`
-      : location
-        ? `من ${location}`
+    const locationAr = getLocationLabel(provider.location, 'ar');
+    const destinationAr = getLocationLabel(provider.destination, 'ar');
+    const route = destinationAr && locationAr
+      ? `من ${locationAr} إلى ${destinationAr}`
+      : locationAr
+        ? `من ${locationAr}`
         : '';
 
     const maxCharge = provider.user?.maxCharge;
@@ -67,12 +68,12 @@ export async function GET(
           ) : (
             <div style={{ width: '100%', height: '200px', display: 'flex', backgroundColor: '#d1d5db', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', direction: 'rtl', flexGrow: 1, justifyContent: 'center' }}>
-            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', flexGrow: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'right', direction: 'rtl', width: '100%' }}>
               {title}
             </div>
             {route ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px', direction: 'rtl', width: '100%' }}>
                 <span>📍</span>
                 <span>{route}</span>
               </div>

@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getLocationLabel } from '@/lib/locations';
 
 export async function GET(
   request: NextRequest,
@@ -41,14 +42,14 @@ export async function GET(
 
     const imageUrl = post.image || '';
     const title = (post.description || post.name || 'طلب تاجر').slice(0, 60);
-    const startPoint = post.startingPoint || '';
-    const endPoint = post.destination || '';
-    const route = endPoint && startPoint
-      ? `من ${startPoint} الى ${endPoint}`
-      : startPoint
-        ? `من ${startPoint}`
-        : endPoint
-          ? `الى ${endPoint}`
+    const startAr = getLocationLabel(post.startingPoint, 'ar');
+    const endAr = getLocationLabel(post.destination, 'ar');
+    const route = startAr && endAr
+      ? `من ${startAr} إلى ${endAr}`
+      : startAr
+        ? `من ${startAr}`
+        : endAr
+          ? `إلى ${endAr}`
           : '';
 
     const currencyMap: Record<string, string> = { LYD: 'دينار ليبي', TND: 'دينار تونسي', EGP: 'جنيه مصري' };
@@ -78,18 +79,18 @@ export async function GET(
           ) : (
             <div style={{ width: '100%', height: '200px', display: 'flex', backgroundColor: '#d1d5db', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px' }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', direction: 'rtl', flexGrow: 1, justifyContent: 'center' }}>
-            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '24px 40px', gap: '12px', flexGrow: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', display: 'flex', textAlign: 'right', direction: 'rtl', width: '100%' }}>
               {title}
             </div>
             {route ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px', direction: 'rtl', width: '100%' }}>
                 <span>📍</span>
                 <span>{route}</span>
               </div>
             ) : null}
             {budgetText ? (
-              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px', direction: 'rtl', width: '100%' }}>
                 <span>💰</span>
                 <span>{budgetText}</span>
               </div>
