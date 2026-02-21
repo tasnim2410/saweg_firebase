@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { readFile } from 'fs/promises';
-import path from 'path';
+import { join } from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -53,13 +53,13 @@ export async function GET(
     const maxChargeUnit = provider.user?.maxChargeUnit || 'طن';
     const chargeText = maxCharge ? `الحمولة: ${maxCharge} ${maxChargeUnit}` : '';
 
-    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'NotoSansArabic.ttf');
+    const fontPath = join(process.cwd(), 'public', 'fonts', 'IBMPlexSansArabic.ttf');
     const fontData = await readFile(fontPath);
-    const fonts = [{ name: 'NotoArabic', data: fontData.buffer, style: 'normal' as const }];
+    const fonts = [{ name: 'ArabicFont', data: fontData.buffer, style: 'normal' as const }];
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', padding: '40px', fontFamily: 'NotoArabic, sans-serif' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', padding: '40px', fontFamily: 'ArabicFont, sans-serif' }}>
           <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', width: '600px', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }}>
             {imageUrl ? (
               <div style={{ width: '100%', height: '300px', display: 'flex', overflow: 'hidden' }}>

@@ -104,6 +104,7 @@ export async function generateMetadata({
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
   const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
+  const pageUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
 
   return {
     title,
@@ -111,6 +112,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
+      url: pageUrl,
       images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       type: 'article',
     },
