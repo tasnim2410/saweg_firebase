@@ -37,6 +37,25 @@ export async function generateMetadata({
   const { locale, id } = await params;
   const providerId = Number(id);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
+  const toAbsoluteUrl = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `${baseUrl}${url}`;
+    return `${baseUrl}/${url}`;
+  };
+  const toLargeOgImageUrl = (url: string) => {
+    const abs = toAbsoluteUrl(url);
+    if (!abs) return abs;
+    if (!abs.includes('res.cloudinary.com')) return abs;
+    const marker = '/image/upload/';
+    const idx = abs.indexOf(marker);
+    if (idx === -1) return abs;
+    const prefix = abs.slice(0, idx + marker.length);
+    const rest = abs.slice(idx + marker.length);
+    return `${prefix}c_fill,w_1200,h_630,g_auto,q_auto,f_jpg/${rest}`;
+  };
+
   const defaultTitle = locale === 'ar' ? 'Saweg - عرض سوّاق' : 'Saweg - Shipper offer';
   const defaultDescription =
     locale === 'ar'
@@ -104,7 +123,8 @@ export async function generateMetadata({
 
   const title = defaultTitle;
   const description = descriptionText;
-  const ogImageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
+  const rawOgImageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
+  const ogImageUrl = toLargeOgImageUrl(rawOgImageUrl);
 
   return {
     title,
@@ -112,7 +132,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: ogImageUrl }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       type: 'article',
     },
     twitter: {
