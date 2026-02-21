@@ -102,10 +102,9 @@ export async function generateMetadata({
   const routePart = [provider.location, provider.destination].filter(Boolean).join(' → ');
   const descriptionText = (rawDescription || routePart || defaultDescription).slice(0, 200);
 
-  const title = rawDescription.slice(0, 100) || routePart.slice(0, 100) || 'Saweg';
-  const description = routePart || '';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
-  const ogImageUrl = `${baseUrl}/api/og/provider/${providerId}`;
+  const title = defaultTitle;
+  const description = descriptionText;
+  const ogImageUrl = provider.image || provider.user?.truckImage || '/images/logo.png';
 
   return {
     title,
@@ -113,7 +112,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      images: [{ url: ogImageUrl }],
       type: 'article',
     },
     twitter: {

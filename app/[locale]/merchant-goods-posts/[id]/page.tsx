@@ -100,10 +100,9 @@ export async function generateMetadata({
   const fallbackDesc = [post.goodsType, routePart].filter(Boolean).join(' • ');
   const descriptionText = (rawDescription || fallbackDesc || defaultDescription).slice(0, 200);
 
-  const title = rawDescription.slice(0, 100) || fallbackDesc.slice(0, 100) || 'Saweg';
-  const description = routePart || post.goodsType || '';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
-  const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
+  const title = defaultTitle;
+  const description = descriptionText;
+  const ogImageUrl = post.image || '/images/logo.png';
 
   return {
     title,
@@ -111,7 +110,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      images: [{ url: ogImageUrl }],
       type: 'article',
     },
     twitter: {

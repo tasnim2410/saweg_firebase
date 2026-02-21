@@ -1,5 +1,8 @@
-import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
+
+// OG image generation — work in progress, re-enable when ready
+/*
+import { ImageResponse } from 'next/og';
 import { prisma } from '@/lib/prisma';
 
 async function loadArabicFont(): Promise<ArrayBuffer | null> {
@@ -120,4 +123,12 @@ export async function GET(
     console.error('Error generating merchant OG image:', error);
     return new Response('Error generating image', { status: 500 });
   }
+}
+*/
+
+export async function GET(
+  _request: NextRequest,
+  _context: { params: Promise<{ id: string }> }
+) {
+  return new Response('Not found', { status: 404 });
 }
