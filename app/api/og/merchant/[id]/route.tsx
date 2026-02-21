@@ -71,17 +71,9 @@ export async function GET(
     const fontData = await readFile(fontPath);
     const fonts = [{ name: 'ArabicFont', data: fontData.buffer, style: 'normal' as const }];
 
-    const Words = ({ text, fontSize, fontWeight, color }: { text: string; fontSize: string; fontWeight?: number; color: string }) => (
-      <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', gap: '6px' }}>
-        {text.split(' ').map((w, i) => (
-          <span key={i} style={{ fontSize, fontWeight: fontWeight || 400, color }}>{w}</span>
-        ))}
-      </div>
-    );
-
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '40px 60px', gap: '24px' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '40px 60px', gap: '24px', direction: 'rtl' }}>
           {imageUrl ? (
             <div style={{ display: 'flex', borderRadius: '28px', overflow: 'hidden', border: '6px solid #e5e7eb', width: '900px', height: '320px', flexShrink: 0 }}>
               <img src={imageUrl} width={900} height={320} style={{ width: '900px', height: '320px', objectFit: 'cover' }} />
@@ -90,21 +82,19 @@ export async function GET(
             <div style={{ display: 'flex', borderRadius: '28px', width: '900px', height: '200px', backgroundColor: '#e5e7eb', border: '6px solid #d1d5db', flexShrink: 0 }} />
           )}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
-            <Words text={title} fontSize='36px' fontWeight={700} color='#1f2937' />
+            <div style={{ fontSize: '36px', fontWeight: 700, color: '#1f2937', textAlign: 'center', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '1000px' }}>
+              {title}
+            </div>
             {route ? (
-              <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                {route.split(' ').map((w, i) => (
-                  <span key={i} style={{ fontSize: '26px', color: '#4b5563' }}>{w}</span>
-                ))}
-                <span style={{ fontSize: '26px' }}>📍</span>
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📍</span>
+                <span>{route}</span>
               </div>
             ) : null}
             {budgetText ? (
-              <div style={{ display: 'flex', flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                {budgetText.split(' ').map((w, i) => (
-                  <span key={i} style={{ fontSize: '26px', color: '#4b5563' }}>{w}</span>
-                ))}
-                <span style={{ fontSize: '26px' }}>💰</span>
+              <div style={{ fontSize: '26px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>💰</span>
+                <span>{budgetText}</span>
               </div>
             ) : null}
           </div>
