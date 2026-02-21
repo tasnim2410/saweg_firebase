@@ -96,9 +96,10 @@ export async function generateMetadata({
   }
 
   const rawDescription = String(post.description || '').trim();
+  const cleanDescription = rawDescription.split(/\n|\r/).map((l) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
   const routePart = `${post.startingPoint || ''} → ${post.destination || ''}`.trim();
   const fallbackDesc = [post.goodsType, routePart].filter(Boolean).join(' • ');
-  const descriptionText = (rawDescription || fallbackDesc || defaultDescription).slice(0, 200);
+  const descriptionText = (cleanDescription || fallbackDesc || defaultDescription).slice(0, 200);
 
   const title = defaultTitle;
   const description = descriptionText;

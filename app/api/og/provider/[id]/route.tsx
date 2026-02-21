@@ -41,7 +41,9 @@ export async function GET(
     }
 
     const imageUrl = provider.image || provider.user?.truckImage || '';
-    const title = (provider.description || provider.name || 'عرض سوّاق').slice(0, 60);
+    const rawDesc = (provider.description || provider.name || 'عرض سوّاق');
+    const cleanDesc = rawDesc.split(/\n|\r/).map((l: string) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
+    const title = cleanDesc.slice(0, 80);
     const locationAr = getLocationLabel(provider.location, 'ar');
     const destinationAr = getLocationLabel(provider.destination, 'ar');
     const route = destinationAr && locationAr

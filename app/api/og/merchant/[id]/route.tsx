@@ -41,7 +41,9 @@ export async function GET(
     }
 
     const imageUrl = post.image || '';
-    const title = (post.description || post.name || 'طلب تاجر').slice(0, 60);
+    const rawDesc = (post.description || post.name || 'طلب تاجر');
+    const cleanDesc = rawDesc.split(/\n|\r/).map((l: string) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
+    const title = cleanDesc.slice(0, 80);
     const startAr = getLocationLabel(post.startingPoint, 'ar');
     const endAr = getLocationLabel(post.destination, 'ar');
     const route = startAr && endAr
