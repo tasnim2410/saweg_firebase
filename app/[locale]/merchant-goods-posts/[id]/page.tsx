@@ -104,8 +104,9 @@ export async function generateMetadata({
   const title = defaultTitle;
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
-  const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
   const pageUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
+  const postImage = post.image || null;
+  const ogImageUrl = postImage || `${baseUrl}/images/logo.png`;
 
   return {
     title,
@@ -114,7 +115,7 @@ export async function generateMetadata({
       title,
       description,
       url: pageUrl,
-      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      images: [{ url: ogImageUrl }],
       type: 'article',
     },
     twitter: {

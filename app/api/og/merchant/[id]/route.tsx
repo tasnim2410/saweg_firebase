@@ -43,21 +43,24 @@ export async function GET(
     const imageUrl = post.image || '';
     const rawDesc = (post.description || post.name || 'طلب تاجر');
     const cleanDesc = rawDesc.split(/\n|\r/).map((l: string) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
-    const title = cleanDesc.slice(0, 80);
+    const titleWords = cleanDesc.slice(0, 80).split(' ').reverse().join(' ');
+    const title = titleWords;
     const startAr = getLocationLabel(post.startingPoint, 'ar');
     const endAr = getLocationLabel(post.destination, 'ar');
-    const route = startAr && endAr
+    const routeText = startAr && endAr
       ? `من ${startAr} إلى ${endAr}`
       : startAr
         ? `من ${startAr}`
         : endAr
           ? `إلى ${endAr}`
           : '';
+    const route = routeText.split(' ').reverse().join(' ');
 
     const currencyMap: Record<string, string> = { LYD: 'دينار ليبي', TND: 'دينار تونسي', EGP: 'جنيه مصري' };
     const budget = post.budget;
     const currency = post.budgetCurrency ? (currencyMap[post.budgetCurrency] || post.budgetCurrency) : '';
-    const budgetText = budget ? `الاجرة: ${budget} ${currency}` : '';
+    const budgetRaw = budget ? `الاجرة: ${budget} ${currency}` : '';
+    const budgetText = budgetRaw ? budgetRaw.split(' ').reverse().join(' ') : '';
 
     const weight = post.goodsWeight;
     const weightUnit = post.goodsWeightUnit || 'طن';
@@ -73,28 +76,28 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '40px 60px', gap: '24px', direction: 'rtl' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '32px 48px', gap: '20px' }}>
           {imageUrl ? (
-            <div style={{ display: 'flex', borderRadius: '28px', overflow: 'hidden', border: '6px solid #e5e7eb', width: '900px', height: '320px', flexShrink: 0 }}>
-              <img src={imageUrl} width={900} height={320} style={{ width: '900px', height: '320px', objectFit: 'cover' }} />
+            <div style={{ display: 'flex', borderRadius: '24px', overflow: 'hidden', border: '5px solid #e5e7eb', width: '1080px', height: '310px', flexShrink: 0 }}>
+              <img src={imageUrl} style={{ width: '1080px', height: '310px', objectFit: 'cover' }} />
             </div>
           ) : (
-            <div style={{ display: 'flex', borderRadius: '28px', width: '900px', height: '200px', backgroundColor: '#e5e7eb', border: '6px solid #d1d5db', flexShrink: 0 }} />
+            <div style={{ display: 'flex', borderRadius: '24px', width: '1080px', height: '200px', backgroundColor: '#e5e7eb', border: '5px solid #d1d5db', flexShrink: 0 }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', maxWidth: '1000px' }}>
-              <span style={{ fontSize: '36px', fontWeight: 700, color: '#1f2937', textAlign: 'center' }}>{title}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '1080px' }}>
+            <div style={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', fontSize: '34px', fontWeight: 700, color: '#1f2937' }}>{title}</div>
             </div>
             {route ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '26px' }}>📍</span>
-                <span style={{ fontSize: '26px', color: '#4b5563' }}>{route}</span>
+                <span style={{ fontSize: '24px' }}>📍</span>
+                <div style={{ display: 'flex', fontSize: '24px', color: '#4b5563' }}>{route}</div>
               </div>
             ) : null}
             {budgetText ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '26px' }}>💰</span>
-                <span style={{ fontSize: '26px', color: '#4b5563' }}>{budgetText}</span>
+                <span style={{ fontSize: '24px' }}>💰</span>
+                <div style={{ display: 'flex', fontSize: '24px', color: '#4b5563' }}>{budgetText}</div>
               </div>
             ) : null}
           </div>
