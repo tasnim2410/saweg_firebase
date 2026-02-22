@@ -78,8 +78,8 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const title = locale === 'ar' ? 'عروض السوّاقين' : 'Shippers offers';
 
   const buildShareUrlForProvider = (providerId: number) => {
-    if (typeof window === 'undefined') return `/api/og/provider/${providerId}`;
-    return `${window.location.origin}/api/og/provider/${providerId}`;
+    if (typeof window === 'undefined') return `/${locale}/providers/${providerId}`;
+    return `${window.location.origin}/${locale}/providers/${providerId}`;
   };
 
   const copyToClipboard = async (text: string) => {

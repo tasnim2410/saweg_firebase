@@ -63,20 +63,20 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'ArabicFont, sans-serif', backgroundColor: '#111827' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'ArabicFont, sans-serif', backgroundColor: '#ffffff' }}>
           {imageUrl ? (
-            <img src={imageUrl} style={{ width: '1200px', height: '430px', objectFit: 'cover', flexShrink: 0 }} />
+            <img src={imageUrl} style={{ width: '1200px', height: '430px', objectFit: 'fill', flexShrink: 0 }} />
           ) : (
-            <div style={{ display: 'flex', width: '1200px', height: '430px', backgroundColor: '#374151', flexShrink: 0 }} />
+            <div style={{ display: 'flex', width: '1200px', height: '430px', backgroundColor: '#e5e7eb', flexShrink: 0 }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '10px', padding: '0 40px', backgroundColor: '#111827' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '10px', padding: '0 50px', backgroundColor: '#ffffff' }}>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <span style={{ fontSize: '36px', fontWeight: 700, color: '#ffffff', textAlign: 'center' }}>{title}</span>
+              <span style={{ fontSize: '36px', fontWeight: 700, color: '#1f2937', textAlign: 'center' }}>{title}</span>
             </div>
             {route ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '26px' }}>📍</span>
-                <span style={{ fontSize: '26px', color: '#9ca3af' }}>{route}</span>
+                <span style={{ fontSize: '26px', color: '#6b7280' }}>{route}</span>
               </div>
             ) : null}
           </div>

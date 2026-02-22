@@ -74,26 +74,26 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'ArabicFont, sans-serif', backgroundColor: '#111827' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'ArabicFont, sans-serif', backgroundColor: '#ffffff' }}>
           {imageUrl ? (
             <img src={imageUrl} style={{ width: '1200px', height: '420px', objectFit: 'cover', flexShrink: 0 }} />
           ) : (
-            <div style={{ display: 'flex', width: '1200px', height: '420px', backgroundColor: '#374151', flexShrink: 0 }} />
+            <div style={{ display: 'flex', width: '1200px', height: '420px', backgroundColor: '#e5e7eb', flexShrink: 0 }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '8px', padding: '0 40px', backgroundColor: '#111827' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '8px', padding: '0 80px', backgroundColor: '#ffffff' }}>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <span style={{ fontSize: '34px', fontWeight: 700, color: '#ffffff', textAlign: 'center' }}>{title}</span>
+              <span style={{ fontSize: '34px', fontWeight: 700, color: '#1f2937', textAlign: 'center' }}>{title}</span>
             </div>
             {route ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '24px' }}>📍</span>
-                <span style={{ fontSize: '24px', color: '#9ca3af' }}>{route}</span>
+                <span style={{ fontSize: '24px', color: '#6b7280' }}>{route}</span>
               </div>
             ) : null}
             {budgetText ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '24px' }}>💰</span>
-                <span style={{ fontSize: '24px', color: '#9ca3af' }}>{budgetText}</span>
+                <span style={{ fontSize: '24px', color: '#6b7280' }}>{budgetText}</span>
               </div>
             ) : null}
           </div>

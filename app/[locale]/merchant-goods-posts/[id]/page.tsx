@@ -109,8 +109,7 @@ export async function generateMetadata({
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
   const pageUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
-  const postImage = post.image || null;
-  const ogImageUrl = postImage || `${baseUrl}/images/logo.png`;
+  const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
 
   return {
     title,
