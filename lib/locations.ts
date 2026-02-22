@@ -12,9 +12,9 @@ export type LocationOptionGroup = {
 };
 
 export const LOCATION_OPTIONS: LocationOption[] = [
-  { value: 'ALL_LIBYA', en: 'All of Libya', ar: 'كل ليبيا' },
-  { value: 'ALL_TUNISIA', en: 'All of Tunisia', ar: 'كل تونس' },
-  { value: 'ALL_EGYPT', en: 'All of Egypt', ar: 'كل مصر' },
+  { value: 'ALL_LIBYA', en: 'All of Libya', ar: 'ليبيا' },
+  { value: 'ALL_TUNISIA', en: 'All of Tunisia', ar: 'تونس' },
+  { value: 'ALL_EGYPT', en: 'All of Egypt', ar: 'مصر' },
   { value: 'Tobruk', en: 'Tobruk', ar: 'طبرق' },
   { value: 'Musaid', en: 'Musaid', ar: 'مساعد' },
   { value: 'Jaghbub', en: 'Jaghbub', ar: 'الجغبوب' },

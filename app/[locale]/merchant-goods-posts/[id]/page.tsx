@@ -110,7 +110,11 @@ export async function generateMetadata({
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
   const pageUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
-  const ogImageUrl = `${baseUrl}/api/og/merchant/${postId}`;
+  // Use original post image for OG, fallback to generated OG image if no image
+  const rawImage = post.image;
+  const ogImageUrl = rawImage
+    ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}${rawImage}`)
+    : `${baseUrl}/api/og/merchant/${postId}`;
 
   return {
     title,
