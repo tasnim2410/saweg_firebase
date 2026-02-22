@@ -1,0 +1,52 @@
+.shareContainer {
+  position: relative;
+  display: inline-flex;
+}
+
+.shareButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.shareButton:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.shareMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 140px;
+  z-index: 100;
+}
+
+.shareMenuItem {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.shareMenuItem:hover {
+  background: #f5f5f5;
+}

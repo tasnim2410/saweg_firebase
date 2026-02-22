@@ -7,6 +7,7 @@ import Link from 'next/link';
 import styles from './providers.module.css';
 import { VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 import PhoneDisplay from './PhoneDisplay';
+import ShareButton from '@/components/ShareButton';
 
 type ProviderDetails = {
   id: number;
@@ -276,6 +277,9 @@ export default async function ProviderDetailsPage({
   const isStale = Number.isFinite(lastUpdateMs) ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000 : false;
   const canCall = provider.active && !isStale;
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
+  const shareUrl = `${baseUrl}/${locale}/providers/${providerId}`;
+
   return (
     <main className={styles.main}>
       <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
@@ -305,6 +309,13 @@ export default async function ProviderDetailsPage({
                 {provider.active ? tDash('available') : tDash('notAvailable')}
               </div>
             </div>
+
+            <ShareButton 
+              url={shareUrl} 
+              title={provider.name}
+              description={provider.description}
+              locale={locale}
+            />
           </div>
 
           <div className={styles.grid}>

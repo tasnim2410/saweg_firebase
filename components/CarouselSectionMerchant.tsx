@@ -416,11 +416,13 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
             const phoneNumber = normalizedPhone && normalizedPhone.ok ? normalizedPhone.e164 : phoneCandidate;
 
             const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
+            /*
             const isRecent = Number.isFinite(createdAtMs)
               ? Date.now() - createdAtMs <= 24 * 60 * 60 * 1000
               : false;
-
             const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
+            */
+            const statusClass = styles.statusActive; // Always active (24h check disabled)
 
             const timeAgo = timeAgoLabelFromMs(createdAtMs);
 

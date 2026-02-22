@@ -8,6 +8,7 @@ import Link from 'next/link';
 import styles from './merchant-goods-posts.module.css';
 import { getVehicleLabel, VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 import PhoneDisplay from './PhoneDisplay';
+import ShareButton from '@/components/ShareButton';
 
 type MerchantGoodsPostDetails = {
   id: number;
@@ -306,6 +307,9 @@ export default async function MerchantGoodsPostDetailsPage({
   const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
   const timeAgo = timeAgoLabelFromMs(createdAtMs);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
+  const shareUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
+
   return (
     <main className={styles.main}>
       <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
@@ -330,6 +334,13 @@ export default async function MerchantGoodsPostDetailsPage({
               <h1 className={styles.title}>{merchantName}</h1>
               {timeAgo ? <div className={styles.subtitle}>{timeAgo}</div> : null}
             </div>
+
+            <ShareButton 
+              url={shareUrl} 
+              title={merchantName}
+              description={post.description}
+              locale={locale}
+            />
           </div>
 
           <div className={styles.grid}>

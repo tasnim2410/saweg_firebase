@@ -508,10 +508,13 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
               ? new Date(provider.lastLocationUpdateAt as any).getTime()
               : NaN;
             const createdAtMs = provider.createdAt ? new Date(provider.createdAt as any).getTime() : NaN;
+            /*
             const isStale = Number.isFinite(lastUpdateMs)
               ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000
               : false;
             const isActive = provider.active && !isStale;
+            */
+            const isActive = true; // Always active (ignores DB value)
             const statusClass = isActive ? styles.statusActive : styles.statusInactive;
 
             const timeAgo = timeAgoLabelFromMs(createdAtMs);

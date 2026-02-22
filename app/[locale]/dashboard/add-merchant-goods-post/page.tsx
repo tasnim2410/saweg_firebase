@@ -432,13 +432,13 @@ export default function AddMerchantGoodsPostPage() {
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'وزن البضاعة' : 'Goods weight'}</div>
                 <div className={styles.modalValue}>
-                  {goodsWeight ? `${goodsWeight} ${goodsWeightUnit}` : '-'}
+                  {goodsWeight ? `${goodsWeight} ${goodsWeightUnit === 'kg' ? (locale === 'ar' ? 'كغ' : 'kg') : locale === 'ar' ? 'طن' : 'ton'}` : '-'}
                 </div>
               </div>
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'الميزانية' : 'Budget'}</div>
                 <div className={styles.modalValue}>
-                  {budget.trim() ? `${budget.trim()}${budgetCurrency.trim() ? ` ${budgetCurrency.trim()}` : ''}` : '-'}
+                  {budget.trim() ? `${budget.trim()}${budgetCurrency.trim() ? ` ${budgetCurrency === 'TND' ? (locale === 'ar' ? 'دينار تونسي' : 'TND') : budgetCurrency === 'LYD' ? (locale === 'ar' ? 'دينار ليبي' : 'LYD') : budgetCurrency === 'EGP' ? (locale === 'ar' ? 'جنيه مصري' : 'EGP') : budgetCurrency.trim()}` : ''}` : '-'}
                 </div>
               </div>
               {/* <div className={styles.modalRow}>
@@ -598,8 +598,8 @@ export default function AddMerchantGoodsPostPage() {
                 value={goodsWeightUnit}
                 onChange={(e) => setGoodsWeightUnit(e.target.value as WeightUnit)}
               >
-                <option value="kg">kg</option>
-                <option value="ton">ton</option>
+                <option value="kg">{locale === 'ar' ? 'كغ' : 'kg'}</option>
+                <option value="ton">{locale === 'ar' ? 'طن' : 'ton'}</option>
               </select>
             </div>
           </div>
@@ -623,9 +623,9 @@ export default function AddMerchantGoodsPostPage() {
                 aria-label={locale === 'ar' ? 'العملة' : 'Currency'}
               >
                 <option value="">{locale === 'ar' ? 'العملة' : 'Currency'}</option>
-                <option value="TND">{locale === 'ar' ? 'تونس (TND)' : 'Tunisia (TND)'}</option>
-                <option value="LYD">{locale === 'ar' ? 'ليبيا (LYD)' : 'Libya (LYD)'}</option>
-                <option value="EGP">{locale === 'ar' ? 'مصر (EGP)' : 'Egypt (EGP)'}</option>
+                <option value="TND">{locale === 'ar' ? 'دينار تونسي' : 'Tunisia (TND)'}</option>
+                <option value="LYD">{locale === 'ar' ? 'دينار ليبي' : 'Libya (LYD)'}</option>
+                <option value="EGP">{locale === 'ar' ? 'جنيه مصري' : 'Egypt (EGP)'}</option>
               </select>
             </div>
           </div>
