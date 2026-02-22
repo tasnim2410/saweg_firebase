@@ -44,6 +44,7 @@ export default function AddMerchantGoodsPostPage() {
   const [budgetCurrency, setBudgetCurrency] = useState<string>('LYD');
   const [loadingDate, setLoadingDate] = useState('');
   const [vehicleTypeDesired, setVehicleTypeDesired] = useState('');
+  const [customVehicleType, setCustomVehicleType] = useState('');
   const [vehicleTypeOpen, setVehicleTypeOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -275,7 +276,10 @@ export default function AddMerchantGoodsPostPage() {
       if (budgetCurrencyValue) payload.append('budgetCurrency', budgetCurrencyValue);
     }
     if (loadingDate) payload.append('loadingDate', loadingDate);
-    if (vehicleTypeDesired) payload.append('vehicleTypeDesired', vehicleTypeDesired);
+    const finalVehicleType = vehicleTypeDesired === 'other' && customVehicleType.trim()
+      ? customVehicleType.trim()
+      : vehicleTypeDesired;
+    if (finalVehicleType) payload.append('vehicleTypeDesired', finalVehicleType);
     payload.append('description', description);
     if (imageFile) payload.append('image', imageFile);
 
@@ -443,7 +447,7 @@ export default function AddMerchantGoodsPostPage() {
               </div> */}
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</div>
-                <div className={styles.modalValue}>{vehicleTypeDesired || '-'}</div>
+                <div className={styles.modalValue}>{vehicleTypeDesired === 'other' && customVehicleType ? customVehicleType : vehicleTypeDesired || '-'}</div>
               </div>
              
               <div className={styles.modalRow}>
@@ -676,6 +680,7 @@ export default function AddMerchantGoodsPostPage() {
                         aria-selected={opt.id === vehicleTypeDesired ? 'true' : 'false'}
                         onClick={() => {
                           setVehicleTypeDesired(opt.id);
+                          if (opt.id !== 'other') setCustomVehicleType('');
                           setVehicleTypeOpen(false);
                         }}
                       >
@@ -693,6 +698,16 @@ export default function AddMerchantGoodsPostPage() {
               </div>
             ) : (
               <input className={styles.input} value={vehicleTypeDesired} readOnly />
+            )}
+            {vehicleTypeDesired === 'other' && (
+              <div className={styles.row} style={{ marginTop: '0.5rem' }}>
+                <input
+                  className={styles.input}
+                  value={customVehicleType}
+                  onChange={(e) => setCustomVehicleType(e.target.value)}
+                  placeholder={locale === 'ar' ? 'أدخل نوع المركبة' : 'Enter vehicle type'}
+                />
+              </div>
             )}
           </div>
          

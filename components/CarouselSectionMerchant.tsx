@@ -60,8 +60,8 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const title = locale === 'ar' ? 'عروض التجار' : 'Merchants requests';
 
   const buildShareUrlForPost = (postId: number) => {
-    if (typeof window === 'undefined') return `/${locale}/merchant-goods-posts/${postId}`;
-    return `${window.location.origin}/${locale}/merchant-goods-posts/${postId}`;
+    if (typeof window === 'undefined') return `/api/og/merchant/${postId}`;
+    return `${window.location.origin}/api/og/merchant/${postId}`;
   };
 
   const copyToClipboard = async (text: string) => {

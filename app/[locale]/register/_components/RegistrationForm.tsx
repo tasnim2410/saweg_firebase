@@ -31,7 +31,7 @@ export default function RegistrationForm({ role }: Props) {
   const [repeatPassword, setRepeatPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [carKindOpen, setCarKindOpen] = useState(false);
-  const [trucksNeededOpen, setTrucksNeededOpen] = useState(false);
+  const [customCarKind, setCustomCarKind] = useState('');
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -76,11 +76,9 @@ export default function RegistrationForm({ role }: Props) {
     maxCharge: '',
     maxChargeUnit: 'ton',
     placeOfBusiness: '',
-    trucksNeeded: '',
   });
 
   const selectedCarKind = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === formData.carKind) ?? null;
-  const selectedTrucksNeeded = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === formData.trucksNeeded) ?? null;
 
   useEffect(() => {
     if (!carKindOpen) return;
@@ -104,29 +102,6 @@ export default function RegistrationForm({ role }: Props) {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [carKindOpen]);
-
-  useEffect(() => {
-    if (!trucksNeededOpen) return;
-
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-      if (!target.closest('[data-trucks-needed-root="true"]')) {
-        setTrucksNeededOpen(false);
-      }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setTrucksNeededOpen(false);
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [trucksNeededOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +154,10 @@ export default function RegistrationForm({ role }: Props) {
     payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
 
     if (role === 'shipper') {
-      payload.append('carKind', formData.carKind);
+      const finalCarKind = formData.carKind === 'other' && customCarKind.trim()
+        ? customCarKind.trim()
+        : formData.carKind;
+      payload.append('carKind', finalCarKind);
       payload.append('maxCharge', formData.maxCharge);
       payload.append('maxChargeUnit', formData.maxChargeUnit);
       payload.append('shipperCity', formData.shipperCity);
@@ -188,7 +166,6 @@ export default function RegistrationForm({ role }: Props) {
 
     if (role === 'merchant') {
       payload.append('placeOfBusiness', formData.placeOfBusiness);
-      payload.append('trucksNeeded', formData.trucksNeeded);
       payload.append('merchantCity', formData.merchantCity);
     }
 
@@ -442,6 +419,7 @@ export default function RegistrationForm({ role }: Props) {
                               aria-selected={opt.id === formData.carKind ? 'true' : 'false'}
                               onClick={() => {
                                 setFormData((prev) => ({ ...prev, carKind: opt.id }));
+                                if (opt.id !== 'other') setCustomCarKind('');
                                 setCarKindOpen(false);
                               }}
                             >
@@ -457,8 +435,20 @@ export default function RegistrationForm({ role }: Props) {
                         </div>
                       ) : null}
 
-                      <input type="hidden" name="carKind" value={formData.carKind} required />
+                      <input type="hidden" name="carKind" value={formData.carKind === 'other' && customCarKind ? customCarKind : formData.carKind} required />
                     </div>
+                    {formData.carKind === 'other' && (
+                      <div className={styles.formGroup} style={{ marginTop: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={customCarKind}
+                          onChange={(e) => setCustomCarKind(e.target.value)}
+                          className={styles.input}
+                          placeholder={locale === 'ar' ? 'أدخل نوع المركبة' : 'Enter vehicle type'}
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className={styles.formGroup}>
@@ -556,66 +546,6 @@ export default function RegistrationForm({ role }: Props) {
                     placeholder={locale === 'ar' ? 'وصف مجال العمل' : 'Job description'}
                   />
                 </div>
-
-                {/*
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>{t('trucksNeeded')}</label>
-                  <div className={styles.carKindRoot} data-trucks-needed-root="true">
-                    <button
-                      type="button"
-                      className={`${styles.input} ${styles.carKindButton}`}
-                      aria-haspopup="listbox"
-                      aria-expanded={trucksNeededOpen ? 'true' : 'false'}
-                      onClick={() => setTrucksNeededOpen((v) => !v)}
-                    >
-                      {selectedTrucksNeeded ? (
-                        <span className={styles.carKindButtonInner}>
-                          <img
-                            src={selectedTrucksNeeded.imagePath}
-                            alt={getVehicleLabel(selectedTrucksNeeded.id, locale === 'ar' ? 'ar' : 'en')}
-                            className={styles.carKindThumb}
-                            loading="lazy"
-                          />
-                          <span className={styles.carKindButtonLabel}>{getVehicleLabel(selectedTrucksNeeded.id, locale === 'ar' ? 'ar' : 'en')}</span>
-                        </span>
-                      ) : (
-                        <span className={styles.carKindPlaceholder}>
-                          {locale === 'ar' ? 'اختر نوع الشاحنة' : 'Choose truck type'}
-                        </span>
-                      )}
-                    </button>
-
-                    {trucksNeededOpen ? (
-                      <div className={styles.carKindPopover} role="listbox">
-                        {VEHICLE_TYPE_CONFIG.map((opt) => (
-                          <button
-                            key={opt.id}
-                            type="button"
-                            className={styles.carKindOption}
-                            role="option"
-                            aria-selected={opt.id === formData.trucksNeeded ? 'true' : 'false'}
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, trucksNeeded: opt.id }));
-                              setTrucksNeededOpen(false);
-                            }}
-                          >
-                            <img
-                              src={opt.imagePath}
-                              alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
-                              className={styles.carKindOptionThumb}
-                              loading="lazy"
-                            />
-                            <span className={styles.carKindOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    <input type="hidden" name="trucksNeeded" value={formData.trucksNeeded} />
-                  </div>
-                </div>
-                */}
-
               </div>
             )}
 

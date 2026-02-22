@@ -150,10 +150,13 @@ export async function POST(req: NextRequest) {
     // Validate vehicle type only if provided
     let normalizedVehicleType: string | null = null;
     if (vehicleTypeDesired) {
-      if (!isValidVehicleType(vehicleTypeDesired)) {
-        return NextResponse.json({ error: 'INVALID_VEHICLE_TYPE' }, { status: 400 });
+      // If it's a known vehicle type, normalize it; otherwise accept custom value as-is
+      if (isValidVehicleType(vehicleTypeDesired)) {
+        normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
+      } else {
+        // Accept custom vehicle type (user entered their own)
+        normalizedVehicleType = vehicleTypeDesired;
       }
-      normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
     }
 
     // Validate weight only if provided
