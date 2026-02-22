@@ -43,16 +43,15 @@ export async function GET(
     const imageUrl = provider.image || provider.user?.truckImage || '';
     const rawDesc = (provider.description || provider.name || 'عرض سوّاق');
     const cleanDesc = rawDesc.split(/\n|\r/).map((l: string) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
-    const titleWords = cleanDesc.slice(0, 80).split(' ').reverse().join(' ');
-    const title = titleWords;
+    const title = cleanDesc.slice(0, 80).split(' ').reverse().join(' ');
     const locationAr = getLocationLabel(provider.location, 'ar');
     const destinationAr = getLocationLabel(provider.destination, 'ar');
-    const routeText = destinationAr && locationAr
+    const routeRaw = destinationAr && locationAr
       ? `من ${locationAr} إلى ${destinationAr}`
       : locationAr
         ? `من ${locationAr}`
         : '';
-    const route = routeText.split(' ').reverse().join(' ');
+    const route = routeRaw.split(' ').reverse().join(' ');
 
     const maxCharge = provider.user?.maxCharge;
     const maxChargeUnit = provider.user?.maxChargeUnit || 'طن';
@@ -64,22 +63,20 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: 'ArabicFont, sans-serif', padding: '32px 48px', gap: '20px' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'ArabicFont, sans-serif', backgroundColor: '#111827' }}>
           {imageUrl ? (
-            <div style={{ display: 'flex', borderRadius: '24px', overflow: 'hidden', border: '5px solid #e5e7eb', width: '1080px', height: '340px', flexShrink: 0 }}>
-              <img src={imageUrl} style={{ width: '1080px', height: '340px', objectFit: 'cover' }} />
-            </div>
+            <img src={imageUrl} style={{ width: '1200px', height: '430px', objectFit: 'cover', flexShrink: 0 }} />
           ) : (
-            <div style={{ display: 'flex', borderRadius: '24px', width: '1080px', height: '200px', backgroundColor: '#e5e7eb', border: '5px solid #d1d5db', flexShrink: 0 }} />
+            <div style={{ display: 'flex', width: '1200px', height: '430px', backgroundColor: '#374151', flexShrink: 0 }} />
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '1080px' }}>
-            <div style={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', fontSize: '36px', fontWeight: 700, color: '#1f2937' }}>{title}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '10px', padding: '0 40px', backgroundColor: '#111827' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <span style={{ fontSize: '36px', fontWeight: 700, color: '#ffffff', textAlign: 'center' }}>{title}</span>
             </div>
             {route ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '26px' }}>📍</span>
-                <div style={{ display: 'flex', fontSize: '26px', color: '#4b5563' }}>{route}</div>
+                <span style={{ fontSize: '26px', color: '#9ca3af' }}>{route}</span>
               </div>
             ) : null}
           </div>

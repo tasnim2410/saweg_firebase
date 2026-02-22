@@ -15,14 +15,41 @@
 
 .header {
   background-color: #eeedcc;
-  padding: 2rem;
-  text-align: center;
+  padding: 1.5rem 2rem;
   color: rgba(24, 0, 0, 0.863);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.backArrowTop {
+  position: absolute;
+  top: 1.5rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  color: #374151;
+  transition: background 0.2s;
+}
+
+:global(html[dir="rtl"]) .backArrowTop {
+  left: auto;
+  right: 1rem;
+}
+
+.backArrowTop:hover {
+  background: #e5e7eb;
 }
 
 .title {
   font-size: 1.875rem;
   font-weight: 700;
+  margin-top: 0.5rem;
 }
 
 .form {
@@ -344,6 +371,21 @@
 .link {
   color: #111827;
   text-decoration: underline;
+}
+
+.backArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  color: #374151;
+  transition: background 0.2s;
+}
+
+.backArrow:hover {
+  background: #e5e7eb;
 }
 
  .modalOverlay {

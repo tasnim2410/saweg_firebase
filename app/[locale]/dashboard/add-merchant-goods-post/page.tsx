@@ -8,6 +8,7 @@ import styles from '../add-provider/add-provider.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, normalizeVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
 import SearchableCitySelect from '@/components/SearchableCitySelect';
+import { ArrowLeft } from 'lucide-react';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -521,6 +522,9 @@ export default function AddMerchantGoodsPostPage() {
 
       <div className={styles.card}>
         <div className={styles.header}>
+          <Link className={styles.backArrowTop} href={`/${locale}`} aria-label={locale === 'ar' ? 'رجوع' : 'Back'} style={{ marginInlineEnd: 'auto' }}>
+            <ArrowLeft size={24} />
+          </Link>
           <h1 className={styles.title}>{locale === 'ar' ? 'إضافة طلب تاجر' : 'Add merchant request'}</h1>
         </div>
 
@@ -725,12 +729,6 @@ export default function AddMerchantGoodsPostPage() {
           <button className={styles.button} type="submit" disabled={submitting}>
             {submitting ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...') : locale === 'ar' ? 'نشر' : 'Publish'}
           </button>
-
-          <div className={styles.footer}>
-            <Link className={styles.link} href={`/${locale}`}>
-              Back
-            </Link>
-          </div>
         </form>
       </div>
     </div>

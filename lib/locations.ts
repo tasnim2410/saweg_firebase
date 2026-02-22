@@ -270,7 +270,21 @@ export function getLocationOptionGroups(locale: LocaleKey): LocationOptionGroup[
 
 export function getLocationLabel(value: string | null | undefined, locale: LocaleKey): string {
   if (!value) return '';
-  const found = LOCATION_OPTIONS.find((o) => o.value === value);
+  // Normalize for lookup: trim and case-insensitive
+  const normalizedValue = value.trim();
+  
+  // Map country names to their ALL_* equivalents
+  const countryMap: Record<string, string> = {
+    'tunisia': 'ALL_TUNISIA',
+    'libya': 'ALL_LIBYA',
+    'egypt': 'ALL_EGYPT',
+    'تونس': 'ALL_TUNISIA',
+    'ليبيا': 'ALL_LIBYA',
+    'مصر': 'ALL_EGYPT',
+  };
+  
+  const mappedValue = countryMap[normalizedValue.toLowerCase()] || normalizedValue;
+  const found = LOCATION_OPTIONS.find((o) => o.value.toLowerCase() === mappedValue.toLowerCase());
   if (!found) return value;
   return locale === 'ar' ? found.ar : found.en;
 }

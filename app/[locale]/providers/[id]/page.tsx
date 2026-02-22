@@ -100,7 +100,11 @@ export async function generateMetadata({
 
   const rawDescription = String(provider.description || '').trim();
   const cleanDescription = rawDescription.split(/\n|\r/).map((l) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean).join(' - ');
-  const routePart = [provider.location, provider.destination].filter(Boolean).join(' → ');
+  const locationAr = getLocationLabel(provider.location, 'ar');
+  const destinationAr = getLocationLabel(provider.destination, 'ar');
+  const routePart = locationAr && destinationAr
+    ? `من ${locationAr} إلى ${destinationAr}`
+    : locationAr || destinationAr || '';
   const descriptionText = (cleanDescription || routePart || defaultDescription).slice(0, 200);
 
   const title = defaultTitle;

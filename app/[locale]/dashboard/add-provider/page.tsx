@@ -8,6 +8,7 @@ import styles from './add-provider.module.css';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { getFormattedLocationName } from '@/lib/geocoding';
 import SearchableCitySelect from '@/components/SearchableCitySelect';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -518,6 +519,9 @@ export default function AddProviderPage() {
       ) : null}
       <div className={styles.card}>
         <div className={styles.header}>
+          <Link className={styles.backArrowTop} href={`/${locale}`} aria-label={locale === 'ar' ? 'رجوع' : 'Back'}>
+            <ArrowRight size={24} />
+          </Link>
           <h1 className={styles.title}>{t('title')}</h1>
         </div>
 
@@ -646,12 +650,6 @@ export default function AddProviderPage() {
           <button className={styles.button} type="submit" disabled={submitting}>
             {submitting ? t('submitting') : t('submit')}
           </button>
-
-          <div className={styles.footer}>
-            <Link className={styles.link} href={`/${locale}`}>
-              Back
-            </Link>
-          </div>
         </form>
       </div>
     </div>
