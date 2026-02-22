@@ -87,7 +87,12 @@ export async function generateMetadata({
       openGraph: {
         title: defaultTitle,
         description: defaultDescription,
-        images: [{ url: '/images/logo.png' }],
+        images: [{ 
+          url: '/images/logo.png',
+          width: 1200,
+          height: 630,
+          alt: defaultTitle
+        }],
         type: 'article',
       },
       twitter: {
@@ -125,7 +130,12 @@ export async function generateMetadata({
       title,
       description,
       url: pageUrl,
-      images: [{ url: ogImageUrl }],
+      images: [{ 
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+        alt: title
+      }],
       type: 'article',
     },
     twitter: {

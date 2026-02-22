@@ -123,7 +123,12 @@ export async function generateMetadata({
       title,
       description,
       url: pageUrl,
-      images: [{ url: ogImageUrl }],
+      images: [{ 
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+        alt: title
+      }],
       type: 'article',
     },
     twitter: {
