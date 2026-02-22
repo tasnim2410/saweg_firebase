@@ -20,11 +20,11 @@ const VEHICLE_TYPES: VehicleType[] = [
   { id: 'dump', labelAR: 'قلابة', labelEN: 'Dump', iconPath: '/images/dump_truck_icon.png' },
   { id: 'curtainsider', labelAR: 'ستارة', labelEN: 'Curtainsider', iconPath: '/images/curtainsider_icon.png' },
   { id: 'tanker', labelAR: 'صهريج', labelEN: 'Tanker', iconPath: '/images/tanker_truck_icon.png' },
-  { id: 'tail-lift', labelAR: 'برافعة', labelEN: 'Tail-lift', iconPath: '/images/tail_lift_truck_icon.png' },
+  { id: 'tail-lift', labelAR: 'برافعة خلفية', labelEN: 'Tail-lift', iconPath: '/images/tail_lift_truck_icon.png' },
   { id: 'crane', labelAR: 'رافعة', labelEN: 'Crane', iconPath: '/images/crane_truck_icon.png' },
-  { id: 'drop-side', labelAR: 'جوانب قابلة لطي', labelEN: 'Drop-side', iconPath: '/images/drop_side_truck_icon.png' },
-  { id: 'container', labelAR: 'حاويات', labelEN: 'Container', iconPath: '/images/container_truck_icon.png' },
-  { id: 'semi-trailer', labelAR: 'نصف مقطورة', labelEN: 'Semi Trailer', iconPath: '/images/semi_trailer_icon.png' },
+  { id: 'drop-side', labelAR: 'بجوانب قابلة لطي', labelEN: 'Drop-side', iconPath: '/images/drop_side_truck_icon.png' },
+  { id: 'container', labelAR: 'شاحنة حاويات', labelEN: 'Container', iconPath: '/images/container_truck_icon.png' },
+  { id: 'semi-trailer', labelAR: 'مجرورة', labelEN: 'Semi Trailer', iconPath: '/images/semi_trailer_icon.png' },
   { id: 'other', labelAR: 'أخرى', labelEN: 'Other', iconPath: '/images/other_icon.png' },
 ];
 
