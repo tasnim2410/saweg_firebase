@@ -39,7 +39,7 @@ export default function AddProviderPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmImageUrl, setConfirmImageUrl] = useState<string | null>(null);
-  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(true);
   const [coords, setCoords] = useState<Coords>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [currentLocationName, setCurrentLocationName] = useState<string | null>(null);
@@ -94,6 +94,11 @@ export default function AddProviderPage() {
         if (typeof fullName === 'string') setName(fullName);
         const userPhone = data?.user?.phone;
         if (typeof userPhone === 'string') setPhone(userPhone);
+        
+        // Auto-fetch current location on load since it's the default
+        if (!cancelled) {
+          getCurrentLocation();
+        }
       } catch {
         if (cancelled) return;
       }
@@ -560,62 +565,87 @@ export default function AddProviderPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{t('location')}</label>
-            <label className={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={useCurrentLocation}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setUseCurrentLocation(checked);
-                  if (checked) {
-                    setLocation('');
-                    setCurrentLocationName(null);
-                    getCurrentLocation();
-                  } else {
-                    setCoords(null);
-                    setCurrentLocationName(null);
-                  }
-                }}
-              />
-              <span>
-                {locale === 'ar' ? 'استخدام الموقع الحالي' : 'Use current location'}
-              </span>
-            </label>
             {useCurrentLocation ? (
-              <div className={styles.locationInfo}>
-                {isLocating ? (
-                  <span className={styles.locationLoading}>
-                    {locale === 'ar' ? 'جاري تحديد الموقع...' : 'Getting location...'}
+              <>
+                <div className={styles.locationInfo}>
+                  {isLocating ? (
+                    <span className={styles.locationLoading}>
+                      {locale === 'ar' ? 'جاري تحديد الموقع...' : 'Getting location...'}
+                    </span>
+                  ) : currentLocationName ? (
+                    <span className={styles.locationCoords}>
+                      {currentLocationName}
+                    </span>
+                  ) : coords ? (
+                    <span className={styles.locationCoords}>
+                      {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
+                    </span>
+                  ) : (
+                    <span className={styles.locationError}>
+                      {locale === 'ar' ? 'لم يتم تحديد الموقع' : 'Location not set'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.locationRefreshBtn}
+                    onClick={getCurrentLocation}
+                    disabled={isLocating}
+                  >
+                    {locale === 'ar' ? 'تحديث' : 'Refresh'}
+                  </button>
+                </div>
+                <label className={styles.checkboxRow} style={{ marginTop: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={!useCurrentLocation}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setUseCurrentLocation(!checked);
+                      if (!checked) {
+                        setLocation('');
+                        setCurrentLocationName(null);
+                        getCurrentLocation();
+                      } else {
+                        setCoords(null);
+                        setCurrentLocationName(null);
+                      }
+                    }}
+                  />
+                  <span>
+                    {locale === 'ar' ? 'أو أدخل الموقع يدوياً' : 'Or enter location manually'}
                   </span>
-                ) : currentLocationName ? (
-                  <span className={styles.locationCoords}>
-                    {currentLocationName}
-                  </span>
-                ) : coords ? (
-                  <span className={styles.locationCoords}>
-                    {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
-                  </span>
-                ) : (
-                  <span className={styles.locationError}>
-                    {locale === 'ar' ? 'لم يتم تحديد الموقع' : 'Location not set'}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  className={styles.locationRefreshBtn}
-                  onClick={getCurrentLocation}
-                  disabled={isLocating}
-                >
-                  {locale === 'ar' ? 'تحديث' : 'Refresh'}
-                </button>
-              </div>
+                </label>
+              </>
             ) : (
-              <SearchableCitySelect
-                value={location}
-                onChange={setLocation}
-                locale={locale as 'ar' | 'en'}
-                placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
-              />
+              <>
+                <SearchableCitySelect
+                  value={location}
+                  onChange={setLocation}
+                  locale={locale as 'ar' | 'en'}
+                  placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+                />
+                <label className={styles.checkboxRow} style={{ marginTop: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={useCurrentLocation}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setUseCurrentLocation(checked);
+                      if (checked) {
+                        setLocation('');
+                        setCurrentLocationName(null);
+                        getCurrentLocation();
+                      } else {
+                        setCoords(null);
+                        setCurrentLocationName(null);
+                      }
+                    }}
+                  />
+                  <span>
+                    {locale === 'ar' ? 'استخدام الموقع الحالي بدلاً من ذلك' : 'Use current location instead'}
+                  </span>
+                </label>
+              </>
             )}
           </div>
 
