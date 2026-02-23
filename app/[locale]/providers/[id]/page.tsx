@@ -45,20 +45,31 @@ export async function generateMetadata({
       : 'See shippers offers on Saweg';
 
   if (!Number.isFinite(providerId)) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
     return {
       title: defaultTitle,
       description: defaultDescription,
+      metadataBase: new URL(baseUrl),
       openGraph: {
         title: defaultTitle,
         description: defaultDescription,
-        images: [{ url: '/images/logo.png' }],
-        type: 'article',
+        siteName: 'Saweg',
+        locale: locale === 'ar' ? 'ar_AR' : 'en_US',
+        images: [{ 
+          url: '/images/logo.png',
+          width: 1200,
+          height: 630,
+          alt: defaultTitle,
+          type: 'image/png',
+        }],
+        type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
         title: defaultTitle,
         description: defaultDescription,
         images: ['/images/logo.png'],
+        site: '@saweg',
       },
     };
   }
@@ -81,25 +92,31 @@ export async function generateMetadata({
   });
 
   if (!provider) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
     return {
       title: defaultTitle,
       description: defaultDescription,
+      metadataBase: new URL(baseUrl),
       openGraph: {
         title: defaultTitle,
         description: defaultDescription,
+        siteName: 'Saweg',
+        locale: locale === 'ar' ? 'ar_AR' : 'en_US',
         images: [{ 
           url: '/images/logo.png',
           width: 1200,
           height: 630,
-          alt: defaultTitle
+          alt: defaultTitle,
+          type: 'image/png',
         }],
-        type: 'article',
+        type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
         title: defaultTitle,
         description: defaultDescription,
         images: ['/images/logo.png'],
+        site: '@saweg',
       },
     };
   }
@@ -113,7 +130,7 @@ export async function generateMetadata({
     : locationAr || destinationAr || '';
   const descriptionText = (cleanDescription || routePart || defaultDescription).slice(0, 200);
 
-  const title = defaultTitle;
+  const title = cleanDescription || provider.name || defaultTitle;
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
   const pageUrl = `${baseUrl}/${locale}/providers/${providerId}`;
@@ -126,23 +143,28 @@ export async function generateMetadata({
   return {
     title,
     description,
+    metadataBase: new URL(baseUrl),
     openGraph: {
       title,
       description,
       url: pageUrl,
+      siteName: 'Saweg',
+      locale: locale === 'ar' ? 'ar_AR' : 'en_US',
       images: [{ 
         url: ogImageUrl,
         width: 1200,
         height: 630,
-        alt: title
+        alt: description,
+        type: 'image/jpeg',
       }],
-      type: 'article',
+      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [ogImageUrl],
+      site: '@saweg',
     },
   };
 }
