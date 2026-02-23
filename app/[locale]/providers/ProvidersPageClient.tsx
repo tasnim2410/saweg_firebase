@@ -547,8 +547,10 @@ export default function ProvidersPageClient() {
               const timeAgo = timeAgoLabelFromMs(createdAtMs);
 
               const lastUpdateMs = p.lastLocationUpdateAt ? new Date(p.lastLocationUpdateAt).getTime() : NaN;
-              const isStale = Number.isFinite(lastUpdateMs) ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000 : true;
-              const isActive = Boolean(p.active) && !isStale;
+              // const isStale = Number.isFinite(lastUpdateMs) ? Date.now() - lastUpdateMs > 24 * 60 * 60 * 1000 : true;
+              // const isActive = Boolean(p.active) && !isStale;
+              // const isActive = Boolean(p.active); // Only use active flag, ignore 24h check
+              const isActive = true; // Force all posts to show as active
 
               // Get vehicle type info
               const carKind = p.user?.carKind;

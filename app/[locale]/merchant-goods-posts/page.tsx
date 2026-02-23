@@ -1,9 +1,9 @@
 import Footer from '@/components/Footer';
-import styles from '@/components/CarouselSection.module.css';
+import styles from './MerchantGoodsPosts.module.css';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { getLocationLabel } from '@/lib/locations';
-import { MapPin, Phone, Truck } from 'lucide-react';
+import { MapPin, Phone, Truck, Package, Calendar, Scale } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,9 +54,8 @@ export default async function MerchantGoodsPostsPage({
   })) as MerchantGoodsPostListItem[];
 
   const title = locale === 'ar' ? 'كل طلبات التجّار' : 'All merchants requests';
-  const countLabel = locale === 'ar' ? `${posts.length} طلب` : `${posts.length} requests`;
-  const lang = locale === 'ar' ? 'ar' : 'en';
   const arrow = locale === 'ar' ? '→' : '←';
+  const lang = locale === 'ar' ? 'ar' : 'en';
 
   const formatDate = (d: string | Date) => {
     const date = new Date(d as any);
@@ -92,17 +91,24 @@ export default async function MerchantGoodsPostsPage({
   };
 
   return (
-    <main>
-      <Link href={`/${locale}`} className={styles.backButton} aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}>
+    <main className={styles.main}>
+      <Link 
+        href={`/${locale}`} 
+        className={styles.backButton} 
+        aria-label={locale === 'ar' ? 'الرجوع إلى الرئيسية' : 'Back to home'}
+      >
         {arrow}
       </Link>
-      <div className={styles.listPage}>
-        <div className={styles.listHeader}>
-          <h1 className={styles.listTitle}>{title}</h1>
-          <div className={styles.listCount}>{countLabel}</div>
+
+      <div className={styles.pageContainer}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>{title}</h1>
+          <span className={styles.counter}>
+            {posts.length} {locale === 'ar' ? (posts.length === 1 ? 'طلب' : 'طلبات') : (posts.length === 1 ? 'request' : 'requests')}
+          </span>
         </div>
 
-        <div className={styles.verticalList}>
+        <div className={styles.grid}>
           {posts.map((post) => {
             const merchantName = (post.name || post.user?.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
             const startLabel = getLocationLabel(post.startingPoint || '-', lang);
@@ -110,11 +116,6 @@ export default async function MerchantGoodsPostsPage({
 
             const createdAtMs = post.createdAt ? new Date(post.createdAt as any).getTime() : NaN;
             const timeAgo = timeAgoLabelFromMs(createdAtMs);
-
-            const isRecent = Number.isFinite(createdAtMs)
-              ? Date.now() - createdAtMs <= 24 * 60 * 60 * 1000
-              : false;
-            const statusClass = isRecent ? styles.statusActive : styles.statusInactive;
 
             const summaryParts: string[] = [];
             if (post.goodsType) summaryParts.push(post.goodsType);
@@ -128,70 +129,81 @@ export default async function MerchantGoodsPostsPage({
             const summary = summaryParts.filter(Boolean).join(' • ');
 
             const description = (post.description || '').trim();
-            const shortDesc = description.length > 160 ? `${description.slice(0, 160)}...` : description;
+            const shortDesc = description.length > 120 ? `${description.slice(0, 120)}...` : description;
 
             const phone = (post.phone || post.user?.phone || '').trim();
-
             const postHref = `/${locale}/merchant-goods-posts/${post.id}`;
 
             return (
-              <div key={post.id} className={styles.listItem}>
-                <Link href={postHref} className={styles.listItemMedia}>
+              <div key={post.id} className={styles.card}>
+                <Link href={postHref} className={styles.cardImageLink}>
                   <img
                     src={post.image || '/images/logo.png'}
                     alt={merchantName}
+                    className={styles.cardImage}
                     style={!post.image ? { filter: 'grayscale(100%)' } : undefined}
                   />
-                  {timeAgo ? <div className={styles.timeBadge}>{timeAgo}</div> : null}
+                  {timeAgo && <span className={styles.timeBadge}>{timeAgo}</span>}
                 </Link>
 
-                <div className={styles.listItemBody}>
-                  {/* <Link href={postHref} className={styles.listItemTitleRow}>
-                    <h3 className={styles.listItemTitle}>{merchantName}</h3>
-                  </Link> */}
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardTitle}>{merchantName}</h3>
 
-                  <div className={styles.metaContainer}>
-                    {shortDesc ? (
-                      <div className={styles.descriptionContainer}>
-                        <Link href={postHref} className={styles.descriptionLink} aria-label={merchantName}>
-                          <p className={`${styles.description} ${styles.descriptionClickable}`}>{shortDesc}</p>
-                        </Link>
-                      </div>
-                    ) : null}
-
-                    <div className={styles.locationContainer}>
-                      <MapPin size={14} className={styles.locationIcon} />
-                      <span className={styles.locationText}>{startLabel}</span>
+                  {post.goodsType && (
+                    <div className={styles.goodsBadge}>
+                      <Package size={16} />
+                      <span>{post.goodsType}</span>
                     </div>
+                  )}
 
-                    <div className={styles.destinationContainer}>
-                      <Truck size={14} className={styles.destinationIcon} />
-                      <span className={styles.destinationText}>{destLabel}</span>
+                  {Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit && (
+                    <div className={styles.weightBadge}>
+                      <Scale size={14} />
+                      <span>{post.goodsWeight} {post.goodsWeightUnit}</span>
                     </div>
+                  )}
 
-                    {summary ? (
-                      <div className={styles.descriptionContainer}>
-                        <Link href={postHref} className={styles.descriptionLink} aria-label={merchantName}>
-                          <p className={`${styles.description} ${styles.descriptionClickable}`}>{summary}</p>
-                        </Link>
-                      </div>
-                    ) : null}
+                  {post.loadingDate && (
+                    <div className={styles.dateBadge}>
+                      <Calendar size={14} />
+                      <span>{formatDate(post.loadingDate)}</span>
+                    </div>
+                  )}
+
+                  {shortDesc && (
+                    <p className={styles.cardDescription}>{shortDesc}</p>
+                  )}
+
+                  <div className={styles.cardMeta}>
+                    <span className={styles.locationBadge}>
+                      <MapPin size={12} />
+                      {startLabel}
+                    </span>
+                    <span className={styles.destinationBadge}>
+                      <Truck size={12} />
+                      {destLabel}
+                    </span>
                   </div>
 
-                  <div className={styles.actionContainer}>
+                  <div className={styles.cardActions}>
                     {phone ? (
                       <a
-                        className={`${styles.callButton} ${statusClass}`}
                         href={toTelHref(phone)}
+                        className={styles.callButton}
                         aria-label={locale === 'ar' ? 'اتصال' : 'Call'}
-                        title={locale === 'ar' ? 'اتصال' : 'Call'}
                       >
-                        <Phone size={16} className={styles.callIcon} aria-hidden="true" />
-                        <span className={styles.callText}>{locale === 'ar' ? 'اتصال' : 'Call'}</span>
+                        <Phone size={16} />
+                        <span>{locale === 'ar' ? 'اتصال' : 'Call'}</span>
                       </a>
                     ) : (
-                      <span className={`${styles.callButton} ${styles.statusInactive}`}>-</span>
+                      <span className={`${styles.callButton} ${styles.callButtonInactive}`}>-</span>
                     )}
+                    <Link 
+                      href={postHref}
+                      className={styles.detailsButton}
+                    >
+                      {locale === 'ar' ? 'التفاصيل' : 'Details'} →
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -199,6 +211,7 @@ export default async function MerchantGoodsPostsPage({
           })}
         </div>
       </div>
+
       <Footer />
     </main>
   );
