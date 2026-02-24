@@ -185,8 +185,30 @@ export async function POST(req: Request) {
     });
 
     return res;
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error('Signup error:', err);
+    
+    // Prisma unique constraint violation (email or phone already exists)
+    if (err?.code === 'P2002') {
+      const field = err?.meta?.target?.[0] || 'email/phone';
+      return NextResponse.json({ ok: false, error: 'USER_ALREADY_EXISTS', field }, { status: 409 });
+    }
+    
+    // Prisma connection/database errors
+    if (err?.code?.startsWith('P1') || err?.code?.startsWith('P2') || err?.code?.startsWith('P3')) {
+      return NextResponse.json({ ok: false, error: 'DATABASE_ERROR' }, { status: 500 });
+    }
+    
+    // Cloudinary upload errors
+    if (err?.message?.includes('cloudinary') || err?.message?.includes('upload')) {
+      return NextResponse.json({ ok: false, error: 'IMAGE_UPLOAD_FAILED' }, { status: 500 });
+    }
+    
+    // File system errors
+    if (err?.code === 'ENOENT' || err?.code === 'EACCES' || err?.code === 'EPERM') {
+      return NextResponse.json({ ok: false, error: 'FILE_SYSTEM_ERROR' }, { status: 500 });
+    }
+    
     return NextResponse.json({ ok: false, error: 'INTERNAL_ERROR' }, { status: 500 });
   }
 }

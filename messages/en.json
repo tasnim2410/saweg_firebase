@@ -176,6 +176,9 @@
       "phoneInvalidCharacters": "Phone number contains invalid characters",
       "phoneInvalidLength": "Phone number must be 8 (Tunisia), 10 (Libya), or 11 (Egypt) digits",
       "userAlreadyExists": "An account with this email/phone already exists",
+      "databaseError": "Database error. Please try again later",
+      "imageUploadFailed": "Failed to upload image. Please try a different image",
+      "fileSystemError": "File system error. Please try again later",
       "signupFailed": "Could not create account",
       "somethingWentWrong": "Something went wrong"
     }

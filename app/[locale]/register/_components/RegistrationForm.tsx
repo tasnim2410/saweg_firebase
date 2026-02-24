@@ -187,7 +187,6 @@ export default function RegistrationForm({ role }: Props) {
             title: titleFor('image'),
             message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
           });
-        } else if (code === 'PHONE_REQUIRED') {
           pushToast({ title: titleFor('phone'), message: t('errors.phoneRequired') });
         } else if (code === 'PHONE_INVALID_CHARACTERS') {
           pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
@@ -197,6 +196,14 @@ export default function RegistrationForm({ role }: Props) {
           pushToast({ title: titleFor('password'), message: t('errors.passwordTooShort') });
         } else if (code === 'USER_ALREADY_EXISTS') {
           pushToast({ title: titleFor('server'), message: t('errors.userAlreadyExists') });
+        } else if (code === 'DATABASE_ERROR') {
+          pushToast({ title: titleFor('server'), message: t('errors.databaseError') });
+        } else if (code === 'IMAGE_UPLOAD_FAILED') {
+          pushToast({ title: titleFor('image'), message: t('errors.imageUploadFailed') });
+        } else if (code === 'FILE_SYSTEM_ERROR') {
+          pushToast({ title: titleFor('server'), message: t('errors.fileSystemError') });
+        } else if (code === 'INTERNAL_ERROR') {
+          pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
         } else {
           pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
         }
