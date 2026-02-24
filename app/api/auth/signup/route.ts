@@ -47,7 +47,8 @@ export async function POST(req: Request) {
     if (contentType.includes('multipart/form-data')) {
       const form = await req.formData();
       fullName = typeof form.get('fullName') === 'string' ? String(form.get('fullName')).trim() : '';
-      email = typeof form.get('email') === 'string' ? String(form.get('email')).trim().toLowerCase() : null;
+      const emailRaw = typeof form.get('email') === 'string' ? String(form.get('email')).trim().toLowerCase() : '';
+      email = emailRaw ? emailRaw : null;
       phone = typeof form.get('phone') === 'string' ? String(form.get('phone')).trim() : null;
       password = typeof form.get('password') === 'string' ? String(form.get('password')) : '';
       typeRaw = form.get('type');
@@ -86,14 +87,7 @@ export async function POST(req: Request) {
     if (password.length < 6) return NextResponse.json({ ok: false, error: 'PASSWORD_TOO_SHORT' }, { status: 400 });
     if (!type) return NextResponse.json({ ok: false, error: 'USER_TYPE_REQUIRED' }, { status: 400 });
 
-    // Validate and normalize vehicle types
-    if (type === 'SHIPPER' && carKind && !isValidVehicleType(carKind)) {
-      return NextResponse.json({ ok: false, error: 'INVALID_CAR_KIND' }, { status: 400 });
-    }
-    if (type === 'MERCHANT' && trucksNeeded && !isValidVehicleType(trucksNeeded)) {
-      return NextResponse.json({ ok: false, error: 'INVALID_TRUCKS_NEEDED' }, { status: 400 });
-    }
-
+    // Normalize vehicle types if they match known types, otherwise keep as-is (for custom "other" entries)
     const normalizedCarKind = carKind ? normalizeVehicleType(carKind) || carKind : null;
     const normalizedTrucksNeeded = trucksNeeded ? normalizeVehicleType(trucksNeeded) || trucksNeeded : null;
 
@@ -191,6 +185,7 @@ export async function POST(req: Request) {
     // Prisma unique constraint violation (email or phone already exists)
     if (err?.code === 'P2002') {
       const field = err?.meta?.target?.[0] || 'email/phone';
+      console.error(`Unique constraint failed on field: ${field}`);
       return NextResponse.json({ ok: false, error: 'USER_ALREADY_EXISTS', field }, { status: 409 });
     }
     
