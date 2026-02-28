@@ -120,7 +120,10 @@ export default async function MerchantGoodsPostsPage({
             const summaryParts: string[] = [];
             if (post.goodsType) summaryParts.push(post.goodsType);
             if (Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit) {
-              summaryParts.push(`${post.goodsWeight} ${post.goodsWeightUnit}`);
+              const unitLabel = locale === 'ar' 
+                ? (post.goodsWeightUnit === 'ton' ? 'طن' : 'كغ')
+                : post.goodsWeightUnit;
+              summaryParts.push(`${post.goodsWeight} ${unitLabel}`);
             }
             if (post.loadingDate) {
               const d = formatDate(post.loadingDate);
@@ -159,7 +162,11 @@ export default async function MerchantGoodsPostsPage({
                   {Number.isFinite(post.goodsWeight as any) && post.goodsWeightUnit && (
                     <div className={styles.weightBadge}>
                       <Scale size={14} />
-                      <span>{post.goodsWeight} {post.goodsWeightUnit}</span>
+                      <span>
+                        {post.goodsWeight} {locale === 'ar' 
+                          ? (post.goodsWeightUnit === 'ton' ? 'طن' : 'كغ')
+                          : post.goodsWeightUnit}
+                      </span>
                     </div>
                   )}
 

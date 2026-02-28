@@ -656,25 +656,34 @@ export default function AddProviderPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{t('image')}</label>
-            <input
-              className={styles.file}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                if (file && file.size > MAX_PROVIDER_IMAGE_BYTES) {
-                  setImageFile(null);
-                  pushToast({
-                    variant: 'error',
-                    title: titleFor('image'),
-                    message: imageTooLargeMessage(MAX_PROVIDER_IMAGE_BYTES),
-                  });
-                  return;
-                }
-                setImageFile(file);
-              }}
-              required
-            />
+            <div className={styles.fileUploadWrapper}>
+              <input
+                className={styles.fileInputHidden}
+                type="file"
+                accept="image/*"
+                id="provider-image-upload"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && file.size > MAX_PROVIDER_IMAGE_BYTES) {
+                    setImageFile(null);
+                    pushToast({
+                      variant: 'error',
+                      title: titleFor('image'),
+                      message: imageTooLargeMessage(MAX_PROVIDER_IMAGE_BYTES),
+                    });
+                    return;
+                  }
+                  setImageFile(file);
+                }}
+                required
+              />
+              <label htmlFor="provider-image-upload" className={styles.fileUploadButton}>
+                {locale === 'ar' ? 'اختيار ملف' : 'Choose file'}
+              </label>
+              <span className={styles.fileUploadText}>
+                {imageFile ? imageFile.name : (locale === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen')}
+              </span>
+            </div>
           </div>
 
           <button className={styles.button} type="submit" disabled={submitting}>

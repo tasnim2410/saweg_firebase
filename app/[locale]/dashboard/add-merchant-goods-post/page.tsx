@@ -39,7 +39,7 @@ export default function AddMerchantGoodsPostPage() {
   const [destination, setDestination] = useState<string | null>(null);
   const [goodsType, setGoodsType] = useState('');
   const [goodsWeight, setGoodsWeight] = useState<string>('');
-  const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('kg');
+  const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('ton');
   const [budget, setBudget] = useState<string>('');
   const [budgetCurrency, setBudgetCurrency] = useState<string>('LYD');
   const [loadingDate, setLoadingDate] = useState('');
@@ -725,20 +725,29 @@ export default function AddMerchantGoodsPostPage() {
 
           <div className={styles.row}>
             <label className={styles.label}>{locale === 'ar' ? 'صورة البضاعة (اختياري)' : 'Goods image (optional)'}</label>
-            <input
-              className={styles.file}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                if (file && file.size > MAX_IMAGE_BYTES) {
-                  setImageFile(null);
-                  pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(MAX_IMAGE_BYTES) });
-                  return;
-                }
-                setImageFile(file);
-              }}
-            />
+            <div className={styles.fileUploadWrapper}>
+              <input
+                className={styles.fileInputHidden}
+                type="file"
+                accept="image/*"
+                id="goods-image-upload"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && file.size > MAX_IMAGE_BYTES) {
+                    setImageFile(null);
+                    pushToast({ variant: 'error', title: titleFor('image'), message: imageTooLargeMessage(MAX_IMAGE_BYTES) });
+                    return;
+                  }
+                  setImageFile(file);
+                }}
+              />
+              <label htmlFor="goods-image-upload" className={styles.fileUploadButton}>
+                {locale === 'ar' ? 'اختيار ملف' : 'Choose file'}
+              </label>
+              <span className={styles.fileUploadText}>
+                {imageFile ? imageFile.name : (locale === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen')}
+              </span>
+            </div>
           </div>
 
           <button className={styles.button} type="submit" disabled={submitting}>

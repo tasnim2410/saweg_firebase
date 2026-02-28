@@ -434,6 +434,101 @@
   flex: 1;
 }
 
+/* Admin Controls - Search & Expand/Collapse */
+.adminControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: white;
+  transition: all 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #FFB81C;
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.2);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0.5;
+}
+
+.postCount {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.expandControls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Collapsible Item Header */
+.itemHeader {
+  cursor: pointer;
+  padding: 1rem;
+  margin: -1rem -1rem 0 -1rem;
+  border-radius: 0.75rem 0.75rem 0 0;
+  transition: background-color 0.2s;
+}
+
+.itemHeader:hover {
+  background-color: #f9fafb;
+}
+
+.itemHeader:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(255, 184, 28, 0.3);
+}
+
+.expandIcon {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-left: 0.5rem;
+}
+
+.itemContent {
+  padding-top: 1.5rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Location Sharing Section */
 .locationSection {
   margin-bottom: 2rem;

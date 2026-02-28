@@ -11,6 +11,7 @@ import { VehicleType, VEHICLE_TYPE_OPTIONS } from './VehicleTypeFilter';
 import { MaxChargeValue, MAX_CHARGE_OPTIONS } from './MaxChargeFilter';
 import { DistanceValue, DistanceSource, DISTANCE_OPTIONS } from './DistanceFilter';
 import { getLocationCoordinates, calculateDistance, isWithinDistance } from '@/lib/distance';
+import { getLocationLabel } from '@/lib/locations';
 
 interface Provider {
   id: number;
@@ -609,11 +610,11 @@ export default function ProvidersPageClient() {
 
                     <div className={styles.cardMeta}>
                       <span className={styles.locationBadge}>
-                        📍 {p.location}
+                        📍 {getLocationLabel(p.location, locale === 'ar' ? 'ar' : 'en')}
                       </span>
                       {p.destination && (
                         <span className={styles.destinationBadge}>
-                          🚛 {p.destination}
+                          🚛 {getLocationLabel(p.destination, locale === 'ar' ? 'ar' : 'en')}
                         </span>
                       )}
                     </div>

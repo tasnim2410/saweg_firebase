@@ -54,7 +54,10 @@ export default function AdminMerchantGoodsPostsClient() {
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [removingImageId, setRemovingImageId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, PostEdits>>({});
+  const [savingSingleId, setSavingSingleId] = useState<number | null>(null);
   const [vehicleTypeOpen, setVehicleTypeOpen] = useState<Record<number, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedPosts, setExpandedPosts] = useState<Record<number, boolean>>({});
 
   const refresh = async () => {
     setLoading(true);
@@ -106,11 +109,76 @@ export default function AdminMerchantGoodsPostsClient() {
     setImageFiles({});
   }, [posts]);
 
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery.trim()) return posts;
+    const query = searchQuery.toLowerCase();
+    return posts.filter(p => 
+      p.name.toLowerCase().includes(query) ||
+      p.startingPoint.toLowerCase().includes(query) ||
+      p.destination.toLowerCase().includes(query) ||
+      p.goodsType.toLowerCase().includes(query) ||
+      p.user?.fullName?.toLowerCase().includes(query)
+    );
+  }, [posts, searchQuery]);
+
+  const toggleExpanded = (id: number) => {
+    setExpandedPosts(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const expandAll = () => {
+    const allExpanded: Record<number, boolean> = {};
+    filteredPosts.forEach(p => allExpanded[p.id] = true);
+    setExpandedPosts(allExpanded);
+  };
+
+  const collapseAll = () => {
+    setExpandedPosts({});
+  };
+
   const byId = useMemo(() => {
     const map = new Map<number, MerchantGoodsPost>();
     for (const p of posts) map.set(p.id, p);
     return map;
   }, [posts]);
+
+  const saveSingle = async (id: number) => {
+    if (savingSingleId === id) return;
+
+    const original = byId.get(id);
+    const current = edits[id];
+    if (!original || !current) return;
+
+    const payload = buildPayload(original, current);
+    if (Object.keys(payload).length === 0) return;
+
+    setSavingSingleId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/merchant-goods-posts/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error || 'Failed to update');
+        return;
+      }
+
+      await refresh();
+
+      try {
+        void fetch('/api/merchant-goods-posts', { credentials: 'include' }).catch(() => null);
+        window.dispatchEvent(new Event('saweg:warmup'));
+      } catch {
+        // ignore
+      }
+    } catch {
+      setError('Failed to update');
+    } finally {
+      setSavingSingleId(null);
+    }
+  };
 
   const buildPayload = (original: MerchantGoodsPost, current: PostEdits) => {
     const payload: Record<string, unknown> = {};
@@ -324,26 +392,80 @@ export default function AdminMerchantGoodsPostsClient() {
           <div className={styles.empty}>{locale === 'ar' ? 'لا توجد منشورات' : 'No posts found'}</div>
         ) : (
           <div className={styles.list}>
-            {posts.map((p) => {
-              const e = edits[p.id];
-              const ownerName = p.user?.fullName || '';
-              const postDate = (() => {
-                try {
-                  return new Date(p.createdAt).toLocaleString();
-                } catch {
-                  return p.createdAt;
-                }
-              })();
+            {/* Search and Controls Bar */}
+            <div className={styles.adminControls}>
+              <div className={styles.searchBox}>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder={locale === 'ar' ? 'بحث في المنشورات...' : 'Search posts...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <span className={styles.searchIcon}>🔍</span>
+              </div>
+              <div className={styles.postCount}>
+                {locale === 'ar' 
+                  ? `إجمالي: ${filteredPosts.length} منشور`
+                  : `Total: ${filteredPosts.length} posts`}
+              </div>
+              <div className={styles.expandControls}>
+                <button
+                  type="button"
+                  className={styles.linkButtonSecondary}
+                  onClick={expandAll}
+                >
+                  {locale === 'ar' ? 'فتح الكل' : 'Expand All'}
+                </button>
+                <button
+                  type="button"
+                  className={styles.linkButtonSecondary}
+                  onClick={collapseAll}
+                >
+                  {locale === 'ar' ? 'طي الكل' : 'Collapse All'}
+                </button>
+              </div>
+            </div>
 
-              return (
-                <div key={p.id} className={styles.item}>
-                  <div className={styles.itemTop}>
-                    <div className={styles.itemTitleRow}>
-                      <div className={styles.itemTitle}>{p.name}</div>
-                      {ownerName ? <div className={styles.meta}>{ownerName}</div> : null}
+            {filteredPosts.length === 0 ? (
+              <div className={styles.empty}>
+                {locale === 'ar' ? 'لا توجد نتائج للبحث' : 'No search results'}
+              </div>
+            ) : (
+              filteredPosts.map((p) => {
+                const e = edits[p.id];
+                const ownerName = p.user?.fullName || '';
+                const postDate = (() => {
+                  try {
+                    return new Date(p.createdAt).toLocaleString();
+                  } catch {
+                    return p.createdAt;
+                  }
+                })();
+                const isExpanded = expandedPosts[p.id] ?? false;
+
+                return (
+                  <div key={p.id} className={styles.item}>
+                    {/* Collapsible Header */}
+                    <div 
+                      className={styles.itemHeader}
+                      onClick={() => toggleExpanded(p.id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className={styles.itemTitleRow}>
+                        <div className={styles.itemTitle}>{p.name}</div>
+                        <div className={styles.headerActions}>
+                          {ownerName ? <span className={styles.meta}>{ownerName}</span> : null}
+                          <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                      </div>
+                      <div className={styles.meta}>{locale === 'ar' ? 'تاريخ الإنشاء' : 'Created'}: {postDate}</div>
                     </div>
-                    <div className={styles.meta}>{locale === 'ar' ? 'تاريخ الإنشاء' : 'Created'}: {postDate}</div>
-                  </div>
+
+                    {/* Collapsible Content */}
+                    {isExpanded && (
+                      <div className={styles.itemContent}>
 
                   <div className={styles.imageSection}>
                     <div className={styles.imagePreviewContainer}>
@@ -522,8 +644,8 @@ export default function AdminMerchantGoodsPostsClient() {
                         }
                         style={{ maxWidth: '8rem' }}
                       >
-                        <option value="kg">kg</option>
-                        <option value="ton">ton</option>
+                        <option value="kg">{locale === 'ar' ? 'كغ' : 'kg'}</option>
+                        <option value="ton">{locale === 'ar' ? 'طن' : 'ton'}</option>
                       </select>
                     </div>
                   </div>
@@ -633,6 +755,20 @@ export default function AdminMerchantGoodsPostsClient() {
 
                   <div className={`${styles.actionsRow} ${styles.deleteSection}`}>
                     <button
+                      className={`${styles.button} ${styles.saveButton}`}
+                      onClick={() => saveSingle(p.id)}
+                      disabled={savingSingleId === p.id || savingAll || savingId !== null}
+                      type="button"
+                    >
+                      {savingSingleId === p.id
+                        ? locale === 'ar'
+                          ? 'جارٍ الحفظ...'
+                          : 'Saving...'
+                        : locale === 'ar'
+                          ? 'حفظ'
+                          : 'Save'}
+                    </button>
+                    <button
                       className={`${styles.deleteButton} ${styles.deleteProviderButton}`}
                       onClick={() => {
                         if (
@@ -656,9 +792,12 @@ export default function AdminMerchantGoodsPostsClient() {
                     </button>
                     <span className={styles.hint}>{tDash('deleteHint')}</span>
                   </div>
-                </div>
-              );
-            })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
 
             <div className={styles.saveAllRow}>
               <button

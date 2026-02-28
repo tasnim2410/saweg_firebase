@@ -90,11 +90,24 @@ export default function SearchableCitySelect({
     setSearchTerm('');
   };
 
+  // Initialize searchTerm when opening with current selection
+  const handleOpen = () => {
+    if (!disabled && !isOpen) {
+      setSearchTerm(selectedLabel);
+      setIsOpen(true);
+    }
+  };
+
+  // Prevent click on input from bubbling to trigger and toggling
+  const handleInputClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className={styles.container} ref={containerRef}>
       <div
         className={`${styles.trigger} ${isOpen ? styles.triggerOpen : ''} ${disabled ? styles.triggerDisabled : ''}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen((v) => !v)}
       >
         <input
           ref={inputRef}
@@ -103,7 +116,8 @@ export default function SearchableCitySelect({
           placeholder={placeholder || (isRTL ? 'ابحث عن مدينة...' : 'Search for a city...')}
           value={isOpen ? searchTerm : selectedLabel}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => !disabled && setIsOpen(true)}
+          onFocus={handleOpen}
+          onClick={handleInputClick}
           disabled={disabled}
           autoComplete="off"
         />

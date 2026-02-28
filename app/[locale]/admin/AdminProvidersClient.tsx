@@ -46,7 +46,10 @@ export default function AdminProvidersClient() {
   const [imageFiles, setImageFiles] = useState<Record<number, File | null>>({});
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [removingImageId, setRemovingImageId] = useState<number | null>(null);
+  const [savingSingleId, setSavingSingleId] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<number, ProviderEdits>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedPosts, setExpandedPosts] = useState<Record<number, boolean>>({});
 
   const refresh = async () => {
     setLoading(true);
@@ -179,11 +182,68 @@ export default function AdminProvidersClient() {
     setImageFiles({});
   }, [providers]);
 
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery.trim()) return providers;
+    const query = searchQuery.toLowerCase();
+    return providers.filter(p => 
+      p.name.toLowerCase().includes(query) ||
+      p.location.toLowerCase().includes(query) ||
+      p.destination?.toLowerCase().includes(query) ||
+      p.phone.toLowerCase().includes(query)
+    );
+  }, [providers, searchQuery]);
+
+  const toggleExpanded = (id: number) => {
+    setExpandedPosts(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const expandAll = () => {
+    const allExpanded: Record<number, boolean> = {};
+    filteredPosts.forEach(p => allExpanded[p.id] = true);
+    setExpandedPosts(allExpanded);
+  };
+
+  const collapseAll = () => {
+    setExpandedPosts({});
+  };
+
   const byId = useMemo(() => {
     const map = new Map<number, Provider>();
     for (const p of providers) map.set(p.id, p);
     return map;
   }, [providers]);
+
+  const saveSingle = async (id: number) => {
+    if (savingSingleId === id) return;
+
+    const original = byId.get(id);
+    const current = edits[id];
+    if (!original || !current) return;
+
+    const payload = buildPayload(original, current);
+    if (Object.keys(payload).length === 0) return;
+
+    setSavingSingleId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/providers/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error || 'Failed to update');
+        return;
+      }
+
+      await refresh();
+    } catch {
+      setError('Failed to update');
+    } finally {
+      setSavingSingleId(null);
+    }
+  };
 
   const buildPayload = (original: Provider, current: ProviderEdits) => {
     const payload: Record<string, unknown> = {};
@@ -263,257 +323,327 @@ export default function AdminProvidersClient() {
           <div className={styles.empty}>{tDash('empty')}</div>
         ) : (
           <div className={styles.list}>
-            {providers.map((p) => {
-              const e = edits[p.id];
-              return (
-                <div key={p.id} className={styles.item}>
-                  <div className={styles.itemTop}>
-                    <div className={styles.itemTitleRow}>
-                      <div className={styles.itemTitle}>{p.name}</div>
-                      <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
-                        {p.active ? tDash('available') : tDash('notAvailable')}
+            {/* Search and Controls Bar */}
+            <div className={styles.adminControls}>
+              <div className={styles.searchBox}>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder={locale === 'ar' ? 'بحث في المنشورات...' : 'Search posts...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <span className={styles.searchIcon}>🔍</span>
+              </div>
+              <div className={styles.postCount}>
+                {locale === 'ar' 
+                  ? `إجمالي: ${filteredPosts.length} منشور`
+                  : `Total: ${filteredPosts.length} posts`}
+              </div>
+              <div className={styles.expandControls}>
+                <button
+                  type="button"
+                  className={styles.linkButtonSecondary}
+                  onClick={expandAll}
+                >
+                  {locale === 'ar' ? 'فتح الكل' : 'Expand All'}
+                </button>
+                <button
+                  type="button"
+                  className={styles.linkButtonSecondary}
+                  onClick={collapseAll}
+                >
+                  {locale === 'ar' ? 'طي الكل' : 'Collapse All'}
+                </button>
+              </div>
+            </div>
+
+            {filteredPosts.length === 0 ? (
+              <div className={styles.empty}>
+                {locale === 'ar' ? 'لا توجد نتائج للبحث' : 'No search results'}
+              </div>
+            ) : (
+              filteredPosts.map((p) => {
+                const e = edits[p.id];
+                const isExpanded = expandedPosts[p.id] ?? false;
+                return (
+                  <div key={p.id} className={styles.item}>
+                    {/* Collapsible Header */}
+                    <div 
+                      className={styles.itemHeader}
+                      onClick={() => toggleExpanded(p.id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className={styles.itemTitleRow}>
+                        <div className={styles.itemTitle}>{p.name}</div>
+                        <div className={styles.headerActions}>
+                          <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
+                            {p.active ? tDash('available') : tDash('notAvailable')}
+                          </div>
+                          <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                      </div>
+                      <div className={styles.meta}>
+                        {tDash('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
                       </div>
                     </div>
-                    <div className={styles.meta}>
-                      {tDash('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
-                    </div>
-                  </div>
 
-                  {/* Enhanced Image Section */}
-                  <div className={styles.imageSection}>
-                    <div className={styles.imagePreviewContainer}>
-                      {p.image ? (
-                        <div className={styles.imageWrapper}>
-                          <img 
-                            className={styles.itemImage} 
-                            src={p.image} 
-                            alt={p.name} 
-                          />
-                          <div className={styles.imageOverlay}>
-                            <span className={styles.imageLabel}>
-                              {locale === 'ar' ? 'الصورة الحالية' : 'Current Image'}
-                            </span>
+                    {/* Collapsible Content */}
+                    {isExpanded && (
+                      <div className={styles.itemContent}>
+                        {/* Enhanced Image Section */}
+                        <div className={styles.imageSection}>
+                          <div className={styles.imagePreviewContainer}>
+                            {p.image ? (
+                              <div className={styles.imageWrapper}>
+                                <img 
+                                  className={styles.itemImage} 
+                                  src={p.image} 
+                                  alt={p.name} 
+                                />
+                                <div className={styles.imageOverlay}>
+                                  <span className={styles.imageLabel}>
+                                    {locale === 'ar' ? 'الصورة الحالية' : 'Current Image'}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={styles.noImage}>
+                                <span>{locale === 'ar' ? 'لا توجد صورة' : 'No Image'}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.imageControls}>
+                            <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                              <label className={styles.label}>{locale === 'ar' ? 'تحميل صورة جديدة' : 'Upload New Image'}</label>
+                              <div className={styles.fileInputWrapper}>
+                                <input
+                                  className={styles.fileInput}
+                                  type="file"
+                                  id={`image-upload-${p.id}`}
+                                  accept="image/*"
+                                  onChange={(ev) => {
+                                    const f = ev.target.files?.[0] ?? null;
+                                    setImageFiles((prev) => ({ ...prev, [p.id]: f }));
+                                  }}
+                                />
+                                <label 
+                                  htmlFor={`image-upload-${p.id}`} 
+                                  className={styles.fileInputLabel}
+                                >
+                                  {imageFiles[p.id] 
+                                    ? imageFiles[p.id]?.name 
+                                    : locale === 'ar' 
+                                      ? 'اختر ملف' 
+                                      : 'Choose file'}
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className={styles.imageButtonsRow}>
+                              <button
+                                className={`${styles.button} ${styles.imageButton}`}
+                                type="button"
+                                onClick={() => uploadImage(p.id)}
+                                disabled={!imageFiles[p.id] || uploadingId === p.id || savingAll || savingId !== null}
+                              >
+                                {uploadingId === p.id
+                                  ? locale === 'ar'
+                                    ? 'جارٍ الرفع...'
+                                    : 'Uploading...'
+                                  : locale === 'ar'
+                                    ? 'رفع الصورة'
+                                    : 'Upload Image'}
+                              </button>
+
+                              <button
+                                className={`${styles.deleteButton} ${styles.imageButton}`}
+                                type="button"
+                                onClick={() => removeImage(p.id)}
+                                disabled={!p.image || removingImageId === p.id || savingAll || savingId !== null}
+                              >
+                                {removingImageId === p.id
+                                  ? locale === 'ar'
+                                    ? 'جارٍ الحذف...'
+                                    : 'Removing...'
+                                  : locale === 'ar'
+                                    ? 'حذف الصورة'
+                                    : 'Remove Image'}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className={styles.noImage}>
-                          <span>{locale === 'ar' ? 'لا توجد صورة' : 'No Image'}</span>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className={styles.imageControls}>
-                      <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                        <label className={styles.label}>{locale === 'ar' ? 'تحميل صورة جديدة' : 'Upload New Image'}</label>
-                        <div className={styles.fileInputWrapper}>
+                        {/* Form Inputs with Spacing */}
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('name')}</label>
                           <input
-                            className={styles.fileInput}
-                            type="file"
-                            id={`image-upload-${p.id}`}
-                            accept="image/*"
-                            onChange={(ev) => {
-                              const f = ev.target.files?.[0] ?? null;
-                              setImageFiles((prev) => ({ ...prev, [p.id]: f }));
-                            }}
+                            className={styles.input}
+                            value={e?.name ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], name: ev.target.value },
+                              }))
+                            }
+                            placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter name'}
                           />
-                          <label 
-                            htmlFor={`image-upload-${p.id}`} 
-                            className={styles.fileInputLabel}
+                        </div>
+
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('location')}</label>
+                          <select
+                            className={styles.input}
+                            value={e?.location ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], location: ev.target.value },
+                              }))
+                            }
                           >
-                            {imageFiles[p.id] 
-                              ? imageFiles[p.id]?.name 
-                              : locale === 'ar' 
-                                ? 'اختر ملف' 
-                                : 'Choose file'}
+                            <option value="">{locale === 'ar' ? '-- اختر الموقع --' : '-- Select Location --'}</option>
+                            {locationOptionGroups.map((group) => (
+                              <optgroup key={group.label} label={group.label}>
+                                {group.options.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('phone')}</label>
+                          <input
+                            className={styles.input}
+                            value={e?.phone ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], phone: ev.target.value },
+                              }))
+                            }
+                            placeholder={locale === 'ar' ? 'أدخل رقم الهاتف' : 'Enter phone number'}
+                          />
+                        </div>
+
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('destination')}</label>
+                          <select
+                            className={styles.input}
+                            value={e?.destination ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], destination: ev.target.value },
+                              }))
+                            }
+                          >
+                            <option value="">{locale === 'ar' ? '-- اختر الوجهة --' : '-- Select Destination --'}</option>
+                            {locationOptionGroups.map((group) => (
+                              <optgroup key={group.label} label={group.label}>
+                                {group.options.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('placeOfBusiness')}</label>
+                          <input
+                            className={styles.input}
+                            value={e?.placeOfBusiness ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], placeOfBusiness: ev.target.value },
+                              }))
+                            }
+                            placeholder={locale === 'ar' ? 'أدخل مجال العمل' : 'Enter place of business'}
+                          />
+                        </div>
+
+                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                          <label className={styles.label}>{tForm('description')}</label>
+                          <textarea
+                            className={styles.textarea}
+                            value={e?.description ?? ''}
+                            onChange={(ev) =>
+                              setEdits((prev) => ({
+                                ...prev,
+                                [p.id]: { ...prev[p.id], description: ev.target.value },
+                              }))
+                            }
+                            placeholder={locale === 'ar' ? 'أدخل الوصف' : 'Enter description'}
+                            rows={3}
+                          />
+                        </div>
+
+                        <div className={`${styles.actionsRow} ${styles.checkboxRowSpaced}`}>
+                          <label className={styles.checkboxRow}>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(e?.active)}
+                              onChange={(ev) =>
+                                setEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: { ...prev[p.id], active: ev.target.checked },
+                                }))
+                              }
+                            />
+                            <span>{tForm('active')}</span>
                           </label>
                         </div>
+
+                        <div className={`${styles.actionsRow} ${styles.deleteSection}`}>
+                          <button
+                            className={`${styles.button} ${styles.saveButton}`}
+                            onClick={() => saveSingle(p.id)}
+                            disabled={savingSingleId === p.id || savingAll || savingId !== null}
+                            type="button"
+                          >
+                            {savingSingleId === p.id
+                              ? locale === 'ar'
+                                ? 'جارٍ الحفظ...'
+                                : 'Saving...'
+                              : locale === 'ar'
+                                ? 'حفظ'
+                                : 'Save'}
+                          </button>
+                          <button
+                            className={`${styles.deleteButton} ${styles.deleteProviderButton}`}
+                            onClick={() => {
+                              if (window.confirm(locale === 'ar' 
+                                ? 'هل أنت متأكد من حذف هذا المنشور؟' 
+                                : 'Are you sure you want to delete this provider?'
+                              )) {
+                                deleteProvider(p.id);
+                              }
+                            }}
+                            disabled={savingId === p.id}
+                            type="button"
+                          >
+                            {savingId === p.id 
+                              ? (locale === 'ar' ? 'جارٍ الحذف...' : 'Deleting...') 
+                              : tDash('delete')}
+                          </button>
+                          <span className={styles.hint}>{tDash('deleteHint')}</span>
+                        </div>
                       </div>
-
-                      <div className={styles.imageButtonsRow}>
-                        <button
-                          className={`${styles.button} ${styles.imageButton}`}
-                          type="button"
-                          onClick={() => uploadImage(p.id)}
-                          disabled={!imageFiles[p.id] || uploadingId === p.id || savingAll || savingId !== null}
-                        >
-                          {uploadingId === p.id
-                            ? locale === 'ar'
-                              ? 'جارٍ الرفع...'
-                              : 'Uploading...'
-                            : locale === 'ar'
-                              ? 'رفع الصورة'
-                              : 'Upload Image'}
-                        </button>
-
-                        <button
-                          className={`${styles.deleteButton} ${styles.imageButton}`}
-                          type="button"
-                          onClick={() => removeImage(p.id)}
-                          disabled={!p.image || removingImageId === p.id || savingAll || savingId !== null}
-                        >
-                          {removingImageId === p.id
-                            ? locale === 'ar'
-                              ? 'جارٍ الحذف...'
-                              : 'Removing...'
-                            : locale === 'ar'
-                              ? 'حذف الصورة'
-                              : 'Remove Image'}
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  {/* Form Inputs with Spacing */}
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('name')}</label>
-                    <input
-                      className={styles.input}
-                      value={e?.name ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], name: ev.target.value },
-                        }))
-                      }
-                      placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter name'}
-                    />
-                  </div>
-
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('location')}</label>
-                    <select
-                      className={styles.input}
-                      value={e?.location ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], location: ev.target.value },
-                        }))
-                      }
-                    >
-                      <option value="">{locale === 'ar' ? '-- اختر الموقع --' : '-- Select Location --'}</option>
-                      {locationOptionGroups.map((group) => (
-                        <optgroup key={group.label} label={group.label}>
-                          {group.options.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('phone')}</label>
-                    <input
-                      className={styles.input}
-                      value={e?.phone ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], phone: ev.target.value },
-                        }))
-                      }
-                      placeholder={locale === 'ar' ? 'أدخل رقم الهاتف' : 'Enter phone number'}
-                    />
-                  </div>
-
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('destination')}</label>
-                    <select
-                      className={styles.input}
-                      value={e?.destination ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], destination: ev.target.value },
-                        }))
-                      }
-                    >
-                      <option value="">{locale === 'ar' ? '-- اختر الوجهة --' : '-- Select Destination --'}</option>
-                      {locationOptionGroups.map((group) => (
-                        <optgroup key={group.label} label={group.label}>
-                          {group.options.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('placeOfBusiness')}</label>
-                    <input
-                      className={styles.input}
-                      value={e?.placeOfBusiness ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], placeOfBusiness: ev.target.value },
-                        }))
-                      }
-                      placeholder={locale === 'ar' ? 'أدخل مجال العمل' : 'Enter place of business'}
-                    />
-                  </div>
-
-                  <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                    <label className={styles.label}>{tForm('description')}</label>
-                    <textarea
-                      className={styles.textarea}
-                      value={e?.description ?? ''}
-                      onChange={(ev) =>
-                        setEdits((prev) => ({
-                          ...prev,
-                          [p.id]: { ...prev[p.id], description: ev.target.value },
-                        }))
-                      }
-                      placeholder={locale === 'ar' ? 'أدخل الوصف' : 'Enter description'}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className={`${styles.actionsRow} ${styles.checkboxRowSpaced}`}>
-                    <label className={styles.checkboxRow}>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(e?.active)}
-                        onChange={(ev) =>
-                          setEdits((prev) => ({
-                            ...prev,
-                            [p.id]: { ...prev[p.id], active: ev.target.checked },
-                          }))
-                        }
-                      />
-                      <span>{tForm('active')}</span>
-                    </label>
-                  </div>
-
-                  <div className={`${styles.actionsRow} ${styles.deleteSection}`}>
-                    <button
-                      className={`${styles.deleteButton} ${styles.deleteProviderButton}`}
-                      onClick={() => {
-                        if (window.confirm(locale === 'ar' 
-                          ? 'هل أنت متأكد من حذف هذا المنشور؟' 
-                          : 'Are you sure you want to delete this provider?'
-                        )) {
-                          deleteProvider(p.id);
-                        }
-                      }}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id 
-                        ? (locale === 'ar' ? 'جارٍ الحذف...' : 'Deleting...') 
-                        : tDash('delete')}
-                    </button>
-                    <span className={styles.hint}>{tDash('deleteHint')}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
 
             <div className={styles.saveAllRow}>
               <button 
