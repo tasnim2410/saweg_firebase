@@ -595,7 +595,10 @@ export default function ProvidersPageClient() {
                       <div className={styles.maxChargeBadge}>
                         <span className={styles.maxChargeIcon}>⚖️</span>
                         <span className={styles.maxChargeText}>
-                          {p.user.maxCharge} {p.user.maxChargeUnit || (locale === 'ar' ? 'كغ' : 'kg')}
+                          {p.user.maxCharge} {' '}
+                          {locale === 'ar' 
+                            ? (p.user.maxChargeUnit?.toLowerCase().includes('ton') ? 'طن' : 'كغ')
+                            : (p.user.maxChargeUnit || 'kg')}
                         </span>
                       </div>
                     )}
