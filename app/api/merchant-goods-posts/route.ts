@@ -38,6 +38,7 @@ export async function GET() {
             fullName: true,
             phone: true,
             email: true,
+            callsReceived: true,
           },
         },
       },
@@ -56,6 +57,7 @@ export async function GET() {
           ? {
               fullName: p.user.fullName,
               phone: p.user.phone ?? null,
+              callsReceived: p.user.callsReceived,
             }
           : null,
       };

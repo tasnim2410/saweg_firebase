@@ -393,6 +393,12 @@ export default async function ProviderDetailsPage({
                 callButtonClass={styles.callButton}
                 callButtonDisabledClass={styles.callButtonDisabled}
                 phoneNumberLtrClass={styles.phoneNumberLtr}
+                onCallClick={() => {
+                  void fetch(`/api/providers/${providerId}/calls`, {
+                    method: 'POST',
+                    keepalive: true,
+                  }).catch(() => null);
+                }}
               />
             </div>
           </div>

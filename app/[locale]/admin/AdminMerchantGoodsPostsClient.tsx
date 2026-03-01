@@ -23,6 +23,7 @@ type MerchantGoodsPost = {
   userId: string;
   user?: {
     fullName?: string;
+    callsReceived?: number;
   };
 };
 
@@ -457,6 +458,11 @@ export default function AdminMerchantGoodsPostsClient() {
                         <div className={styles.itemTitle}>{p.name}</div>
                         <div className={styles.headerActions}>
                           {ownerName ? <span className={styles.meta}>{ownerName}</span> : null}
+                          {p.user?.callsReceived ? (
+                            <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
+                              📞 {p.user.callsReceived}
+                            </span>
+                          ) : null}
                           <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
                         </div>
                       </div>

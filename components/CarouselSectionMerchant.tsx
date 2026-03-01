@@ -59,6 +59,13 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const addHref = `/${locale}/dashboard/add-merchant-goods-post`;
   const title = locale === 'ar' ? 'عروض التجار' : 'Merchants requests';
 
+  const trackMerchantCall = (postId: number) => {
+    void fetch(`/api/merchant-goods-posts/${postId}/calls`, {
+      method: 'POST',
+      keepalive: true,
+    }).catch(() => null);
+  };
+
   const buildShareUrlForPost = (postId: number) => {
     if (typeof window === 'undefined') return `/${locale}/merchant-goods-posts/${postId}`;
     return `${window.location.origin}/${locale}/merchant-goods-posts/${postId}`;
@@ -540,6 +547,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                           >
                             <a
                               href={toTelHref(phoneNumber)}
+                              onClick={() => trackMerchantCall(post.id)}
                               className={styles.callMenuItem}
                               role="menuitem"
                             >
@@ -550,6 +558,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                               href={toWhatsAppHref(phoneNumber)}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={() => trackMerchantCall(post.id)}
                               className={styles.callMenuItem}
                               role="menuitem"
                             >

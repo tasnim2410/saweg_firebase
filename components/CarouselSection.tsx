@@ -665,6 +665,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                           href={toWhatsAppHref(provider.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => trackCall(provider.id)}
                           className={styles.callMenuItem}
                           role="menuitem"
                         >

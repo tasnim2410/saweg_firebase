@@ -625,6 +625,12 @@ export default function ProvidersPageClient() {
                     <div className={styles.cardActions}>
                       <a
                         href={toTelHref(p.phone)}
+                        onClick={() => {
+                          void fetch(`/api/providers/${p.id}/calls`, {
+                            method: 'POST',
+                            keepalive: true,
+                          }).catch(() => null);
+                        }}
                         className={`${styles.callButton} ${isActive ? styles.callButtonActive : styles.callButtonInactive}`}
                       >
                         📞 {locale === 'ar' ? 'اتصال' : 'Call'}

@@ -407,6 +407,12 @@ export default async function MerchantGoodsPostDetailsPage({
                 callButtonClass={styles.callButton}
                 callButtonDisabledClass={styles.callButtonDisabled}
                 phoneNumberLtrClass={styles.phoneNumberLtr}
+                onCallClick={() => {
+                  void fetch(`/api/merchant-goods-posts/${postId}/calls`, {
+                    method: 'POST',
+                    keepalive: true,
+                  }).catch(() => null);
+                }}
               />
             </div>
           </div>

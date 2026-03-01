@@ -18,6 +18,9 @@ type Provider = {
   active: boolean;
   lastLocationUpdateAt: string;
   createdAt: string;
+  user?: {
+    callsReceived?: number;
+  } | null;
 };
 
 type ProviderEdits = {
@@ -381,6 +384,11 @@ export default function AdminProvidersClient() {
                           <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
                             {p.active ? tDash('available') : tDash('notAvailable')}
                           </div>
+                          {p.user?.callsReceived ? (
+                            <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
+                              📞 {p.user.callsReceived}
+                            </span>
+                          ) : null}
                           <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
                         </div>
                       </div>

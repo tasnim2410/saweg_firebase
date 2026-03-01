@@ -4,23 +4,25 @@ import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import styles from './providers.module.css';
 
-type Props = {
+type PhoneDisplayProps = {
   phone: string;
   locale: string;
-  canCall: boolean;
-  callButtonClass: string;
-  callButtonDisabledClass: string;
-  phoneNumberLtrClass: string;
+  canCall?: boolean;
+  callButtonClass?: string;
+  callButtonDisabledClass?: string;
+  phoneNumberLtrClass?: string;
+  onCallClick?: () => void;
 };
 
 export default function PhoneDisplay({
   phone,
   locale,
-  canCall,
+  canCall = true,
   callButtonClass,
   callButtonDisabledClass,
   phoneNumberLtrClass,
-}: Props) {
+  onCallClick,
+}: PhoneDisplayProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const formatPhoneForDisplay = (phoneNumber: string) => {
@@ -75,6 +77,9 @@ export default function PhoneDisplay({
             >
               <a
                 href={toTelHref(phone)}
+                onClick={onCallClick}
+                className={styles.callMenuItem}
+                role="menuitem"
                 style={{
                   padding: '10px 16px',
                   display: 'flex',
@@ -92,6 +97,9 @@ export default function PhoneDisplay({
                 href={toWhatsAppHref(phone)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={onCallClick}
+                className={styles.callMenuItem}
+                role="menuitem"
                 style={{
                   padding: '10px 16px',
                   display: 'flex',
