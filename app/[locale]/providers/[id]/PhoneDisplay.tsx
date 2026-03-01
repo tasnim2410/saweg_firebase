@@ -8,20 +8,20 @@ type PhoneDisplayProps = {
   phone: string;
   locale: string;
   canCall?: boolean;
+  providerId?: number;
   callButtonClass?: string;
   callButtonDisabledClass?: string;
   phoneNumberLtrClass?: string;
-  onCallClick?: () => void;
 };
 
 export default function PhoneDisplay({
   phone,
   locale,
   canCall = true,
+  providerId,
   callButtonClass,
   callButtonDisabledClass,
   phoneNumberLtrClass,
-  onCallClick,
 }: PhoneDisplayProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -41,6 +41,15 @@ export default function PhoneDisplay({
   const toWhatsAppHref = (phoneNumber: string) => {
     const normalized = phoneNumber.replace(/[^\d]/g, '');
     return `https://wa.me/${normalized}`;
+  };
+
+  const trackCall = () => {
+    if (providerId) {
+      void fetch(`/api/providers/${providerId}/calls`, {
+        method: 'POST',
+        keepalive: true,
+      }).catch(() => null);
+    }
   };
 
   return (
@@ -77,7 +86,7 @@ export default function PhoneDisplay({
             >
               <a
                 href={toTelHref(phone)}
-                onClick={onCallClick}
+                onClick={trackCall}
                 className={styles.callMenuItem}
                 role="menuitem"
                 style={{
@@ -97,7 +106,7 @@ export default function PhoneDisplay({
                 href={toWhatsAppHref(phone)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={onCallClick}
+                onClick={trackCall}
                 className={styles.callMenuItem}
                 role="menuitem"
                 style={{

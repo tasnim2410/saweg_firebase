@@ -390,15 +390,10 @@ export default async function ProviderDetailsPage({
                 phone={provider.phone}
                 locale={locale}
                 canCall={canCall}
+                providerId={providerId}
                 callButtonClass={styles.callButton}
                 callButtonDisabledClass={styles.callButtonDisabled}
                 phoneNumberLtrClass={styles.phoneNumberLtr}
-                onCallClick={() => {
-                  void fetch(`/api/providers/${providerId}/calls`, {
-                    method: 'POST',
-                    keepalive: true,
-                  }).catch(() => null);
-                }}
               />
             </div>
           </div>
