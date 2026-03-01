@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import styles from '../dashboard/my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel } from '@/lib/vehicleTypes';
+import { getDaysRemaining, formatDaysRemaining } from '@/lib/postLifetime';
 
 type MerchantGoodsPost = {
   id: number;
@@ -444,6 +445,7 @@ export default function AdminMerchantGoodsPostsClient() {
                   }
                 })();
                 const isExpanded = expandedPosts[p.id] ?? false;
+                const daysInfo = getDaysRemaining(p.createdAt);
 
                 return (
                   <div key={p.id} className={styles.item}>
@@ -463,6 +465,13 @@ export default function AdminMerchantGoodsPostsClient() {
                               📞 {p.user.callsReceived}
                             </span>
                           ) : null}
+                          <span
+                            className={styles.daysRemainingBadge}
+                            data-expired={daysInfo.isExpired}
+                            title={locale === 'ar' ? 'الأيام المتبقية قبل الحذف التلقائي' : 'Days remaining before auto-deletion'}
+                          >
+                            ⏳ {formatDaysRemaining(daysInfo.daysRemaining, locale)}
+                          </span>
                           <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
                         </div>
                       </div>

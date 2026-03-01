@@ -7,6 +7,7 @@ import { MapPin } from 'lucide-react';
 import styles from './my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
 import LocationSharing from '../_components/LocationSharing';
+import { getDaysRemaining, formatDaysRemaining } from '@/lib/postLifetime';
 
 type Provider = {
   id: number;
@@ -173,65 +174,75 @@ export default function MyProvidersPage() {
               </div>
 
               <div className={styles.list}>
-                {providers.map((p) => (
-                <div key={p.id} className={styles.item}>
-                  <div className={styles.itemTop}>
-                    <div className={styles.itemTitleRow}>
-                      <div className={styles.itemTitle}>{p.name}</div>
-                      <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
-                        {p.active ? t('available') : t('notAvailable')}
+                {providers.map((p) => {
+                  const daysInfo = getDaysRemaining(p.createdAt);
+                  return (
+                    <div key={p.id} className={styles.item}>
+                      <div className={styles.itemTop}>
+                        <div className={styles.itemTitleRow}>
+                          <div className={styles.itemTitle}>{p.name}</div>
+                          <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
+                            {p.active ? t('available') : t('notAvailable')}
+                          </div>
+                          <span
+                            className={styles.daysRemainingBadge}
+                            data-expired={daysInfo.isExpired}
+                            title={locale === 'ar' ? 'الأيام المتبقية قبل الحذف التلقائي' : 'Days remaining before auto-deletion'}
+                          >
+                            ⏳ {formatDaysRemaining(daysInfo.daysRemaining, locale)}
+                          </span>
+                        </div>
+                        <div className={styles.meta}>
+                          {t('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
+                        </div>
+                      </div>
+
+                      <div className={styles.formRow}>
+                        <label className={styles.label}>{t('location')}</label>
+                        <select
+                          className={styles.input}
+                          id={`loc-${p.id}`}
+                          defaultValue={p.location}
+                        >
+                          <option value="" />
+                          {locationOptionGroups.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.options.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <button
+                          className={styles.button}
+                          onClick={() => {
+                            const input = document.getElementById(`loc-${p.id}`) as HTMLSelectElement | null;
+                            updateLocation(p.id, input?.value ?? p.location);
+                          }}
+                          disabled={savingId === p.id}
+                          type="button"
+                        >
+                          {savingId === p.id ? t('saving') : t('save')}
+                        </button>
+                      </div>
+
+                      <div className={styles.actionsRow}>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => deleteProvider(p.id)}
+                          disabled={savingId === p.id}
+                          type="button"
+                        >
+                          {t('delete')}
+                        </button>
+                        <span className={styles.hint}>{t('deleteHint')}</span>
                       </div>
                     </div>
-                    <div className={styles.meta}>
-                      {t('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
-                    </div>
-                  </div>
-
-                  <div className={styles.formRow}>
-                    <label className={styles.label}>{t('location')}</label>
-                    <select
-                      className={styles.input}
-                      id={`loc-${p.id}`}
-                      defaultValue={p.location}
-                    >
-                      <option value="" />
-                      {locationOptionGroups.map((group) => (
-                        <optgroup key={group.label} label={group.label}>
-                          {group.options.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                    <button
-                      className={styles.button}
-                      onClick={() => {
-                        const input = document.getElementById(`loc-${p.id}`) as HTMLSelectElement | null;
-                        updateLocation(p.id, input?.value ?? p.location);
-                      }}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {savingId === p.id ? t('saving') : t('save')}
-                    </button>
-                  </div>
-
-                  <div className={styles.actionsRow}>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => deleteProvider(p.id)}
-                      disabled={savingId === p.id}
-                      type="button"
-                    >
-                      {t('delete')}
-                    </button>
-                    <span className={styles.hint}>{t('deleteHint')}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
           </>
         )}
         </div>

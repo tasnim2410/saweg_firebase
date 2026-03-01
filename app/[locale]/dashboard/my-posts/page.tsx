@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import styles from '../my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import { getDaysRemaining, formatDaysRemaining } from '@/lib/postLifetime';
 
 const MAX_PROVIDER_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -391,6 +392,7 @@ export default function MyPostsPage() {
             <div className={styles.list}>
               {providers.map((p) => {
                 const e = edits[p.id];
+                const daysInfo = getDaysRemaining(p.createdAt);
                 return (
                   <div key={p.id} className={styles.item}>
                     <div className={styles.itemTop}>
@@ -402,6 +404,13 @@ export default function MyPostsPage() {
                         <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
                           {p.active ? tDash('available') : tDash('notAvailable')}
                         </div>
+                        <span
+                          className={styles.daysRemainingBadge}
+                          data-expired={daysInfo.isExpired}
+                          title={locale === 'ar' ? 'الأيام المتبقية قبل الحذف التلقائي' : 'Days remaining before auto-deletion'}
+                        >
+                          ⏳ {formatDaysRemaining(daysInfo.daysRemaining, locale)}
+                        </span>
                       </div>
                       <div className={styles.meta}>
                         {tDash('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}

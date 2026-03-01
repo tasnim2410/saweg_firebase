@@ -196,12 +196,6 @@ export default async function MerchantGoodsPostsPage({
                     {phone ? (
                       <a
                         href={toTelHref(phone)}
-                        onClick={() => {
-                          void fetch(`/api/merchant-goods-posts/${post.id}/calls`, {
-                            method: 'POST',
-                            keepalive: true,
-                          }).catch(() => null);
-                        }}
                         className={styles.callButton}
                         aria-label={locale === 'ar' ? 'اتصال' : 'Call'}
                       >

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/my-providers/my-providers.module.css';
 import { getLocationOptionGroups } from '@/lib/locations';
+import { getDaysRemaining, formatDaysRemaining } from '@/lib/postLifetime';
 
 type Provider = {
   id: number;
@@ -361,144 +362,68 @@ export default function AdminProvidersClient() {
               </div>
             </div>
 
-            {filteredPosts.length === 0 ? (
-              <div className={styles.empty}>
-                {locale === 'ar' ? 'لا توجد نتائج للبحث' : 'No search results'}
-              </div>
-            ) : (
-              filteredPosts.map((p) => {
-                const e = edits[p.id];
-                const isExpanded = expandedPosts[p.id] ?? false;
-                return (
-                  <div key={p.id} className={styles.item}>
-                    {/* Collapsible Header */}
-                    <div 
-                      className={styles.itemHeader}
-                      onClick={() => toggleExpanded(p.id)}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className={styles.itemTitleRow}>
-                        <div className={styles.itemTitle}>{p.name}</div>
-                        <div className={styles.headerActions}>
-                          <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
-                            {p.active ? tDash('available') : tDash('notAvailable')}
-                          </div>
-                          {p.user?.callsReceived ? (
-                            <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
-                              📞 {p.user.callsReceived}
-                            </span>
-                          ) : null}
-                          <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
+          {filteredPosts.length === 0 ? (
+            <div className={styles.empty}>
+              {locale === 'ar' ? 'لا توجد نتائج للبحث' : 'No search results'}
+            </div>
+          ) : (
+            filteredPosts.map((p) => {
+              const e = edits[p.id];
+              const isExpanded = expandedPosts[p.id] ?? false;
+              const daysInfo = getDaysRemaining(p.createdAt);
+              return (
+                <div key={p.id} className={styles.item}>
+                  {/* Collapsible Header */}
+                  <div 
+                    className={styles.itemHeader}
+                    onClick={() => toggleExpanded(p.id)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.itemTitleRow}>
+                      <div className={styles.itemTitle}>{p.name}</div>
+                      <div className={styles.headerActions}>
+                        <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
+                          {p.active ? tDash('available') : tDash('notAvailable')}
                         </div>
-                      </div>
-                      <div className={styles.meta}>
-                        {tDash('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
+                        {p.user?.callsReceived ? (
+                          <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
+                            📞 {p.user.callsReceived}
+                          </span>
+                        ) : null}
+                        <span
+                          className={styles.daysRemainingBadge}
+                          data-expired={daysInfo.isExpired}
+                          title={locale === 'ar' ? 'الأيام المتبقية قبل الحذف التلقائي' : 'Days remaining before auto-deletion'}
+                        >
+                          ⏳ {formatDaysRemaining(daysInfo.daysRemaining, locale)}
+                        </span>
+                        <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
                       </div>
                     </div>
+                    <div className={styles.meta}>
+                      {tDash('lastUpdate')}: {new Date(p.lastLocationUpdateAt).toLocaleString()}
+                    </div>
+                  </div>
 
-                    {/* Collapsible Content */}
-                    {isExpanded && (
-                      <div className={styles.itemContent}>
-                        {/* Enhanced Image Section */}
-                        <div className={styles.imageSection}>
-                          <div className={styles.imagePreviewContainer}>
-                            {p.image ? (
-                              <div className={styles.imageWrapper}>
-                                <img 
-                                  className={styles.itemImage} 
-                                  src={p.image} 
-                                  alt={p.name} 
-                                />
-                                <div className={styles.imageOverlay}>
-                                  <span className={styles.imageLabel}>
-                                    {locale === 'ar' ? 'الصورة الحالية' : 'Current Image'}
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className={styles.noImage}>
-                                <span>{locale === 'ar' ? 'لا توجد صورة' : 'No Image'}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={styles.imageControls}>
-                            <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                              <label className={styles.label}>{locale === 'ar' ? 'تحميل صورة جديدة' : 'Upload New Image'}</label>
-                              <div className={styles.fileInputWrapper}>
-                                <input
-                                  className={styles.fileInput}
-                                  type="file"
-                                  id={`image-upload-${p.id}`}
-                                  accept="image/*"
-                                  onChange={(ev) => {
-                                    const f = ev.target.files?.[0] ?? null;
-                                    setImageFiles((prev) => ({ ...prev, [p.id]: f }));
-                                  }}
-                                />
-                                <label 
-                                  htmlFor={`image-upload-${p.id}`} 
-                                  className={styles.fileInputLabel}
-                                >
-                                  {imageFiles[p.id] 
-                                    ? imageFiles[p.id]?.name 
-                                    : locale === 'ar' 
-                                      ? 'اختر ملف' 
-                                      : 'Choose file'}
-                                </label>
-                              </div>
-                            </div>
-
-                            <div className={styles.imageButtonsRow}>
-                              <button
-                                className={`${styles.button} ${styles.imageButton}`}
-                                type="button"
-                                onClick={() => uploadImage(p.id)}
-                                disabled={!imageFiles[p.id] || uploadingId === p.id || savingAll || savingId !== null}
-                              >
-                                {uploadingId === p.id
-                                  ? locale === 'ar'
-                                    ? 'جارٍ الرفع...'
-                                    : 'Uploading...'
-                                  : locale === 'ar'
-                                    ? 'رفع الصورة'
-                                    : 'Upload Image'}
-                              </button>
-
-                              <button
-                                className={`${styles.deleteButton} ${styles.imageButton}`}
-                                type="button"
-                                onClick={() => removeImage(p.id)}
-                                disabled={!p.image || removingImageId === p.id || savingAll || savingId !== null}
-                              >
-                                {removingImageId === p.id
-                                  ? locale === 'ar'
-                                    ? 'جارٍ الحذف...'
-                                    : 'Removing...'
-                                  : locale === 'ar'
-                                    ? 'حذف الصورة'
-                                    : 'Remove Image'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Form Inputs with Spacing */}
-                        <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
-                          <label className={styles.label}>{tForm('name')}</label>
-                          <input
-                            className={styles.input}
-                            value={e?.name ?? ''}
-                            onChange={(ev) =>
-                              setEdits((prev) => ({
-                                ...prev,
-                                [p.id]: { ...prev[p.id], name: ev.target.value },
-                              }))
-                            }
-                            placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter name'}
-                          />
-                        </div>
+                  {/* Collapsible Content */}
+                  {isExpanded && (
+                    <div className={styles.itemContent}>
+                      {/* Form Inputs with Spacing */}
+                      <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
+                        <label className={styles.label}>{tForm('name')}</label>
+                        <input
+                          className={styles.input}
+                          value={e?.name ?? ''}
+                          onChange={(ev) =>
+                            setEdits((prev) => ({
+                              ...prev,
+                              [p.id]: { ...prev[p.id], name: ev.target.value },
+                            }))
+                          }
+                          placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter name'}
+                        />
+                      </div>
 
                         <div className={`${styles.formRow} ${styles.formRowSpaced}`}>
                           <label className={styles.label}>{tForm('location')}</label>
