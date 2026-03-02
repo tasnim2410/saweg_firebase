@@ -360,15 +360,17 @@ export default async function ProviderDetailsPage({
               <div className={styles.infoValue}>{provider.description || '-'}</div>
             </div>
 
-            <div className={styles.infoBlockFull}>
-              <div className={styles.infoLabel}>{locale === 'ar' ? 'المسار' : 'Route'}</div>
-              <div className={styles.infoValue}>
-                {locale === 'ar' 
-                  ? `من ${locLabel || '-'} إلى ${destLabel || '-'}`
-                  : `From ${locLabel || '-'} to ${destLabel || '-'}`
-                }
-              </div>
+            <div className={styles.infoBlock}>
+              <div className={styles.infoLabel}>{locale === 'ar' ? 'الموقع الحالي' : 'Current Location'}</div>
+              <div className={styles.infoValue}>{locLabel || '-'}</div>
             </div>
+
+            {destLabel && (
+              <div className={styles.infoBlock}>
+                <div className={styles.infoLabel}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</div>
+                <div className={styles.infoValue}>{destLabel}</div>
+              </div>
+            )}
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{tRegister('carKind')}</div>

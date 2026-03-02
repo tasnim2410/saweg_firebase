@@ -16,6 +16,7 @@ type MerchantGoodsPost = {
   phone?: string;
   startingPoint: string;
   destination: string;
+  destinations?: string[] | null;
   goodsType: string;
   goodsWeight: number;
   goodsWeightUnit: string;
@@ -516,12 +517,26 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                       <span className={`${styles.statusDot} ${statusClass}`} />
                     </div>
 
-                    <div className={styles.destinationContainer}>
-                      <Truck size={14} className={styles.destinationIcon} />
-                      <span className={styles.destinationText}>
-                        {getLocationLabel(post.destination || '-', locale === 'ar' ? 'ar' : 'en')}
-                      </span>
-                    </div>
+                    {post.destinations && Array.isArray(post.destinations) && post.destinations.length > 0 ? (
+                      <div className={styles.destinationContainer}>
+                        <Truck size={14} className={styles.destinationIcon} />
+                        <span className={styles.destinationText}>
+                          {post.destinations.map((dest, idx) => (
+                            <span key={idx}>
+                              {getLocationLabel(dest || '-', locale === 'ar' ? 'ar' : 'en')}
+                              {idx < post.destinations!.length - 1 ? ' ; ' : ''}
+                            </span>
+                          ))}
+                        </span>
+                      </div>
+                    ) : post.destination ? (
+                      <div className={styles.destinationContainer}>
+                        <Truck size={14} className={styles.destinationIcon} />
+                        <span className={styles.destinationText}>
+                          {getLocationLabel(post.destination || '-', locale === 'ar' ? 'ar' : 'en')}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className={styles.actionContainer}>

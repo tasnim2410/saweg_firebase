@@ -31,6 +31,7 @@ export default function AddMerchantPostPage() {
 
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
+  const [destinations, setDestinations] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
@@ -127,6 +128,7 @@ export default function AddMerchantPostPage() {
     const payload = new FormData();
     if (isAdmin && name.trim()) payload.append('name', name.trim());
     payload.append('destination', destination);
+    payload.append('destinations', JSON.stringify(destinations.filter(d => d.trim())));
     payload.append('placeOfBusiness', destination);
     payload.append('description', description);
     payload.append('location', location);
@@ -251,19 +253,50 @@ export default function AddMerchantPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{t('destination')}</label>
-            <select className={styles.input} value={destination} onChange={(e) => setDestination(e.target.value)}>
-              <option value="" />
-              {locationOptionGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </optgroup>
+            <label className={styles.label}>{locale === 'ar' ? 'وجهات التفريغ' : 'Unloading Locations'}</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {destinations.map((dest, index) => (
+                <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <select 
+                    className={styles.input} 
+                    value={dest} 
+                    onChange={(e) => {
+                      const newDests = [...destinations];
+                      newDests[index] = e.target.value;
+                      setDestinations(newDests);
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    <option value="" />
+                    {locationOptionGroups.map((group) => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setDestinations(destinations.filter((_, i) => i !== index))}
+                    className={styles.button}
+                    style={{ padding: '8px 16px', minWidth: 'auto' }}
+                  >
+                    {locale === 'ar' ? 'حذف' : 'Remove'}
+                  </button>
+                </div>
               ))}
-            </select>
+              <button
+                type="button"
+                onClick={() => setDestinations([...destinations, ''])}
+                className={styles.button}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                {locale === 'ar' ? '+ إضافة وجهة' : '+ Add Destination'}
+              </button>
+            </div>
           </div>
 
           <div className={styles.row}>

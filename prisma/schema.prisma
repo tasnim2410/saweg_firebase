@@ -85,6 +85,7 @@ model MerchantGoodsPost {
   phone              String   @default("")
   startingPoint      String?
   destination        String?
+  destinations       Json?
   goodsType          String?
   goodsWeight        Float?
   goodsWeightUnit    String?

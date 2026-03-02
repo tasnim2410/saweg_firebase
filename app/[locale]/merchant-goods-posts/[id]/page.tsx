@@ -16,6 +16,7 @@ type MerchantGoodsPostDetails = {
   phone: string;
   startingPoint: string;
   destination: string;
+  destinations?: string[] | null;
   goodsType: string;
   goodsWeight: number;
   goodsWeightUnit: string;
@@ -72,6 +73,7 @@ export async function generateMetadata({
       name: true,
       startingPoint: true,
       destination: true,
+      destinations: true,
       goodsType: true,
       image: true,
       description: true,
@@ -174,6 +176,7 @@ export default async function MerchantGoodsPostDetailsPage({
       phone: true,
       startingPoint: true,
       destination: true,
+      destinations: true,
       goodsType: true,
       goodsWeight: true,
       goodsWeightUnit: true,
@@ -275,6 +278,9 @@ export default async function MerchantGoodsPostDetailsPage({
 
   const startLabel = getLocationLabel(post.startingPoint, locale === 'ar' ? 'ar' : 'en');
   const destLabel = getLocationLabel(post.destination, locale === 'ar' ? 'ar' : 'en');
+  const destinationsLabels = post.destinations && Array.isArray(post.destinations) 
+    ? post.destinations.map(d => getLocationLabel(d, locale === 'ar' ? 'ar' : 'en'))
+    : [];
 
   // Translate units for Arabic locale
   const weightUnitDisplay = (unit: string | null) => {
@@ -358,16 +364,28 @@ export default async function MerchantGoodsPostDetailsPage({
               <div className={styles.infoValue}>{post.description || '-'}</div>
             </div>
 
-            
-            <div className={styles.infoBlockFull}>
-              <div className={styles.infoLabel}>{locale === 'ar' ? 'المسار' : 'Route'}</div>
-              <div className={styles.infoValue}>
-                {locale === 'ar' 
-                  ? `من ${startLabel || '-'} إلى ${destLabel || '-'}`
-                  : `From ${startLabel || '-'} to ${destLabel || '-'}`
-                }
-              </div>
+            <div className={styles.infoBlock}>
+              <div className={styles.infoLabel}>{locale === 'ar' ? 'نقطة الانطلاق' : 'Starting Point'}</div>
+              <div className={styles.infoValue}>{startLabel || '-'}</div>
             </div>
+
+            {destinationsLabels.length > 0 ? (
+              <div className={styles.infoBlock}>
+                <div className={styles.infoLabel}>{locale === 'ar' ? 'وجهات التفريغ' : 'Unloading Locations'}</div>
+                <div className={styles.infoValue}>
+                  {destinationsLabels.map((dest, idx) => (
+                    <div key={idx} style={{ marginBottom: idx < destinationsLabels.length - 1 ? '4px' : '0' }}>
+                      {dest}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : destLabel ? (
+              <div className={styles.infoBlock}>
+                <div className={styles.infoLabel}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</div>
+                <div className={styles.infoValue}>{destLabel}</div>
+              </div>
+            ) : null}
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.goods}</div>

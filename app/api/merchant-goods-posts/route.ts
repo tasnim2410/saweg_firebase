@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
 
     const startingPoint = typeof formData.get('startingPoint') === 'string' ? String(formData.get('startingPoint')).trim() : '';
     const destination = typeof formData.get('destination') === 'string' ? String(formData.get('destination')).trim() : '';
+    const destinationsRaw = typeof formData.get('destinations') === 'string' ? String(formData.get('destinations')).trim() : '';
     const goodsType = typeof formData.get('goodsType') === 'string' ? String(formData.get('goodsType')).trim() : '';
     const goodsWeightRaw = typeof formData.get('goodsWeight') === 'string' ? String(formData.get('goodsWeight')).trim() : '';
     const goodsWeightUnit = typeof formData.get('goodsWeightUnit') === 'string' ? String(formData.get('goodsWeightUnit')).trim() : '';
@@ -144,6 +145,18 @@ export async function POST(req: NextRequest) {
     const description = typeof formData.get('description') === 'string' ? String(formData.get('description')).trim() : '';
     const budgetRaw = typeof formData.get('budget') === 'string' ? String(formData.get('budget')).trim() : '';
     const budgetCurrencyRaw = typeof formData.get('budgetCurrency') === 'string' ? String(formData.get('budgetCurrency')).trim() : '';
+
+    let destinations: string[] = [];
+    if (destinationsRaw) {
+      try {
+        const parsed = JSON.parse(destinationsRaw);
+        if (Array.isArray(parsed)) {
+          destinations = parsed.filter(d => typeof d === 'string' && d.trim()).map(d => String(d).trim());
+        }
+      } catch {
+        // ignore invalid JSON
+      }
+    }
 
     if (!description) {
       return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
@@ -243,6 +256,7 @@ export async function POST(req: NextRequest) {
           phone: normalizedPhone.e164,
           startingPoint: startingPoint || null,
           destination: destination || null,
+          destinations: destinations.length > 0 ? destinations : null,
           goodsType: goodsType || null,
           goodsWeight: goodsWeight,
           goodsWeightUnit: normalizedUnit,

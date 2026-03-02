@@ -37,6 +37,7 @@ export default function AddMerchantGoodsPostPage() {
   const [name, setName] = useState('');
   const [startingPoint, setStartingPoint] = useState<string | null>(null);
   const [destination, setDestination] = useState<string | null>(null);
+  const [destinations, setDestinations] = useState<(string | null)[]>([]);
   const [goodsType, setGoodsType] = useState('');
   const [goodsWeight, setGoodsWeight] = useState<string>('');
   const [goodsWeightUnit, setGoodsWeightUnit] = useState<WeightUnit>('ton');
@@ -266,6 +267,10 @@ export default function AddMerchantGoodsPostPage() {
     payload.append('phone', normalizedPhoneE164);
     if (startingPoint && startingPoint.trim()) payload.append('startingPoint', startingPoint);
     if (destination && destination.trim()) payload.append('destination', destination);
+    const validDestinations = destinations.filter(d => d && d.trim());
+    if (validDestinations.length > 0) {
+      payload.append('destinations', JSON.stringify(validDestinations));
+    }
     if (goodsType.trim()) payload.append('goodsType', goodsType);
     if (weightNum !== null) {
       payload.append('goodsWeight', String(weightNum));
@@ -421,10 +426,24 @@ export default function AddMerchantGoodsPostPage() {
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نقطة البداية' : 'Starting point'}</div>
                 <div className={styles.modalValue}>{startingPoint || '-'}</div>
               </div>
-              <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</div>
-                <div className={styles.modalValue}>{destination || '-'}</div>
-              </div>
+              {destinations.length > 0 ? (
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>{locale === 'ar' ? 'وجهات التفريغ' : 'Unloading Locations'}</div>
+                  <div className={styles.modalValue}>
+                    {destinations.filter(d => d && d.trim()).map((dest, idx) => (
+                      <div key={idx} style={{ marginBottom: idx < destinations.filter(d => d && d.trim()).length - 1 ? '4px' : '0' }}>
+                        {dest}
+                      </div>
+                    ))}
+                    {destinations.filter(d => d && d.trim()).length === 0 && '-'}
+                  </div>
+                </div>
+              ) : destination ? (
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>{locale === 'ar' ? 'الوجهة' : 'Destination'}</div>
+                  <div className={styles.modalValue}>{destination || '-'}</div>
+                </div>
+              ) : null}
               <div className={styles.modalRow}>
                 <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع البضاعة' : 'Type of goods'}</div>
                 <div className={styles.modalValue}>{goodsType || '-'}</div>
@@ -568,13 +587,59 @@ export default function AddMerchantGoodsPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'مكان التنزيل' : 'Unloading location'}</label>
-            <SearchableCitySelect
-              value={destination}
-              onChange={setDestination}
-              locale={locale as 'ar' | 'en'}
-              placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
-            />
+            <label className={styles.label}>{locale === 'ar' ? 'وجهات التفريغ' : 'Unloading Locations'}</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {destinations.map((dest, index) => (
+                <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <SearchableCitySelect
+                      value={dest}
+                      onChange={(val) => {
+                        const newDests = [...destinations];
+                        newDests[index] = val;
+                        setDestinations(newDests);
+                      }}
+                      locale={locale as 'ar' | 'en'}
+                      placeholder={locale === 'ar' ? 'ابحث عن مدينة...' : 'Search for a city...'}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDestinations(destinations.filter((_, i) => i !== index))}
+                    style={{ 
+                      padding: '6px 10px', 
+                      minWidth: 'auto', 
+                      marginTop: 0,
+                      fontSize: '12px',
+                      backgroundColor: 'transparent',
+                      color: '#dc2626',
+                      border: '1px solid #dc2626',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {locale === 'ar' ? '×' : '×'}
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setDestinations([...destinations, null])}
+                style={{ 
+                  alignSelf: 'flex-start',
+                  padding: '6px 12px',
+                  fontSize: '13px',
+                  backgroundColor: 'transparent',
+                  color: '#000000c1',
+                  border: '1px solid #c8ad29ff',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginTop: destinations.length > 0 ? '2px' : 0
+                }}
+              >
+                {locale === 'ar' ? '+ إضافة وجهة' : '+ Add'}
+              </button>
+            </div>
           </div>
 
           <div className={styles.row}>
