@@ -22,6 +22,8 @@ type MerchantGoodsPost = {
   description: string | null;
   createdAt: string;
   userId: string;
+  callCount?: number;
+  viewCount?: number;
   user?: {
     fullName?: string;
     callsReceived?: number;
@@ -460,10 +462,19 @@ export default function AdminMerchantGoodsPostsClient() {
                         <div className={styles.itemTitle}>{p.name}</div>
                         <div className={styles.headerActions}>
                           {ownerName ? <span className={styles.meta}>{ownerName}</span> : null}
-                          {p.user?.callsReceived ? (
-                            <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
-                              📞 {p.user.callsReceived}
-                            </span>
+                          {typeof p.callCount === 'number' || typeof p.viewCount === 'number' ? (
+                            <div style={{ display: 'flex', gap: '8px', marginInlineEnd: '8px' }}>
+                              {typeof p.callCount === 'number' && p.callCount > 0 ? (
+                                <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات على هذا المنشور' : 'Calls on this post'}>
+                                  📞 {p.callCount}
+                                </span>
+                              ) : null}
+                              {typeof p.viewCount === 'number' && p.viewCount > 0 ? (
+                                <span className={styles.callsBadge} style={{ backgroundColor: '#3b82f6' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
+                                  👁 {p.viewCount}
+                                </span>
+                              ) : null}
+                            </div>
                           ) : null}
                           <span
                             className={styles.daysRemainingBadge}

@@ -32,7 +32,27 @@ export async function GET() {
   try {
     const posts = await (prisma as any).merchantGoodsPost.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        startingPoint: true,
+        destination: true,
+        destinations: true,
+        goodsType: true,
+        goodsWeight: true,
+        goodsWeightUnit: true,
+        loadingDate: true,
+        vehicleTypeDesired: true,
+        budget: true,
+        budgetCurrency: true,
+        image: true,
+        description: true,
+        userId: true,
+        callCount: true,
+        viewCount: true,
+        createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             fullName: true,

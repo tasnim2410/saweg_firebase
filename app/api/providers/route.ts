@@ -42,7 +42,21 @@ export async function GET() {
     });
 
   const providers = await prisma.provider.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        phone: true,
+        destination: true,
+        description: true,
+        image: true,
+        active: true,
+        callCount: true,
+        viewCount: true,
+        lastLocationUpdateAt: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
         user: {
           select: { fullName: true, email: true, phone: true, carKind: true, maxCharge: true, maxChargeUnit: true, callsReceived: true },
         },

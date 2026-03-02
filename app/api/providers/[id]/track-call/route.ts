@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const postId = parseInt(id, 10);
+    
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
+    }
+
+    // Increment the call count for this specific provider post
+    await (prisma as any).provider.update({
+      where: { id: postId },
+      data: {
+        callCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error tracking provider call:', error);
+    return NextResponse.json({ error: 'Failed to track call' }, { status: 500 });
+  }
+}

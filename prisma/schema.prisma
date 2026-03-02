@@ -55,6 +55,8 @@ model Provider {
   image     String? // Path to uploaded image, optional
   active    Boolean  @default(true)
   userId    String
+  callCount Int      @default(0)
+  viewCount Int      @default(0)
   lastLocationUpdateAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -96,6 +98,8 @@ model MerchantGoodsPost {
   image              String?
   description        String?
   userId             String
+  callCount          Int      @default(0)
+  viewCount          Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

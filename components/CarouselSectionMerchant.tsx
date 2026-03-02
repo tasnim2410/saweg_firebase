@@ -27,6 +27,8 @@ type MerchantGoodsPost = {
   image: string | null;
   description: string | null;
   userId: string;
+  callCount?: number;
+  viewCount?: number;
   publishedByAdmin?: boolean;
   user?: {
     fullName?: string;
@@ -61,7 +63,14 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
   const title = locale === 'ar' ? 'عروض التجار' : 'Merchants requests';
 
   const trackMerchantCall = (postId: number) => {
-    void fetch(`/api/merchant-goods-posts/${postId}/calls`, {
+    void fetch(`/api/merchant-goods-posts/${postId}/track-call`, {
+      method: 'POST',
+      keepalive: true,
+    }).catch(() => null);
+  };
+
+  const trackMerchantView = (postId: number) => {
+    void fetch(`/api/merchant-goods-posts/${postId}/track-view`, {
       method: 'POST',
       keepalive: true,
     }).catch(() => null);
@@ -447,6 +456,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                     href={`/${locale}/merchant-goods-posts/${post.id}`}
                     aria-label={merchantName}
                     className={styles.imageLink}
+                    onClick={() => trackMerchantView(post.id)}
                   >
                   {hasImage ? (
                     !isImageBroken ? (
@@ -501,6 +511,7 @@ const CarouselSectionMerchant: React.FC<CarouselSectionMerchantProps> = ({ vehic
                           href={`/${locale}/merchant-goods-posts/${post.id}`}
                           className={styles.descriptionLink}
                           aria-label={merchantName}
+                          onClick={() => trackMerchantView(post.id)}
                         >
                           <p className={`${styles.description} ${styles.descriptionClickable}`}>
                             {descriptionShort}

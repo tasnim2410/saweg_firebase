@@ -21,6 +21,8 @@ interface Provider {
   phone: string;          // phoneNumber
   image: string | null;   // path to uploaded image
   active: boolean;
+  callCount?: number;
+  viewCount?: number;
   lastLocationUpdateAt?: string | Date;
   createdAt?: string | Date;
   description?: string | null;
@@ -76,6 +78,20 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const addHref = `/${locale}/dashboard/add-provider`;
   const callsEndpointFor = (id: number) => `/api/providers/${id}/calls`;
   const title = locale === 'ar' ? 'عروض السوّاقين' : 'Shippers offers';
+
+  const trackProviderCall = (providerId: number) => {
+    void fetch(`/api/providers/${providerId}/track-call`, {
+      method: 'POST',
+      keepalive: true,
+    }).catch(() => null);
+  };
+
+  const trackProviderView = (providerId: number) => {
+    void fetch(`/api/providers/${providerId}/track-view`, {
+      method: 'POST',
+      keepalive: true,
+    }).catch(() => null);
+  };
 
   const buildShareUrlForProvider = (providerId: number) => {
     if (typeof window === 'undefined') return `/${locale}/providers/${providerId}`;
@@ -536,6 +552,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                     href={`/${locale}/providers/${provider.id}`}
                     aria-label={provider.name}
                     className={styles.imageLink}
+                    onClick={() => trackProviderView(provider.id)}
                   >
                     {hasImage ? (
                       !isImageBroken ? (
@@ -590,6 +607,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                           href={`/${locale}/providers/${provider.id}`}
                           className={styles.descriptionLink}
                           aria-label={provider.name}
+                          onClick={() => trackProviderView(provider.id)}
                         >
                           <p className={`${styles.description} ${styles.descriptionClickable}`}>
                             {descriptionShort}
@@ -654,7 +672,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                       >
                         <a
                           href={toTelHref(provider.phone)}
-                          onClick={() => trackCall(provider.id)}
+                          onClick={() => trackProviderCall(provider.id)}
                           className={styles.callMenuItem}
                           role="menuitem"
                         >
@@ -665,7 +683,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                           href={toWhatsAppHref(provider.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={() => trackCall(provider.id)}
+                          onClick={() => trackProviderCall(provider.id)}
                           className={styles.callMenuItem}
                           role="menuitem"
                         >

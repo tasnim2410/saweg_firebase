@@ -17,6 +17,8 @@ type Provider = {
   description: string | null;
   image: string | null;
   active: boolean;
+  callCount?: number;
+  viewCount?: number;
   lastLocationUpdateAt: string;
   createdAt: string;
   user?: {
@@ -386,10 +388,19 @@ export default function AdminProvidersClient() {
                         <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
                           {p.active ? tDash('available') : tDash('notAvailable')}
                         </div>
-                        {p.user?.callsReceived ? (
-                          <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات' : 'Call count'}>
-                            📞 {p.user.callsReceived}
-                          </span>
+                        {typeof p.callCount === 'number' || typeof p.viewCount === 'number' ? (
+                          <div style={{ display: 'flex', gap: '8px', marginInlineEnd: '8px' }}>
+                            {typeof p.callCount === 'number' && p.callCount > 0 ? (
+                              <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات على هذا المنشور' : 'Calls on this post'}>
+                                📞 {p.callCount}
+                              </span>
+                            ) : null}
+                            {typeof p.viewCount === 'number' && p.viewCount > 0 ? (
+                              <span className={styles.callsBadge} style={{ backgroundColor: '#3b82f6' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
+                                👁 {p.viewCount}
+                              </span>
+                            ) : null}
+                          </div>
                         ) : null}
                         <span
                           className={styles.daysRemainingBadge}
