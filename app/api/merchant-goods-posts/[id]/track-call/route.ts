@@ -16,7 +16,7 @@ export async function POST(
     }
 
     // Increment the call count for this specific post
-    await (prisma as any).merchantGoodsPost.update({
+    const result = await (prisma as any).merchantGoodsPost.updateMany({
       where: { id: postId },
       data: {
         callCount: {
@@ -24,6 +24,10 @@ export async function POST(
         },
       },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

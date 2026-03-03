@@ -16,7 +16,7 @@ export async function POST(
     }
 
     // Increment the view count for this specific provider post
-    await (prisma as any).provider.update({
+    const result = await (prisma as any).provider.updateMany({
       where: { id: postId },
       data: {
         viewCount: {
@@ -24,6 +24,10 @@ export async function POST(
         },
       },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
