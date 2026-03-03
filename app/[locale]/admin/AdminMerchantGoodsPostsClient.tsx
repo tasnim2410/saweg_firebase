@@ -50,6 +50,8 @@ type MerchantGoodsPost = {
 
   viewCount?: number;
 
+  notificationClickCount?: number;
+
   user?: {
 
     fullName?: string;
@@ -926,7 +928,7 @@ export default function AdminMerchantGoodsPostsClient() {
 
                           {ownerName ? <span className={styles.meta}>{ownerName}</span> : null}
 
-                          {typeof p.callCount === 'number' || typeof p.viewCount === 'number' ? (
+                          {typeof p.callCount === 'number' || typeof p.viewCount === 'number' || typeof p.notificationClickCount === 'number' ? (
 
                             <div style={{ display: 'flex', gap: '8px', marginInlineEnd: '8px' }}>
 
@@ -945,6 +947,16 @@ export default function AdminMerchantGoodsPostsClient() {
                                 <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: '#00040cff' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
 
                                   👁 {p.viewCount}
+
+                                </span>
+
+                              ) : null}
+
+                              {typeof p.notificationClickCount === 'number' && p.notificationClickCount > 0 ? (
+
+                                <span className={styles.callsBadge} style={{ backgroundColor: '#4CAF50', color: 'white' }} title={locale === 'ar' ? 'نقرات الإشعارات' : 'Notification clicks'}>
+
+                                  🔔 {p.notificationClickCount}
 
                                 </span>
 
