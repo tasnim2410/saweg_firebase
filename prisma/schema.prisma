@@ -152,3 +152,19 @@ model PasswordResetCode {
   @@index([email])
   @@index([code])
 }
+
+model NotificationClick {
+  id              String   @id @default(cuid())
+  notificationTag String?
+  url             String?
+  postType        String?
+  postId          Int?
+  userId          String?
+  userAgent       String?
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([postType, postId])
+  @@index([timestamp])
+  @@index([userId])
+}

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get('user-agent') || undefined;
 
     // Create notification click record
-    await (prisma as any).notificationClick.create({
+    await prisma.notificationClick.create({
       data: {
         notificationTag: notificationTag || null,
         url: url || null,
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 
     if (postType && postId) {
       // Get clicks for a specific post
-      const count = await (prisma as any).notificationClick.count({
+      const count = await prisma.notificationClick.count({
         where: {
           postType,
           postId: parseInt(postId, 10),
@@ -81,9 +81,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Get overall stats
-    const totalClicks = await (prisma as any).notificationClick.count();
+    const totalClicks = await prisma.notificationClick.count();
     
-    const clicksByType = await (prisma as any).notificationClick.groupBy({
+    const clicksByType = await prisma.notificationClick.groupBy({
       by: ['postType'],
       _count: {
         id: true,

@@ -7,7 +7,7 @@ export async function getNotificationClickCounts(
   if (postIds.length === 0) return {};
 
   try {
-    const clicks = await (prisma as any).notificationClick.groupBy({
+    const clicks = await prisma.notificationClick.groupBy({
       by: ['postId'],
       where: {
         postType,
