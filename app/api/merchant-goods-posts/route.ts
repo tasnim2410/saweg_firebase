@@ -630,7 +630,7 @@ export async function POST(req: NextRequest) {
 
           : 'طلب جديد من تاجر';
 
-        const url = '/ar/merchant-goods-posts';
+        const url = `/ar/merchant-goods-posts/${post.id}`;
 
 
 

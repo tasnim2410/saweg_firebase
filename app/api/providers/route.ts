@@ -270,6 +270,11 @@ export async function POST(req: NextRequest) {
 
 
 
+    const contentType = req.headers.get('content-type') || '';
+    if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded')) {
+      return NextResponse.json({ error: 'INVALID_CONTENT_TYPE' }, { status: 400 });
+    }
+
     const formData = await req.formData();
 
 
