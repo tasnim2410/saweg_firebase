@@ -1,170 +1,308 @@
 generator client {
+
   provider = "prisma-client-js"
+
 }
+
+
 
 datasource db {
+
   provider = "postgresql"
+
   url      = env("DATABASE_URL")
+
 }
+
+
 
 enum UserType {
+
   SHIPPER
+
   MERCHANT
+
   ADMIN
+
 }
+
+
 
 enum BudgetCurrency {
+
   TND
+
   LYD
+
   EGP
+
 }
+
+
 
 model User {
+
   id           String     @id @default(cuid())
+
   fullName     String
+
   email        String?    @unique
+
   phone        String?    @unique
+
   passwordHash String
+
   type         UserType   @default(MERCHANT)
+
   callsReceived Int       @default(0)
+
   merchantCity String?
+
   shipperCity  String?
+
   carKind      String?
+
   maxCharge    String?
+
   maxChargeUnit String?
+
   trucksNeeded String?
+
   placeOfBusiness String?
+
   truckImage   String?
+
   profileImage String?
+
   createdAt    DateTime   @default(now())
+
   updatedAt    DateTime   @updatedAt
+
   providers    Provider[]
+
   merchantPosts MerchantPost[]
+
   merchantGoodsPosts MerchantGoodsPost[]
+
   pushSubscriptions PushSubscription[]
+
   location     Location?
+
 }
+
+
 
 model Provider {
+
   id        Int      @id @default(autoincrement())
+
   name      String
+
   location  String
+
   phone     String
+
   destination     String? @map("placeOfBusiness")
+
   description     String?
+
   image     String? // Path to uploaded image, optional
+
   active    Boolean  @default(true)
+
   userId    String
+
   callCount Int      @default(0)
+
   viewCount Int      @default(0)
+
   lastLocationUpdateAt DateTime @default(now())
+
   createdAt DateTime @default(now())
+
   updatedAt DateTime @updatedAt
 
+
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
+
+
 
 model MerchantPost {
+
   id        Int      @id @default(autoincrement())
+
   name      String
+
   location  String
+
   phone     String
+
   destination String?
+
   description String?
+
   image     String?
+
   active    Boolean  @default(true)
+
   userId    String
+
   lastLocationUpdateAt DateTime @default(now())
+
   createdAt DateTime @default(now())
+
   updatedAt DateTime @updatedAt
 
+
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
+
+
 
 model MerchantGoodsPost {
+
   id                 Int      @id @default(autoincrement())
+
   name               String   @default("")
+
   phone              String   @default("")
+
   startingPoint      String?
+
   destination        String?
+
   destinations       Json?
+
   goodsType          String?
+
   goodsWeight        Float?
+
   goodsWeightUnit    String?
+
   loadingDate        DateTime?
+
   vehicleTypeDesired String?
+
   budget             Float?
+
   budgetCurrency     BudgetCurrency?
+
   image              String?
+
   description        String?
+
   userId             String
+
   callCount          Int      @default(0)
+
   viewCount          Int      @default(0)
+
   createdAt          DateTime @default(now())
+
   updatedAt          DateTime @updatedAt
 
+
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
+
+
 
 model PushSubscription {
+
   id             String   @id @default(cuid())
+
   endpoint       String   @unique
+
   p256dh         String
+
   auth           String
+
   expirationTime Int?
+
   userId         String
+
   createdAt      DateTime @default(now())
+
   updatedAt      DateTime @updatedAt
 
+
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
+
+
 
 model Location {
+
   id        String   @id @default(cuid())
+
   latitude  Float
+
   longitude Float
+
   accuracy  Float?
+
   speed     Float?
+
   timestamp DateTime
+
   isActive  Boolean  @default(true)
+
   address   String?  // Human-readable address/city name
+
   userId    String   @unique
+
   tripId    String?
+
   providerId String?
+
   createdAt DateTime @default(now())
+
   updatedAt DateTime @updatedAt
+
+
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+
+
   @@index([userId])
+
   @@index([isActive])
+
   @@index([updatedAt])
+
 }
+
+
 
 model PasswordResetCode {
+
   id        String   @id @default(cuid())
+
   email     String
+
   code      String
+
   used      Boolean  @default(false)
+
   expiresAt DateTime
+
   createdAt DateTime @default(now())
 
+
+
   @@index([email])
+
   @@index([code])
+
 }
 
-model NotificationClick {
-  id              String   @id @default(cuid())
-  notificationTag String?
-  url             String?
-  postType        String?
-  postId          Int?
-  userId          String?
-  userAgent       String?
-  timestamp       DateTime @default(now())
-  createdAt       DateTime @default(now())
-
-  @@index([postType, postId])
-  @@index([timestamp])
-  @@index([userId])
-}
