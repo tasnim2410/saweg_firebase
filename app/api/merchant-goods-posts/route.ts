@@ -7,6 +7,7 @@ import { normalizePhoneNumber } from '@/lib/phone';
 import { sendPushToSubscription } from '@/lib/webPush';
 import { isValidVehicleType, normalizeVehicleType } from '@/lib/vehicleTypes';
 import { getLocationLabel } from '@/lib/locations';
+import { getNotificationClickCounts } from '@/lib/notificationClicks';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -64,6 +65,10 @@ export async function GET() {
       },
     });
 
+    // Get notification click counts for all posts
+    const postIds = posts.map((p: any) => p.id);
+    const notificationClickCounts = await getNotificationClickCounts('merchant-goods-post', postIds);
+
     const normalized = (posts as any[]).map((p) => {
       const publishedByAdmin = Boolean(
         (p?.user?.email && isAdminIdentifier(String(p.user.email))) ||
@@ -73,6 +78,7 @@ export async function GET() {
       return {
         ...p,
         publishedByAdmin,
+        notificationClickCount: notificationClickCounts[p.id] || 0,
         user: p.user
           ? {
               fullName: p.user.fullName,

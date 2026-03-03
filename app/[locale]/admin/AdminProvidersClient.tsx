@@ -19,6 +19,7 @@ type Provider = {
   active: boolean;
   callCount?: number;
   viewCount?: number;
+  notificationClickCount?: number;
   lastLocationUpdateAt: string;
   createdAt: string;
   user?: {
@@ -388,7 +389,7 @@ export default function AdminProvidersClient() {
                         <div className={styles.badge} data-active={p.active ? 'true' : 'false'}>
                           {p.active ? tDash('available') : tDash('notAvailable')}
                         </div>
-                        {typeof p.callCount === 'number' || typeof p.viewCount === 'number' ? (
+                        {typeof p.callCount === 'number' || typeof p.viewCount === 'number' || typeof p.notificationClickCount === 'number' ? (
                           <div style={{ display: 'flex', gap: '8px', marginInlineEnd: '8px' }}>
                             {typeof p.callCount === 'number' && p.callCount > 0 ? (
                               <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات على هذا المنشور' : 'Calls on this post'}>
@@ -398,6 +399,11 @@ export default function AdminProvidersClient() {
                             {typeof p.viewCount === 'number' && p.viewCount > 0 ? (
                               <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: '#000918ff' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
                                 👁 {p.viewCount}
+                              </span>
+                            ) : null}
+                            {typeof p.notificationClickCount === 'number' && p.notificationClickCount > 0 ? (
+                              <span className={styles.callsBadge} style={{ backgroundColor: '#4CAF50', color: 'white' }} title={locale === 'ar' ? 'نقرات الإشعارات' : 'Notification clicks'}>
+                                🔔 {p.notificationClickCount}
                               </span>
                             ) : null}
                           </div>

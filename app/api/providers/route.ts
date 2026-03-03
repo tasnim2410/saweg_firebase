@@ -7,6 +7,7 @@ import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { getNotificationClickCounts } from '@/lib/notificationClicks';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -64,6 +65,10 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Get notification click counts for all providers
+    const providerIds = providers.map((p: any) => p.id);
+    const notificationClickCounts = await getNotificationClickCounts('provider', providerIds);
+
     const normalized = providers.map((p: any) => {
       const publishedByAdmin = Boolean(
         (p?.user?.email && isAdminIdentifier(String(p.user.email))) ||
@@ -74,6 +79,7 @@ export async function GET() {
         ...p,
         destination: p.destination ?? p.placeOfBusiness ?? null,
         publishedByAdmin,
+        notificationClickCount: notificationClickCounts[p.id] || 0,
         user: p.user ? { fullName: p.user.fullName, carKind: p.user.carKind, maxCharge: p.user.maxCharge, maxChargeUnit: p.user.maxChargeUnit, callsReceived: p.user.callsReceived } : null,
       };
     });

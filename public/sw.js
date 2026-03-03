@@ -629,9 +629,29 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification?.data?.url || '/ar';
+  const tag = event.notification?.tag || null;
 
   event.waitUntil(
     (async () => {
+      // Track notification click
+      try {
+        await fetch('/api/notification-clicks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            notificationTag: tag,
+            url: url,
+            userId: null, // Will be populated server-side if user is logged in
+          }),
+        });
+      } catch (err) {
+        // Silent fail - don't block navigation if tracking fails
+        console.error('Failed to track notification click:', err);
+      }
+
+      // Navigate to URL
       const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of allClients) {
         if ('focus' in client) {

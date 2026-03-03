@@ -24,6 +24,7 @@ type MerchantGoodsPost = {
   userId: string;
   callCount?: number;
   viewCount?: number;
+  notificationClickCount?: number;
   user?: {
     fullName?: string;
     callsReceived?: number;
@@ -462,7 +463,7 @@ export default function AdminMerchantGoodsPostsClient() {
                         <div className={styles.itemTitle}>{p.name}</div>
                         <div className={styles.headerActions}>
                           {ownerName ? <span className={styles.meta}>{ownerName}</span> : null}
-                          {typeof p.callCount === 'number' || typeof p.viewCount === 'number' ? (
+                          {typeof p.callCount === 'number' || typeof p.viewCount === 'number' || typeof p.notificationClickCount === 'number' ? (
                             <div style={{ display: 'flex', gap: '8px', marginInlineEnd: '8px' }}>
                               {typeof p.callCount === 'number' && p.callCount > 0 ? (
                                 <span className={styles.callsBadge} title={locale === 'ar' ? 'عدد المكالمات على هذا المنشور' : 'Calls on this post'}>
@@ -472,6 +473,11 @@ export default function AdminMerchantGoodsPostsClient() {
                               {typeof p.viewCount === 'number' && p.viewCount > 0 ? (
                                 <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: '#00040cff' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
                                   👁 {p.viewCount}
+                                </span>
+                              ) : null}
+                              {typeof p.notificationClickCount === 'number' && p.notificationClickCount > 0 ? (
+                                <span className={styles.callsBadge} style={{ backgroundColor: '#4CAF50', color: 'white' }} title={locale === 'ar' ? 'نقرات الإشعارات' : 'Notification clicks'}>
+                                  🔔 {p.notificationClickCount}
                                 </span>
                               ) : null}
                             </div>
