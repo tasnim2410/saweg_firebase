@@ -396,7 +396,7 @@ export default function AdminProvidersClient() {
                               </span>
                             ) : null}
                             {typeof p.viewCount === 'number' && p.viewCount > 0 ? (
-                              <span className={styles.callsBadge} style={{ backgroundColor: '#3b82f6' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
+                              <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: '#000918ff' }} title={locale === 'ar' ? 'عدد المشاهدات' : 'View count'}>
                                 👁 {p.viewCount}
                               </span>
                             ) : null}
