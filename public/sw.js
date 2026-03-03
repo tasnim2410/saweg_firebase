@@ -14,7 +14,7 @@ try {
 
 
 
-const CACHE_NAME = 'saweg-pwa-v7';
+const CACHE_NAME = 'saweg-pwa-v8';
 
 
 
