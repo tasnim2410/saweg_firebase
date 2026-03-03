@@ -138,13 +138,13 @@ export async function generateMetadata({
   const description = descriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saweg.app';
   const pageUrl = `${baseUrl}/${locale}/merchant-goods-posts/${postId}`;
-  // Use original post image for OG, fallback to generated OG image if no image
+  // Use original post image only if it exists
   const rawImage = post.image;
   const ogImageUrl = rawImage
     ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}${rawImage}`)
-    : `${baseUrl}/api/og/merchant/${postId}`;
+    : null;
 
-  return {
+  const metadata: Metadata = {
     title,
     description,
     metadataBase: new URL(baseUrl),
@@ -154,23 +154,28 @@ export async function generateMetadata({
       url: pageUrl,
       siteName: 'Saweg',
       locale: locale === 'ar' ? 'ar_AR' : 'en_US',
-      images: [{ 
-        url: ogImageUrl,
-        width: 1200,
-        height: 630,
-        alt: description,
-        type: 'image/jpeg',
-      }],
       type: 'website',
     },
     twitter: {
-      card: 'summary_large_image',
+      card: ogImageUrl ? 'summary_large_image' : 'summary',
       title,
       description,
-      images: [ogImageUrl],
       site: '@saweg',
     },
   };
+
+  if (ogImageUrl) {
+    metadata.openGraph!.images = [{ 
+      url: ogImageUrl,
+      width: 1200,
+      height: 630,
+      alt: description,
+      type: 'image/jpeg',
+    }];
+    metadata.twitter!.images = [ogImageUrl];
+  }
+
+  return metadata;
 }
 
 export default async function MerchantGoodsPostDetailsPage({
