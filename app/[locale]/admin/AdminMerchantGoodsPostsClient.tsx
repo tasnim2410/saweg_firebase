@@ -954,7 +954,7 @@ export default function AdminMerchantGoodsPostsClient() {
 
                               {typeof p.notificationClickCount === 'number' && p.notificationClickCount > 0 ? (
 
-                                <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: 'white' }} title={locale === 'ar' ? 'نقرات الإشعارات' : 'Notification clicks'}>
+                                <span className={styles.callsBadge} style={{ backgroundColor: 'transparent', color: 'black' }} title={locale === 'ar' ? 'نقرات الإشعارات' : 'Notification clicks'}>
 
                                   🔔 {p.notificationClickCount}
 
