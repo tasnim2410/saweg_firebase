@@ -2,19 +2,19 @@
 // Use short IDs as values for storage/API, separate display labels for each locale
 
 export const VEHICLE_TYPE_CONFIG = [
-  { id: 'van-box', labelAR: 'شاحنة صندوقية', labelEN: 'Van / Box Truck', imagePath: '/images/van_box_truck.png' },
-  { id: 'flatbed', labelAR: 'شاحنة مسطحة', labelEN: 'Flatbed Truck', imagePath: '/images/flatbed_truck.png' },
-  { id: 'reefer', labelAR: 'شاحنة مبردة', labelEN: 'Reefer Truck', imagePath: '/images/reefer_truck.png' },
-  { id: 'dump', labelAR: 'شاحنة قلابة', labelEN: 'Dump Truck / Tipper', imagePath: '/images/dump_truck_tipper.png' },
-  { id: 'curtainsider', labelAR: 'شاحنة مغطاة', labelEN: 'Curtainsider', imagePath: '/images/curtainsider.png' },
-  { id: 'tanker', labelAR: 'شاحنة صهريج', labelEN: 'Tanker Truck', imagePath: '/images/tanker_truck.png' },
-  { id: 'tail-lift', labelAR: 'شاحنة برافعة خلفية', labelEN: 'Tail-lift Truck', imagePath: '/images/tail_lift_truck.png' },
-  { id: 'crane', labelAR: 'شاحنة رافعة', labelEN: 'Crane Truck', imagePath: '/images/crane_truck.png' },
-  { id: 'drop-side', labelAR: 'شاحنة صندوقية بجوانب قابلة للطي', labelEN: 'Drop-side Truck', imagePath: '/images/drop_side_truck.png' },
-  { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck.png' },
-  { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tranker.png' },
-  { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer.png' },
-  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_icon.png' },
+  { id: 'van-box', labelAR: 'شاحنة صندوقية', labelEN: 'Van / Box Truck', imagePath: '/images/van_icon.svg' },
+  { id: 'flatbed', labelAR: 'شاحنة مسطحة', labelEN: 'Flatbed Truck', imagePath: '/images/flatbet_truck_icon.svg' },
+  { id: 'reefer', labelAR: 'شاحنة مبردة', labelEN: 'Reefer Truck', imagePath: '/images/reefer_truck_icon.svg' },
+  { id: 'dump', labelAR: 'شاحنة قلابة', labelEN: 'Dump Truck / Tipper', imagePath: '/images/dump_truck_icon.svg' },
+  { id: 'curtainsider', labelAR: 'شاحنة مغطاة', labelEN: 'Curtainsider', imagePath: '/images/curtainsider_icon.svg' },
+  { id: 'tanker', labelAR: 'شاحنة صهريج', labelEN: 'Tanker Truck', imagePath: '/images/tanker_truck_icon.svg' },
+  { id: 'tail-lift', labelAR: 'شاحنة برافعة خلفية', labelEN: 'Tail-lift Truck', imagePath: '/images/tail_lift_truck_icon.svg' },
+  { id: 'crane', labelAR: 'شاحنة رافعة', labelEN: 'Crane Truck', imagePath: '/images/crane_truck_icon.svg' },
+  { id: 'drop-side', labelAR: 'شاحنة صندوقية بجوانب قابلة للطي', labelEN: 'Drop-side Truck', imagePath: '/images/drop_side_truck_icon.svg' },
+  { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck_icon.svg' },
+  { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tanker.svg' },
+  { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer_icon.svg' },
+  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_icon.svg' },
 ] as const;
 
 export type VehicleTypeId = typeof VEHICLE_TYPE_CONFIG[number]['id'];

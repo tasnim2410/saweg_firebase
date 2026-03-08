@@ -198,21 +198,22 @@
   display: inline-flex;
   align-items: center;
   gap: 0.9rem;
- }
+}
 
- .vehicleTypeThumb {
+.vehicleTypeThumb {
   width: 96px;
   height: 84px;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 8px;
   border-radius: 0.5rem;
   background: #e5e7eb;
   border: 1px solid rgba(0, 0, 0, 0.08);
- }
+}
 
- .vehicleTypeButtonLabel {
+.vehicleTypeButtonLabel {
   font-weight: 600;
   color: #111827;
- }
+}
 
  .vehicleTypePlaceholder {
   color: #6b7280;
@@ -260,7 +261,8 @@
  .vehicleTypeOptionThumb {
   width: 96px;
   height: 84px;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 8px;
   border-radius: 0.5rem;
   background: #e5e7eb;
   border: 1px solid rgba(0, 0, 0, 0.08);

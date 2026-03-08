@@ -197,7 +197,16 @@ export default function AddMerchantGoodsPostPage() {
       return { ok: false as const };
     }
 
-    // Validate description is required
+    // Validate at least one destination is provided
+    const validDestinations = destinations.filter(d => d && d.trim());
+    if (validDestinations.length === 0) {
+      pushToast({
+        variant: 'error',
+        title: titleFor('form'),
+        message: locale === 'ar' ? 'يرجى إضافة وجهة تفريغ واحدة على الأقل' : 'Please add at least one unloading location',
+      });
+      return { ok: false as const };
+    }
     if (!description.trim()) {
       pushToast({
         variant: 'error',
@@ -445,11 +454,11 @@ export default function AddMerchantGoodsPostPage() {
                 </div>
               ) : null}
               <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع البضاعة' : 'Type of goods'}</div>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع الحمولة' : 'Type of goods'}</div>
                 <div className={styles.modalValue}>{goodsType || '-'}</div>
               </div>
               <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>{locale === 'ar' ? 'وزن البضاعة' : 'Goods weight'}</div>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'وزن الحمولة' : 'Goods weight'}</div>
                 <div className={styles.modalValue}>
                   {goodsWeight ? `${goodsWeight} ${goodsWeightUnit === 'kg' ? (locale === 'ar' ? 'كغ' : 'kg') : locale === 'ar' ? 'طن' : 'ton'}` : '-'}
                 </div>
@@ -565,7 +574,17 @@ export default function AddMerchantGoodsPostPage() {
          
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'رقم الهاتف' : 'Phone number'}</label>
+            <label className={styles.label}>
+              {locale === 'ar' ? (
+                <>
+                  رقم الهاتف <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              ) : (
+                <>
+                  Phone number <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              )}
+            </label>
             <input
               className={styles.input}
               value={phone}
@@ -587,7 +606,17 @@ export default function AddMerchantGoodsPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'وجهات التفريغ' : 'Unloading Locations'}</label>
+            <label className={styles.label}>
+              {locale === 'ar' ? (
+                <>
+                  وجهات التفريغ <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              ) : (
+                <>
+                  Unloading Locations <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              )}
+            </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {destinations.map((dest, index) => (
                 <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -643,12 +672,12 @@ export default function AddMerchantGoodsPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'نوع البضاعة' : 'Type of goods'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'نوع الحمولة' : 'Type of goods'}</label>
             <input className={styles.input} value={goodsType} onChange={(e) => setGoodsType(e.target.value)} />
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'وزن البضاعة' : 'Goods weight'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'وزن الحمولة' : 'Goods weight'}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 className={styles.input}
@@ -670,7 +699,7 @@ export default function AddMerchantGoodsPostPage() {
           </div>
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'الميزانية (اختياري)' : 'Budget (optional)'}</label>
+            <label className={styles.label}>{locale === 'ar' ? 'الميزانية' : 'Budget'}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 className={styles.input}
@@ -778,7 +807,17 @@ export default function AddMerchantGoodsPostPage() {
          
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'الوصف' : 'Description'}</label>
+            <label className={styles.label}>
+              {locale === 'ar' ? (
+                <>
+                  الوصف <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              ) : (
+                <>
+                  Description <span style={{ color: '#dc2626' }}>*</span>
+                </>
+              )}
+            </label>
             <textarea
               className={styles.textarea}
               value={description}
