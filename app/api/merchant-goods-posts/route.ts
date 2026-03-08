@@ -330,7 +330,7 @@ export async function POST(req: NextRequest) {
 
     const loadingDateRaw = typeof formData.get('loadingDate') === 'string' ? String(formData.get('loadingDate')).trim() : '';
 
-    const vehicleTypeDesired = typeof formData.get('vehicleTypeDesired') === 'string' ? String(formData.get('vehicleTypeDesired')).trim() : '';
+    const vehicleTypesDesiredRaw = typeof formData.get('vehicleTypesDesired') === 'string' ? String(formData.get('vehicleTypesDesired')).trim() : '';
 
     const description = typeof formData.get('description') === 'string' ? String(formData.get('description')).trim() : '';
 
@@ -364,33 +364,49 @@ export async function POST(req: NextRequest) {
 
 
 
-    if (!description) {
+    // Parse vehicle types array
 
-      return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
+    let vehicleTypesDesired: string[] = [];
+
+    if (vehicleTypesDesiredRaw) {
+
+      try {
+
+        const parsed = JSON.parse(vehicleTypesDesiredRaw);
+
+        if (Array.isArray(parsed)) {
+
+          vehicleTypesDesired = parsed.filter(vt => typeof vt === 'string' && vt.trim()).map(vt => {
+
+            const vtStr = String(vt).trim();
+
+            // Normalize known vehicle types
+
+            if (isValidVehicleType(vtStr)) {
+
+              return normalizeVehicleType(vtStr) || vtStr;
+
+            }
+
+            return vtStr;
+
+          });
+
+        }
+
+      } catch {
+
+        // ignore invalid JSON
+
+      }
 
     }
 
 
 
-    // Validate vehicle type only if provided
+    if (!description) {
 
-    let normalizedVehicleType: string | null = null;
-
-    if (vehicleTypeDesired) {
-
-      // If it's a known vehicle type, normalize it; otherwise accept custom value as-is
-
-      if (isValidVehicleType(vehicleTypeDesired)) {
-
-        normalizedVehicleType = normalizeVehicleType(vehicleTypeDesired) || vehicleTypeDesired;
-
-      } else {
-
-        // Accept custom vehicle type (user entered their own)
-
-        normalizedVehicleType = vehicleTypeDesired;
-
-      }
+      return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
 
     }
 
@@ -570,7 +586,7 @@ export async function POST(req: NextRequest) {
 
           loadingDate: loadingDate,
 
-          vehicleTypeDesired: normalizedVehicleType,
+          vehicleTypeDesired: vehicleTypesDesired.length > 0 ? vehicleTypesDesired : null,
 
           budget,
 

@@ -186,7 +186,7 @@ model MerchantGoodsPost {
 
   loadingDate        DateTime?
 
-  vehicleTypeDesired String?
+  vehicleTypeDesired Json?
 
   budget             Float?
 

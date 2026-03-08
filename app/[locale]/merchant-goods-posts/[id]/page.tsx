@@ -340,13 +340,31 @@ export default async function MerchantGoodsPostDetailsPage({
     return currency;
   };
 
-  const vehicleLabelDisplay = (vehicleType: string | null) => {
+  const vehicleLabelDisplay = (vehicleType: string | string[] | null) => {
     if (!vehicleType) return '-';
-    if (locale === 'ar') {
-      const vehicleConfig = VEHICLE_TYPE_CONFIG.find(v => v.id === vehicleType);
-      if (vehicleConfig) return vehicleConfig.labelAR;
+    
+    // Parse if it's a JSON string (from old data) or already an array
+    let vehicleTypes: string[] = [];
+    if (typeof vehicleType === 'string') {
+      try {
+        const parsed = JSON.parse(vehicleType);
+        vehicleTypes = Array.isArray(parsed) ? parsed : [vehicleType];
+      } catch {
+        vehicleTypes = [vehicleType];
+      }
+    } else if (Array.isArray(vehicleType)) {
+      vehicleTypes = vehicleType;
     }
-    return vehicleType;
+    
+    if (vehicleTypes.length === 0) return '-';
+    
+    return vehicleTypes.map(vt => {
+      const vehicleConfig = VEHICLE_TYPE_CONFIG.find(v => v.id === vt);
+      if (vehicleConfig) {
+        return locale === 'ar' ? vehicleConfig.labelAR : vehicleConfig.labelEN;
+      }
+      return vt; // Fallback to raw value if not found
+    });
   };
 
   const merchantName = (post.name || post.user.fullName || '').trim() || (locale === 'ar' ? 'تاجر' : 'Merchant');
@@ -449,7 +467,23 @@ export default async function MerchantGoodsPostDetailsPage({
 
             <div className={styles.infoBlock}>
               <div className={styles.infoLabel}>{labels.vehicle}</div>
-              <div className={styles.infoValue}>{vehicleLabelDisplay(post.vehicleTypeDesired)}</div>
+              <div className={styles.infoValue}>
+                {(() => {
+                  const vehicleLabels = vehicleLabelDisplay(post.vehicleTypeDesired);
+                  if (vehicleLabels === '-') return '-';
+                  if (!Array.isArray(vehicleLabels)) return vehicleLabels;
+                  return vehicleLabels.map((label, idx) => (
+                    <div key={idx} style={{ marginBottom: idx < vehicleLabels.length - 1 ? '4px' : '0' }}>
+                      {label}
+                      {idx < vehicleLabels.length - 1 && (
+                        <span style={{ color: '#6b7280', fontSize: '0.85em', marginTop: '2px', display: 'block' }}>
+                          {locale === 'ar' ? 'أو' : 'or'}
+                        </span>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </div>
             </div>
            
 

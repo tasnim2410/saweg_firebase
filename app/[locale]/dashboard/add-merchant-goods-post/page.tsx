@@ -44,13 +44,11 @@ export default function AddMerchantGoodsPostPage() {
   const [budget, setBudget] = useState<string>('');
   const [budgetCurrency, setBudgetCurrency] = useState<string>('LYD');
   const [loadingDate, setLoadingDate] = useState('');
-  const [vehicleTypeDesired, setVehicleTypeDesired] = useState('');
+  const [vehicleTypesDesired, setVehicleTypesDesired] = useState<VehicleTypeId[]>([]);
+  const [vehicleTypesOpen, setVehicleTypesOpen] = useState(false);
   const [customVehicleType, setCustomVehicleType] = useState('');
-  const [vehicleTypeOpen, setVehicleTypeOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-
-  const selectedVehicleType = VEHICLE_TYPE_CONFIG.find((opt) => opt.id === vehicleTypeDesired) ?? null;
 
   const pushToast = (toast: { variant: 'error' | 'success' | 'info'; title: string; message: string }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -145,18 +143,18 @@ export default function AddMerchantGoodsPostPage() {
   }, [confirmOpen]);
 
   useEffect(() => {
-    if (!vehicleTypeOpen) return;
+    if (!vehicleTypesOpen) return;
 
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       if (!target.closest('[data-vehicle-type-root="true"]')) {
-        setVehicleTypeOpen(false);
+        setVehicleTypesOpen(false);
       }
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setVehicleTypeOpen(false);
+      if (e.key === 'Escape') setVehicleTypesOpen(false);
     };
 
     document.addEventListener('pointerdown', onPointerDown);
@@ -165,7 +163,8 @@ export default function AddMerchantGoodsPostPage() {
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [vehicleTypeOpen]);
+  }, [vehicleTypesOpen]);
+
 
   const validateForSubmit = () => {
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -290,10 +289,7 @@ export default function AddMerchantGoodsPostPage() {
       if (budgetCurrencyValue) payload.append('budgetCurrency', budgetCurrencyValue);
     }
     if (loadingDate) payload.append('loadingDate', loadingDate);
-    const finalVehicleType = vehicleTypeDesired === 'other' && customVehicleType.trim()
-      ? customVehicleType.trim()
-      : vehicleTypeDesired;
-    if (finalVehicleType) payload.append('vehicleTypeDesired', finalVehicleType);
+    payload.append('vehicleTypesDesired', JSON.stringify(vehicleTypesDesired));
     payload.append('description', description);
     if (imageFile) payload.append('image', imageFile);
 
@@ -474,8 +470,14 @@ export default function AddMerchantGoodsPostPage() {
                 <div className={styles.modalValue}>{loadingDate || '-'}</div>
               </div> */}
               <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</div>
-                <div className={styles.modalValue}>{vehicleTypeDesired === 'other' && customVehicleType ? customVehicleType : vehicleTypeDesired || '-'}</div>
+                <div className={styles.modalLabel}>{locale === 'ar' ? 'أنواع المركبات المطلوبة' : 'Vehicle types desired'}</div>
+                <div className={styles.modalValue}>
+                  {vehicleTypesDesired.length > 0 ? vehicleTypesDesired.map((vt, idx) => (
+                    <div key={idx} style={{ marginBottom: idx < vehicleTypesDesired.length - 1 ? '4px' : '0' }}>
+                      {getVehicleLabel(vt, locale === 'ar' ? 'ar' : 'en')}
+                    </div>
+                  )) : '-'}
+                </div>
               </div>
              
               <div className={styles.modalRow}>
@@ -736,74 +738,98 @@ export default function AddMerchantGoodsPostPage() {
           </div> */}
 
           <div className={styles.row}>
-            <label className={styles.label}>{locale === 'ar' ? 'نوع المركبة المطلوبة' : 'Type of vehicle desired'}</label>
-            {mounted ? (
-              <div className={styles.vehicleTypeRoot} data-vehicle-type-root="true">
-                <button
-                  type="button"
-                  className={`${styles.input} ${styles.vehicleTypeButton}`}
-                  aria-haspopup="listbox"
-                  aria-expanded={vehicleTypeOpen ? 'true' : 'false'}
-                  onClick={() => setVehicleTypeOpen((v) => !v)}
-                >
-                  {selectedVehicleType ? (
-                    <span className={styles.vehicleTypeButtonInner}>
-                      <img
-                        src={selectedVehicleType.imagePath}
-                        alt={getVehicleLabel(selectedVehicleType.id, locale === 'ar' ? 'ar' : 'en')}
-                        className={styles.vehicleTypeThumb}
-                        loading="lazy"
-                      />
-                      <span className={styles.vehicleTypeButtonLabel}>{getVehicleLabel(selectedVehicleType.id, locale === 'ar' ? 'ar' : 'en')}</span>
-                    </span>
-                  ) : (
-                    <span className={styles.vehicleTypePlaceholder}>
-                      {locale === 'ar' ? 'اختر نوع المركبة' : 'Choose vehicle type'}
-                    </span>
-                  )}
-                </button>
-
-                {vehicleTypeOpen ? (
-                  <div className={styles.vehicleTypePopover} role="listbox">
-                    {VEHICLE_TYPE_CONFIG.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={styles.vehicleTypeOption}
-                        role="option"
-                        aria-selected={opt.id === vehicleTypeDesired ? 'true' : 'false'}
-                        onClick={() => {
-                          setVehicleTypeDesired(opt.id);
-                          if (opt.id !== 'other') setCustomVehicleType('');
-                          setVehicleTypeOpen(false);
-                        }}
-                      >
-                        <img
-                          src={opt.imagePath}
-                          alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
-                          className={styles.vehicleTypeOptionThumb}
-                          loading="lazy"
-                        />
-                        <span className={styles.vehicleTypeOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
-                      </button>
-                    ))}
+            <label className={styles.label}>{locale === 'ar' ? 'أنواع المركبات المطلوبة' : 'Vehicle types desired'}</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {vehicleTypesDesired.map((vt, index) => (
+                <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1.5px solid #e5e7eb', borderRadius: '0.5rem', backgroundColor: '#f9fafb' }}>
+                    <img
+                      src={VEHICLE_TYPE_CONFIG.find(v => v.id === vt)?.imagePath || ''}
+                      alt={getVehicleLabel(vt, locale === 'ar' ? 'ar' : 'en')}
+                      style={{ width: '40px', height: '35px', objectFit: 'contain', padding: '4px', borderRadius: '0.25rem', backgroundColor: '#e5e7eb' }}
+                      loading="lazy"
+                    />
+                    <span style={{ fontWeight: 600, color: '#111827' }}>{getVehicleLabel(vt, locale === 'ar' ? 'ar' : 'en')}</span>
                   </div>
-                ) : null}
-              </div>
-            ) : (
-              <input className={styles.input} value={vehicleTypeDesired} readOnly />
-            )}
-            {vehicleTypeDesired === 'other' && (
-              <div className={styles.row} style={{ marginTop: '0.5rem' }}>
-                <input
-                  className={styles.input}
-                  value={customVehicleType}
-                  onChange={(e) => setCustomVehicleType(e.target.value)}
-                  placeholder={locale === 'ar' ? 'أدخل نوع المركبة' : 'Enter vehicle type'}
-                />
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={() => setVehicleTypesDesired(vehicleTypesDesired.filter((_, i) => i !== index))}
+                    style={{ 
+                      padding: '6px 10px', 
+                      minWidth: 'auto', 
+                      marginTop: 0,
+                      fontSize: '12px',
+                      backgroundColor: 'transparent',
+                      color: '#dc2626',
+                      border: '1px solid #dc2626',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {locale === 'ar' ? '×' : '×'}
+                  </button>
+                </div>
+              ))}
+              {mounted && (
+                <div className={styles.vehicleTypeRoot} data-vehicle-type-root="true">
+                  <button
+                    type="button"
+                    onClick={() => setVehicleTypesOpen((v) => !v)}
+                    style={{ 
+                      alignSelf: 'flex-start',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: 'transparent',
+                      color: '#000000c1',
+                      border: '1px solid #c8ad29ff',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginTop: vehicleTypesDesired.length > 0 ? '2px' : 0
+                    }}
+                  >
+                    {locale === 'ar' ? '+ إضافة نوع مركبة' : '+ Add'}
+                  </button>
+
+                  {vehicleTypesOpen && (
+                    <div className={styles.vehicleTypePopover} role="listbox" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                      {VEHICLE_TYPE_CONFIG.filter(opt => !vehicleTypesDesired.includes(opt.id)).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={styles.vehicleTypeOption}
+                          role="option"
+                          onClick={() => {
+                            setVehicleTypesDesired([...vehicleTypesDesired, opt.id]);
+                            setVehicleTypesOpen(false);
+                          }}
+                        >
+                          <img
+                            src={opt.imagePath}
+                            alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
+                            className={styles.vehicleTypeOptionThumb}
+                            loading="lazy"
+                          />
+                          <span className={styles.vehicleTypeOptionLabel}>{getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
+          {vehicleTypesDesired.includes('other') && (
+            <div className={styles.row}>
+              <label className={styles.label}>{locale === 'ar' ? 'حدد نوع المركبة الأخرى' : 'Specify other vehicle type'}</label>
+              <input
+                className={styles.input}
+                value={customVehicleType}
+                onChange={(e) => setCustomVehicleType(e.target.value)}
+                placeholder={locale === 'ar' ? 'أدخل نوع المركبة' : 'Enter vehicle type'}
+              />
+            </div>
+          )}
          
 
           <div className={styles.row}>
