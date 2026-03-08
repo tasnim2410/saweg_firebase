@@ -14,6 +14,7 @@ export const VEHICLE_TYPE_CONFIG = [
   { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck_icon.svg' },
   { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tanker.svg' },
   { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer_icon.svg' },
+  { id: 'towing', labelAR: 'شاحنة سحب', labelEN: 'Towing Truck', imagePath: '/images/towing_truck_icon.svg' },
   { id: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_icon.svg' },
 ] as const;
 

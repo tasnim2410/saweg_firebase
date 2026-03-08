@@ -25,6 +25,7 @@ const VEHICLE_TYPES: VehicleType[] = [
   { id: 'drop-side', labelAR: 'بجوانب قابلة لطي', labelEN: 'Drop-side', iconPath: '/images/drop_side_truck_icon.svg' },
   { id: 'container', labelAR: 'شاحنة حاويات', labelEN: 'Container', iconPath: '/images/container_truck_icon.svg' },
   { id: 'semi-trailer', labelAR: 'مجرورة', labelEN: 'Semi Trailer', iconPath: '/images/semi_trailer_icon.svg' },
+  { id: 'towing', labelAR: 'سحب', labelEN: 'Towing', iconPath: '/images/towing_truck_icon.svg' },
   { id: 'other', labelAR: 'أخرى', labelEN: 'Other', iconPath: '/images/other_icon.svg' },
 ];
 
