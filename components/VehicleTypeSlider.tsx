@@ -14,18 +14,18 @@ interface VehicleType {
 }
 
 const VEHICLE_TYPES: VehicleType[] = [
-  { id: 'van-box', labelAR: 'صندوقية', labelEN: 'Van/Box', iconPath: '/images/van_icon.png' },
-  { id: 'flatbed', labelAR: 'مسطحة', labelEN: 'Flatbed', iconPath: '/images/flatbet_truck_icon.png' },
-  { id: 'reefer', labelAR: 'براد', labelEN: 'Reefer', iconPath: '/images/reefer_truck_icon.png' },
-  { id: 'dump', labelAR: 'قلابة', labelEN: 'Dump', iconPath: '/images/dump_truck_icon.png' },
-  { id: 'curtainsider', labelAR: 'ستارة', labelEN: 'Curtainsider', iconPath: '/images/curtainsider_icon.png' },
-  { id: 'tanker', labelAR: 'صهريج', labelEN: 'Tanker', iconPath: '/images/tanker_truck_icon.png' },
-  { id: 'tail-lift', labelAR: 'برافعة خلفية', labelEN: 'Tail-lift', iconPath: '/images/tail_lift_truck_icon.png' },
-  { id: 'crane', labelAR: 'رافعة', labelEN: 'Crane', iconPath: '/images/crane_truck_icon.png' },
-  { id: 'drop-side', labelAR: 'بجوانب قابلة لطي', labelEN: 'Drop-side', iconPath: '/images/drop_side_truck_icon.png' },
-  { id: 'container', labelAR: 'شاحنة حاويات', labelEN: 'Container', iconPath: '/images/container_truck_icon.png' },
-  { id: 'semi-trailer', labelAR: 'مجرورة', labelEN: 'Semi Trailer', iconPath: '/images/semi_trailer_icon.png' },
-  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', iconPath: '/images/other_icon.png' },
+  { id: 'van-box', labelAR: 'صندوقية', labelEN: 'Van/Box', iconPath: '/images/van_icon.svg' },
+  { id: 'flatbed', labelAR: 'مسطحة', labelEN: 'Flatbed', iconPath: '/images/flatbet_truck_icon.svg' },
+  { id: 'reefer', labelAR: 'براد', labelEN: 'Reefer', iconPath: '/images/reefer_truck_icon.svg' },
+  { id: 'dump', labelAR: 'قلابة', labelEN: 'Dump', iconPath: '/images/dump_truck_icon.svg' },
+  { id: 'curtainsider', labelAR: 'ستارة', labelEN: 'Curtainsider', iconPath: '/images/curtainsider_icon.svg' },
+  { id: 'tanker', labelAR: 'صهريج', labelEN: 'Tanker', iconPath: '/images/tanker_truck_icon.svg' },
+  { id: 'tail-lift', labelAR: 'برافعة خلفية', labelEN: 'Tail-lift', iconPath: '/images/tail_lift_truck_icon.svg' },
+  { id: 'crane', labelAR: 'رافعة', labelEN: 'Crane', iconPath: '/images/crane_truck_icon.svg' },
+  { id: 'drop-side', labelAR: 'بجوانب قابلة لطي', labelEN: 'Drop-side', iconPath: '/images/drop_side_truck_icon.svg' },
+  { id: 'container', labelAR: 'شاحنة حاويات', labelEN: 'Container', iconPath: '/images/container_truck_icon.svg' },
+  { id: 'semi-trailer', labelAR: 'مجرورة', labelEN: 'Semi Trailer', iconPath: '/images/semi_trailer_icon.svg' },
+  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', iconPath: '/images/other_icon.svg' },
 ];
 
 interface VehicleTypeSliderProps {
