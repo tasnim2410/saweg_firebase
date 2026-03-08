@@ -630,11 +630,31 @@ export async function POST(req: NextRequest) {
 
         const destinationAr = post.destination ? getLocationLabel(post.destination, 'ar') : '';
 
-        const body = startingPointAr && destinationAr 
+        // Build route line
+        const routeLine = startingPointAr && destinationAr 
+          ? `من ${startingPointAr} → ${destinationAr}`
+          : startingPointAr 
+            ? `من ${startingPointAr}`
+            : destinationAr 
+              ? `إلى ${destinationAr}`
+              : '';
 
-          ? `مطلوب شاحنة من "${startingPointAr}" الي "${destinationAr}"`
+        // Truncate description to 80 chars
+        const descriptionTruncated = post.description 
+          ? (post.description.length > 80 ? post.description.slice(0, 77) + '...' : post.description)
+          : '';
 
-          : 'طلب جديد من تاجر';
+        // Build notification body with route and description
+        let body: string;
+        if (routeLine && descriptionTruncated) {
+          body = `${routeLine}\n${descriptionTruncated}`;
+        } else if (routeLine) {
+          body = routeLine;
+        } else if (descriptionTruncated) {
+          body = `طلب جديد من تاجر\n${descriptionTruncated}`;
+        } else {
+          body = 'طلب جديد من تاجر';
+        }
 
         const url = `/ar/merchant-goods-posts/${post.id}`;
 
