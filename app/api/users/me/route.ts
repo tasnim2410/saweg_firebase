@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { AUTH_COOKIE_NAME, getSession, signSessionToken } from '@/lib/session';
+import { getSession } from '@/lib/session';
 import { Prisma } from '@prisma/client';
-import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/storage';
 import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';
@@ -221,23 +221,7 @@ export async function PATCH(req: Request) {
       } as any,
     });
 
-    const token = await signSessionToken({
-      sub: (updated as any).id,
-      email: (updated as any).email,
-      phone: (updated as any).phone,
-      type: (session.user as any).type,
-    });
-
-    const res = NextResponse.json({ ok: true, user: updated });
-    res.cookies.set(AUTH_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    return res;
+    return NextResponse.json({ ok: true, user: updated });
   } catch (err: any) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
       const target = (err.meta as any)?.target;

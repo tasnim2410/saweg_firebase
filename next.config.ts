@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/**',
+      },
+      // Keep Cloudinary during transition until all images are migrated
+      {
+        protocol: 'https',
         hostname: 'res.cloudinary.com',
         pathname: '/**',
       },

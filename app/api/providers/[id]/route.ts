@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
-import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/storage';
 import { normalizePhoneNumber } from '@/lib/phone';
 import fs from 'fs/promises';
 import path from 'path';

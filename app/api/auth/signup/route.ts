@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword } from '@/lib/password';
-import { AUTH_COOKIE_NAME, signSessionToken } from '@/lib/session';
-import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { adminAuth } from '@/lib/firebase-admin';
+import { AUTH_COOKIE_NAME } from '@/lib/session';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/storage';
 import { normalizePhoneNumber } from '@/lib/phone';
-import { isValidVehicleType, normalizeVehicleType } from '@/lib/vehicleTypes';
+import { normalizeVehicleType } from '@/lib/vehicleTypes';
 import fs from 'fs/promises';
 import path from 'path';
 
 export const runtime = 'nodejs';
 
 const MAX_TRUCK_IMAGE_BYTES = 10 * 1024 * 1024;
+const SESSION_EXPIRES_IN_MS = 60 * 60 * 24 * 14 * 1000;
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 const uploadDir = path.join(process.cwd(), 'public/images/users');
 
@@ -29,10 +31,10 @@ export async function POST(req: Request) {
   try {
     const contentType = req.headers.get('content-type') || '';
 
+    let idToken = '';
     let fullName = '';
     let email: string | null = null;
     let phone: string | null = null;
-    let password = '';
     let typeRaw: unknown = null;
 
     let merchantCity: string | null = null;
@@ -46,11 +48,11 @@ export async function POST(req: Request) {
 
     if (contentType.includes('multipart/form-data')) {
       const form = await req.formData();
+      idToken = typeof form.get('idToken') === 'string' ? String(form.get('idToken')) : '';
       fullName = typeof form.get('fullName') === 'string' ? String(form.get('fullName')).trim() : '';
       const emailRaw = typeof form.get('email') === 'string' ? String(form.get('email')).trim().toLowerCase() : '';
-      email = emailRaw ? emailRaw : null;
+      email = emailRaw || null;
       phone = typeof form.get('phone') === 'string' ? String(form.get('phone')).trim() : null;
-      password = typeof form.get('password') === 'string' ? String(form.get('password')) : '';
       typeRaw = form.get('type');
 
       merchantCity = typeof form.get('merchantCity') === 'string' ? String(form.get('merchantCity')).trim() : null;
@@ -65,10 +67,10 @@ export async function POST(req: Request) {
       truckImage = file instanceof File ? file : null;
     } else {
       const body = await req.json();
+      idToken = typeof body?.idToken === 'string' ? body.idToken : '';
       fullName = typeof body?.fullName === 'string' ? body.fullName.trim() : '';
       email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : null;
       phone = typeof body?.phone === 'string' ? body.phone.trim() : null;
-      password = typeof body?.password === 'string' ? body.password : '';
       typeRaw = body?.type;
 
       merchantCity = typeof body?.merchantCity === 'string' ? body.merchantCity.trim() : null;
@@ -80,17 +82,17 @@ export async function POST(req: Request) {
       placeOfBusiness = typeof body?.placeOfBusiness === 'string' ? body.placeOfBusiness.trim() : null;
     }
 
-    const type = parseUserType(typeRaw);
-
+    if (!idToken) return NextResponse.json({ ok: false, error: 'ID_TOKEN_REQUIRED' }, { status: 400 });
     if (!fullName) return NextResponse.json({ ok: false, error: 'FULL_NAME_REQUIRED' }, { status: 400 });
-    if (!email && !phone) return NextResponse.json({ ok: false, error: 'EMAIL_OR_PHONE_REQUIRED' }, { status: 400 });
-    if (password.length < 6) return NextResponse.json({ ok: false, error: 'PASSWORD_TOO_SHORT' }, { status: 400 });
+
+    const type = parseUserType(typeRaw);
     if (!type) return NextResponse.json({ ok: false, error: 'USER_TYPE_REQUIRED' }, { status: 400 });
 
-    // Normalize vehicle types if they match known types, otherwise keep as-is (for custom "other" entries)
-    const normalizedCarKind = carKind ? normalizeVehicleType(carKind) || carKind : null;
-    const normalizedTrucksNeeded = trucksNeeded ? normalizeVehicleType(trucksNeeded) || trucksNeeded : null;
+    // Verify the Firebase ID token
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    const firebaseUid = decoded.uid;
 
+    // Normalize phone
     let phoneE164: string | null = null;
     if (phone) {
       const normalizedPhone = normalizePhoneNumber(phone);
@@ -100,30 +102,23 @@ export async function POST(req: Request) {
       phoneE164 = normalizedPhone.e164;
     }
 
-    const existing = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(email ? [{ email }] : []),
-          ...(phoneE164 ? [{ phone: phoneE164 }] : []),
-        ],
-      },
+    // Check if a DB user already exists for this Firebase UID
+    const existing = await prisma.user.findUnique({
+      where: { firebaseUid },
       select: { id: true },
     });
-
     if (existing) return NextResponse.json({ ok: false, error: 'USER_ALREADY_EXISTS' }, { status: 409 });
 
-    const passwordHash = await hashPassword(password);
+    // Normalize vehicle types
+    const normalizedCarKind = carKind ? normalizeVehicleType(carKind) || carKind : null;
+    const normalizedTrucksNeeded = trucksNeeded ? normalizeVehicleType(trucksNeeded) || trucksNeeded : null;
 
+    // Handle truck image upload
     let truckImagePath: string | null = null;
     if (truckImage && truckImage.size > 0) {
       if (truckImage.size > MAX_TRUCK_IMAGE_BYTES) {
         return NextResponse.json(
-          {
-            ok: false,
-            error: 'IMAGE_TOO_LARGE',
-            maxBytes: MAX_TRUCK_IMAGE_BYTES,
-            sizeBytes: truckImage.size,
-          },
+          { ok: false, error: 'IMAGE_TOO_LARGE', maxBytes: MAX_TRUCK_IMAGE_BYTES, sizeBytes: truckImage.size },
           { status: 413 }
         );
       }
@@ -134,7 +129,7 @@ export async function POST(req: Request) {
         const uploaded = await uploadImageBuffer({
           buffer,
           folder: 'saweg/users',
-          publicId: `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          publicId: `truck-${firebaseUid}-${Date.now()}`,
           contentType: truckImage.type,
         });
         truckImagePath = uploaded.url;
@@ -142,18 +137,18 @@ export async function POST(req: Request) {
         await ensureUploadDir();
         const ext = path.extname(truckImage.name) || '.jpg';
         const filename = `truck-${Date.now()}-${Math.random().toString(36).substring(2, 10)}${ext}`;
-        const filepath = path.join(uploadDir, filename);
-        await fs.writeFile(filepath, buffer);
+        await fs.writeFile(path.join(uploadDir, filename), buffer);
         truckImagePath = `/images/users/${filename}`;
       }
     }
 
-    const user = await (prisma as any).user.create({
+    // Create the user in our DB, linked to Firebase UID
+    const user = await prisma.user.create({
       data: {
+        firebaseUid,
         fullName,
-        email,
+        email: email || decoded.email || null,
         phone: phoneE164,
-        passwordHash,
         type: type as any,
         merchantCity: type === 'MERCHANT' ? (merchantCity || null) : null,
         shipperCity: type === 'SHIPPER' ? (shipperCity || null) : null,
@@ -167,43 +162,43 @@ export async function POST(req: Request) {
       select: { id: true, fullName: true, email: true, phone: true, type: true },
     });
 
-    const token = await signSessionToken({ sub: user.id, email: user.email, phone: user.phone, type: (user as any).type });
+    // Set custom claims on the Firebase user (for admin detection in middleware)
+    await adminAuth.setCustomUserClaims(firebaseUid, {
+      userType: type,
+      internalId: user.id,
+    });
+
+    // Mint a long-lived session cookie
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+      expiresIn: SESSION_EXPIRES_IN_MS,
+    });
 
     const res = NextResponse.json({ ok: true, user });
-    res.cookies.set(AUTH_COOKIE_NAME, token, {
+    res.cookies.set(AUTH_COOKIE_NAME, sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
-
     return res;
   } catch (err: any) {
     console.error('Signup error:', err);
-    
-    // Prisma unique constraint violation (email or phone already exists)
+
     if (err?.code === 'P2002') {
       const field = err?.meta?.target?.[0] || 'email/phone';
-      console.error(`Unique constraint failed on field: ${field}`);
       return NextResponse.json({ ok: false, error: 'USER_ALREADY_EXISTS', field }, { status: 409 });
     }
-    
-    // Prisma connection/database errors
     if (err?.code?.startsWith('P1') || err?.code?.startsWith('P2') || err?.code?.startsWith('P3')) {
       return NextResponse.json({ ok: false, error: 'DATABASE_ERROR' }, { status: 500 });
     }
-    
-    // Cloudinary upload errors
-    if (err?.message?.includes('cloudinary') || err?.message?.includes('upload')) {
+    if (err?.code === 'auth/id-token-expired' || err?.code === 'auth/argument-error') {
+      return NextResponse.json({ ok: false, error: 'INVALID_ID_TOKEN' }, { status: 401 });
+    }
+    if (err?.message?.includes('upload') || err?.message?.includes('storage')) {
       return NextResponse.json({ ok: false, error: 'IMAGE_UPLOAD_FAILED' }, { status: 500 });
     }
-    
-    // File system errors
-    if (err?.code === 'ENOENT' || err?.code === 'EACCES' || err?.code === 'EPERM') {
-      return NextResponse.json({ ok: false, error: 'FILE_SYSTEM_ERROR' }, { status: 500 });
-    }
-    
+
     return NextResponse.json({ ok: false, error: 'INTERNAL_ERROR' }, { status: 500 });
   }
 }

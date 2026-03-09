@@ -1,0 +1,76 @@
+# Firebase App Hosting configuration
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  runtime: nodejs20
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  # Replace PROJECT_ID:REGION:INSTANCE_NAME with your Cloud SQL connection name
+  # e.g. my-project:us-central1:saweg-db
+  # cloudSqlInstances:
+  #   - PROJECT_ID:REGION:saweg-db
+
+env:
+  # ── Non-secret Firebase client config (safe to commit) ────────────────────
+  # Replace these values with your Firebase project's config
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: YOUR_PROJECT_ID
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: YOUR_PROJECT_ID.firebaseapp.com
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: YOUR_PROJECT_ID.firebasestorage.app
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "YOUR_MESSAGING_SENDER_ID"
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: YOUR_APP_ID
+
+  - variable: NODE_ENV
+    value: production
+
+  # ── Secrets (stored in GCP Secret Manager) ────────────────────────────────
+  # Create each secret with:
+  #   echo -n "VALUE" | gcloud secrets create SECRET_NAME --data-file=-
+  # Then grant Firebase App Hosting service account the Secret Accessor role.
+
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: firebase-api-key
+
+  - variable: FIREBASE_PROJECT_ID
+    secret: firebase-project-id
+
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: firebase-client-email
+
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: firebase-private-key
+
+  - variable: DATABASE_URL
+    secret: database-url
+
+  - variable: RESEND_API_KEY
+    secret: resend-api-key
+
+  - variable: RESEND_FROM_EMAIL
+    secret: resend-from-email
+
+  - variable: CONTACT_TO_EMAIL
+    secret: contact-to-email
+
+  - variable: ADMIN_IDENTIFIERS
+    secret: admin-identifiers
+
+  - variable: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    secret: vapid-public-key
+
+  - variable: VAPID_PRIVATE_KEY
+    secret: vapid-private-key
+
+  - variable: VAPID_EMAIL
+    secret: vapid-email

@@ -1,9 +1,10 @@
 // middleware.ts
+export const runtime = 'nodejs';
 
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 import { locales } from './i18n/request';
-import { AUTH_COOKIE_NAME, verifySessionToken } from './lib/session';
+import { AUTH_COOKIE_NAME } from './lib/session';
 import { isAdminIdentifier } from './lib/admin';
 
 const intlMiddleware = createMiddleware({
@@ -19,8 +20,8 @@ export default async function middleware(req: NextRequest) {
   const segments = pathname.split('/').filter(Boolean);
   const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
 
-  // Now we're on www.saweg.app - check if we need to add /ar
-  if (!locales.some(loc => 
+  // Ensure locale prefix is present
+  if (!locales.some(loc =>
     pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
   )) {
     const url = req.nextUrl.clone();
@@ -31,70 +32,43 @@ export default async function middleware(req: NextRequest) {
   // Define protected sections
   const protectedSections = ['admin', 'dashboard'];
   const section = segments.length >= 2 ? segments[1] : null;
-
-  // Check if current path is under a protected section (admin or dashboard)
   const isProtectedPath = section && protectedSections.includes(section);
 
   if (isProtectedPath) {
-    const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+    const sessionCookie = req.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-    // No token → redirect to login with callbackUrl
-    if (!token) {
+    if (!sessionCookie) {
       const loginUrl = new URL(`/${locale}/login`, req.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Token exists → verify it
     try {
-      const session = await verifySessionToken(token);
+      const { adminAuth } = await import('./lib/firebase-admin');
+      const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
 
-      if (!session) {
-        // Invalid token
-        const loginUrl = new URL(`/${locale}/login`, req.url);
-        loginUrl.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-
-      // Special admin check only for /admin routes
       if (section === 'admin') {
-        const adminOk = Boolean(
-          (session as any).type === 'ADMIN' ||
-          (session.email && isAdminIdentifier(session.email)) ||
-          (session.phone && isAdminIdentifier(session.phone))
+        const isAdmin = Boolean(
+          decoded.admin === true ||
+          (decoded.email && isAdminIdentifier(decoded.email)) ||
+          (decoded.phone_number && isAdminIdentifier(decoded.phone_number))
         );
-
-        if (!adminOk) {
-          // Not an admin → send to home
-          const homeUrl = new URL(`/${locale}`, req.url);
-          return NextResponse.redirect(homeUrl);
+        if (!isAdmin) {
+          return NextResponse.redirect(new URL(`/${locale}`, req.url));
         }
       }
-
-      // For /dashboard: any authenticated user is allowed → continue
-      // For /admin: only admins → already checked above
-
-    } catch (error) {
-      // Verification failed
+    } catch {
       const loginUrl = new URL(`/${locale}/login`, req.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  // All other routes: just run next-intl middleware (locale handling, redirection, etc.)
   return intlMiddleware(req);
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - API routes
-     * - _next (Next.js internals)
-     * - _vercel (Vercel internals)
-     * - Static files (favicon, images, etc.)
-     */
     '/((?!api|_next|_vercel|.*\\..*).*)',
   ],
 };

@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { isAdminIdentifier } from '@/lib/admin';
-import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/cloudinary';
+import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/storage';
 import { getLocationLabel } from '@/lib/locations';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { sendPushToSubscription } from '@/lib/webPush';

@@ -1,48 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose';
-
-export const AUTH_COOKIE_NAME = 'saweg_session';
-
-type SessionPayload = {
-  sub: string;
-  email?: string | null;
-  phone?: string | null;
-  type?: string | null;
-};
-
-function getSecretKey() {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error('Missing AUTH_SECRET');
-  return new TextEncoder().encode(secret);
-}
-
-export async function signSessionToken(payload: SessionPayload) {
-  const secretKey = getSecretKey();
-
-  return new SignJWT({
-    email: payload.email ?? undefined,
-    phone: payload.phone ?? undefined,
-    type: payload.type ?? undefined,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(payload.sub)
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(secretKey);
-}
-
-export async function verifySessionToken(token: string) {
-  const secretKey = getSecretKey();
-  const { payload } = await jwtVerify(token, secretKey);
-
-  const sub = typeof payload.sub === 'string' ? payload.sub : undefined;
-  const email = typeof payload.email === 'string' ? payload.email : undefined;
-  const phone = typeof payload.phone === 'string' ? payload.phone : undefined;
-  const type = typeof payload.type === 'string' ? payload.type : undefined;
-
-  if (!sub) throw new Error('Invalid session token');
-
-  return { userId: sub, email, phone, type };
-}
+export const AUTH_COOKIE_NAME = '__session';
 
 // Lightweight cookie parser for standard Request objects
 function parseCookieHeader(header: string | null | undefined): Record<string, string> {
@@ -64,7 +20,9 @@ function parseCookieHeader(header: string | null | undefined): Record<string, st
 
 // Returns a session object compatible with callers expecting session.user.id
 export async function getSession(req: Request) {
-  // Try NextRequest-style cookies first if available
+  const { adminAuth } = await import('./firebase-admin');
+  const { prisma } = await import('./prisma');
+
   const anyReq = req as any;
   let token: string | undefined;
   if (anyReq?.cookies && typeof anyReq.cookies.get === 'function') {
@@ -78,8 +36,20 @@ export async function getSession(req: Request) {
   if (!token) return null;
 
   try {
-    const { userId, email, phone, type } = await verifySessionToken(token);
-    return { user: { id: userId, email: email ?? null, phone: phone ?? null, type: type ?? null } };
+    const decoded = await adminAuth.verifySessionCookie(token, true);
+    const user = await prisma.user.findUnique({
+      where: { firebaseUid: decoded.uid },
+      select: { id: true, email: true, phone: true, type: true },
+    });
+    if (!user) return null;
+    return {
+      user: {
+        id: user.id,
+        email: user.email ?? null,
+        phone: user.phone ?? null,
+        type: user.type as string ?? null,
+      },
+    };
   } catch {
     return null;
   }

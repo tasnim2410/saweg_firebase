@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // All saweg images are publicly readable (CDN-served)
+    // Writes are server-only via firebase-admin (bypasses these rules)
+    match /saweg/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
