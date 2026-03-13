@@ -50,7 +50,7 @@ env:
     secret: firebase-private-key
 
   - variable: DATABASE_URL
-    secret: database-url@latest
+    secret: database-url
 
   - variable: RESEND_API_KEY
     secret: resend-api-key
