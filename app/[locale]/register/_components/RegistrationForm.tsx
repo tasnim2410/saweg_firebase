@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CheckCircle, ArrowLeft, Camera, Upload } from 'lucide-react';
 import styles from './RegistrationForm.module.css';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
 import SearchableCitySelect from '@/components/SearchableCitySelect';
@@ -146,11 +148,30 @@ export default function RegistrationForm({ role }: Props) {
       return;
     }
 
+    // Create Firebase user first, then get idToken for the server
+    let idToken: string;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, formData.email, password);
+      idToken = await cred.user.getIdToken();
+    } catch (firebaseErr: any) {
+      const code = firebaseErr?.code;
+      if (code === 'auth/email-already-in-use') {
+        pushToast({
+          title: titleFor('server'),
+          message: locale === 'ar' ? 'البريد الإلكتروني مستخدم بالفعل' : 'Email is already in use',
+        });
+      } else {
+        pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.' });
+      }
+      setLoading(false);
+      return;
+    }
+
     const payload = new FormData();
+    payload.append('idToken', idToken);
     payload.append('fullName', formData.fullName);
     payload.append('email', formData.email);
     payload.append('phone', normalizedPhone.e164);
-    payload.append('password', password);
     payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
 
     if (role === 'shipper') {

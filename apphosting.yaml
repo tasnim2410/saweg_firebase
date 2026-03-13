@@ -8,28 +8,26 @@ runConfig:
   memoryMiB: 512
   minInstances: 0
   maxInstances: 100
-  # Replace PROJECT_ID:REGION:INSTANCE_NAME with your Cloud SQL connection name
-  # e.g. my-project:us-central1:saweg-db
-  # cloudSqlInstances:
-  #   - PROJECT_ID:REGION:saweg-db
+  cloudSqlInstances:
+    - saweg-f8c50:africa-south1:saweg-db
 
 env:
   # ── Non-secret Firebase client config (safe to commit) ────────────────────
   # Replace these values with your Firebase project's config
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: YOUR_PROJECT_ID
+    value: saweg-f8c50
 
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: YOUR_PROJECT_ID.firebaseapp.com
+    value: saweg-f8c50.firebaseapp.com
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: YOUR_PROJECT_ID.firebasestorage.app
+    value: saweg-f8c50.firebasestorage.app
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "YOUR_MESSAGING_SENDER_ID"
+    value: "175029709733"
 
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: YOUR_APP_ID
+    value: 1:175029709733:web:507ffa47e9f194c26a564c
 
   - variable: NODE_ENV
     value: production

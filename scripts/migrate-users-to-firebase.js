@@ -98,6 +98,7 @@ async function run() {
     const importUsers = batch
       .filter(u => u.email || u.phone) // Firebase requires at least one identifier
       .map(u => ({
+        uid: u.id, // Use the existing DB id as Firebase UID (CUID, 25 chars)
         ...(u.email ? { email: u.email } : {}),
         ...(u.phone ? { phoneNumber: u.phone } : {}),
         displayName: u.fullName,
@@ -137,19 +138,14 @@ async function run() {
       }
     }
 
-    // Rate-limit lookups to avoid Firebase quota issues
-    // Write back Firebase UIDs to the DB
-    for (const user of batch) {
-      const uid = await getFirebaseUid(user);
-      if (uid) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { firebaseUid: uid },
-        });
-        console.log(`  Linked user ${user.id} → Firebase UID ${uid}`);
-      }
-      await sleep(50); // 50ms between lookups to avoid rate limiting
+    // Write Firebase UIDs back to DB (uid === user.id since we set it explicitly)
+    for (const user of batch.filter(u => u.email || u.phone)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { firebaseUid: user.id },
+      });
     }
+    console.log(`  Linked ${batch.filter(u => u.email || u.phone).length} users in DB.`);
   }
 
   console.log(`\nMigration complete: ${totalSuccess} imported, ${totalFail} failed.`);

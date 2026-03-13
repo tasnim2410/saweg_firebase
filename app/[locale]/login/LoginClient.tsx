@@ -4,6 +4,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 import styles from './auth.module.css';
 
 export default function LoginClient() {
@@ -72,15 +74,52 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      // Step 1: Resolve identifier to email (handles phone number logins)
+      let email = identifier.trim();
+      if (!email.includes('@')) {
+        const resolveRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ identifier }),
+        });
+        const resolveData = await resolveRes.json();
+        if (!resolveRes.ok || !resolveData?.email) {
+          pushToast({ title: titleFor('auth'), message: getErrorMessage('INVALID_CREDENTIALS') });
+          setLoading(false);
+          return;
+        }
+        email = resolveData.email;
+      }
+
+      // Step 2: Firebase sign in
+      let idToken: string;
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        idToken = await cred.user.getIdToken();
+      } catch (firebaseErr: any) {
+        const code = firebaseErr?.code;
+        if (
+          code === 'auth/invalid-credential' ||
+          code === 'auth/wrong-password' ||
+          code === 'auth/user-not-found'
+        ) {
+          pushToast({ title: titleFor('auth'), message: getErrorMessage('INVALID_CREDENTIALS') });
+        } else {
+          pushToast({ title: titleFor('auth'), message: t('somethingWentWrong') });
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Exchange Firebase idToken for a server session cookie
+      const sessionRes = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ idToken }),
       });
-
-      const data = await res.json();
-      if (!res.ok || !data?.ok) {
-        pushToast({ title: titleFor('auth'), message: getErrorMessage(data?.error ?? 'UNKNOWN') });
+      const sessionData = await sessionRes.json();
+      if (!sessionRes.ok || !sessionData?.ok) {
+        pushToast({ title: titleFor('auth'), message: getErrorMessage(sessionData?.error ?? 'UNKNOWN') });
         setLoading(false);
         return;
       }

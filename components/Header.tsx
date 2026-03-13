@@ -8,6 +8,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Header.module.css';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 
 export default function Header() {
   const t = useTranslations('header');
@@ -598,6 +600,7 @@ export default function Header() {
 
   const logout = async () => {
     try {
+      await signOut(auth);
       await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
       setAuthUser(null);

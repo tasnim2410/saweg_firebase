@@ -25,6 +25,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getStorage } = require('firebase-admin/storage');
 const { PrismaClient } = require('@prisma/client');
@@ -45,10 +46,32 @@ const prisma = new PrismaClient();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
+// Build a Cloudinary download API URL (works for private/authenticated images)
+function cloudinaryDownloadUrl(originalUrl) {
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'daeq7alf4';
+
+  if (!apiKey || !apiSecret) return originalUrl;
+
+  const match = originalUrl.match(/\/image\/upload\/(v\d+\/)?(.+)$/);
+  if (!match) return originalUrl;
+
+  const publicIdWithExt = match[2];
+  const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ''); // strip extension
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const toSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+  const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+
+  return `https://api.cloudinary.com/v1_1/${cloudName}/image/download?public_id=${encodeURIComponent(publicId)}&api_key=${apiKey}&timestamp=${timestamp}&signature=${signature}`;
+}
+
 function downloadBuffer(url) {
+  const resolvedUrl = cloudinaryDownloadUrl(url);
   return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-    client.get(url, res => {
+    const client = resolvedUrl.startsWith('https') ? https : http;
+    client.get(resolvedUrl, res => {
       if (res.statusCode !== 200) {
         reject(new Error(`HTTP ${res.statusCode} for ${url}`));
         res.resume();
