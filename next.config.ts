@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: 'standalone',
   productionBrowserSourceMaps: false,
   compress: true,
   images: {
