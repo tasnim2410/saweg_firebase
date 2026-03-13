@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword } from '@/lib/password';
 
 export async function POST(req: Request) {
   try {
@@ -46,27 +45,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user exists
+    // Check if user exists and get their Firebase UID
     const user = await (prisma as any).user.findUnique({
       where: { email },
-      select: { id: true },
+      select: { id: true, firebaseUid: true },
     });
 
-    if (!user) {
+    if (!user || !user.firebaseUid) {
       return NextResponse.json(
         { ok: false, error: 'USER_NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    // Hash the new password
-    const passwordHash = await hashPassword(newPassword);
-
-    // Update the user's password
-    await (prisma as any).user.update({
-      where: { email },
-      data: { passwordHash },
-    });
+    // Update password in Firebase Auth
+    const { adminAuth } = await import('@/lib/firebase-admin');
+    await adminAuth.updateUser(user.firebaseUid, { password: newPassword });
 
     // Mark the token as used
     await (prisma as any).passwordResetCode.update({
