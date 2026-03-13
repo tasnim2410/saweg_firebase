@@ -18,6 +18,20 @@ function parseCookieHeader(header: string | null | undefined): Record<string, st
   return result;
 }
 
+// Verifies a session cookie token and returns { userId, type }
+export async function verifySessionToken(token: string) {
+  const { adminAuth } = await import('./firebase-admin');
+  const { prisma } = await import('./prisma');
+
+  const decoded = await adminAuth.verifySessionCookie(token, true);
+  const user = await prisma.user.findUnique({
+    where: { firebaseUid: decoded.uid },
+    select: { id: true, type: true },
+  });
+  if (!user) throw new Error('User not found');
+  return { userId: user.id, type: user.type };
+}
+
 // Returns a session object compatible with callers expecting session.user.id
 export async function getSession(req: Request) {
   const { adminAuth } = await import('./firebase-admin');
