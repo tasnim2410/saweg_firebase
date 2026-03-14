@@ -23,7 +23,7 @@ export async function verifySessionToken(token: string) {
   const { adminAuth } = await import('./firebase-admin');
   const { prisma } = await import('./prisma');
 
-  const decoded = await adminAuth.verifySessionCookie(token, true);
+  const decoded = await adminAuth.verifySessionCookie(token, false);
   const user = await prisma.user.findUnique({
     where: { firebaseUid: decoded.uid },
     select: { id: true, type: true },
@@ -50,7 +50,8 @@ export async function getSession(req: Request) {
   if (!token) return null;
 
   try {
-    const decoded = await adminAuth.verifySessionCookie(token, true);
+    // false = skip revocation check (local JWT verify only — faster, no network call to Firebase)
+    const decoded = await adminAuth.verifySessionCookie(token, false);
     const user = await prisma.user.findUnique({
       where: { firebaseUid: decoded.uid },
       select: { id: true, email: true, phone: true, type: true },

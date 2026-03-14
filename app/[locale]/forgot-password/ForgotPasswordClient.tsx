@@ -2,6 +2,9 @@
 
 import { useLocale } from 'next-intl';
 import { useState } from 'react';
+// Note: after password reset, Firebase redirects to saweg-f8c50.firebaseapp.com (default handler)
+// To redirect back to your app instead, add your domain to Firebase Console →
+// Authentication → Settings → Authorized domains, then restore the `url` parameter.
 import Link from 'next/link';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
@@ -28,14 +31,11 @@ export default function ForgotPasswordClient() {
     setLoading(true);
 
     try {
-      const origin = window.location.origin;
-      await sendPasswordResetEmail(auth, email.trim(), {
-        url: `${origin}/${locale}/login`,
-      });
+      await sendPasswordResetEmail(auth, email.trim());
       setSent(true);
     } catch (err: any) {
       const code = err?.code;
-      if (code === 'auth/user-not-found' || code === 'auth/invalid-email') {
+      if (code === 'auth/user-not-found' || code === 'auth/invalid-email' || code === 'auth/invalid-credential') {
         setError(isAr ? 'هذا البريد الإلكتروني غير مسجل' : 'This email is not registered');
       } else {
         setError(isAr ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.');
