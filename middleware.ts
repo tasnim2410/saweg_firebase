@@ -16,6 +16,11 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
+  // Skip API routes, static assets, and Next.js internals
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.startsWith('/_vercel/')) {
+    return NextResponse.next();
+  }
+
   // Extract locale from current pathname
   const segments = pathname.split('/').filter(Boolean);
   const locale = segments[0] && locales.includes(segments[0] as any) ? segments[0] : 'ar';
