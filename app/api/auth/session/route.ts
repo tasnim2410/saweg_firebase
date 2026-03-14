@@ -8,6 +8,10 @@ export const runtime = 'nodejs';
 const SESSION_EXPIRES_IN_MS = 60 * 60 * 24 * 14 * 1000;
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
+export function GET() {
+  return NextResponse.json({ ok: true, method: 'GET' });
+}
+
 export async function POST(req: Request) {
   try {
     const { adminAuth } = await import('@/lib/firebase-admin');
