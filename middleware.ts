@@ -10,6 +10,7 @@ const intlMiddleware = createMiddleware({
   locales,
   defaultLocale: 'ar',
   localePrefix: 'always',
+  localeDetection: false,
 });
 
 export default async function middleware(req: NextRequest) {

@@ -64,11 +64,11 @@ env:
   - variable: ADMIN_IDENTIFIERS
     secret: admin-identifiers
 
-  - variable: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  - variable: VAPID_PUBLIC_KEY
     secret: vapid-public-key
 
   - variable: VAPID_PRIVATE_KEY
     secret: vapid-private-key
 
-  - variable: VAPID_EMAIL
+  - variable: VAPID_SUBJECT
     secret: vapid-email
