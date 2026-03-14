@@ -744,7 +744,7 @@ export default function AddMerchantGoodsPostPage() {
                 <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1.5px solid #e5e7eb', borderRadius: '0.5rem', backgroundColor: '#f9fafb' }}>
                     <img
-                      src={VEHICLE_TYPE_CONFIG.find(v => v.id === vt)?.imagePath || ''}
+                      src={VEHICLE_TYPE_CONFIG.find(v => v.id === vt)?.image.src || ''}
                       alt={getVehicleLabel(vt, locale === 'ar' ? 'ar' : 'en')}
                       style={{ width: '40px', height: '35px', objectFit: 'contain', padding: '4px', borderRadius: '0.25rem', backgroundColor: '#e5e7eb' }}
                       loading="lazy"
@@ -804,7 +804,7 @@ export default function AddMerchantGoodsPostPage() {
                           }}
                         >
                           <img
-                            src={opt.imagePath}
+                            src={opt.image.src}
                             alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
                             className={styles.vehicleTypeOptionThumb}
                             loading="lazy"

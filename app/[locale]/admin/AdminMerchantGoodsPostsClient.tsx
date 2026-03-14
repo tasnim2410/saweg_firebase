@@ -1432,7 +1432,7 @@ export default function AdminMerchantGoodsPostsClient() {
 
                                 <img
 
-                                  src={selected.imagePath}
+                                  src={selected.image.src}
 
                                   alt={getVehicleLabel(selected.id, locale === 'ar' ? 'ar' : 'en')}
 
@@ -1512,7 +1512,7 @@ export default function AdminMerchantGoodsPostsClient() {
 
                               <img
 
-                                src={opt.imagePath}
+                                src={opt.image.src}
 
                                 alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
 

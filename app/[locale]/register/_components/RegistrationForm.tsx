@@ -431,7 +431,7 @@ export default function RegistrationForm({ role }: Props) {
                         {selectedCarKind ? (
                           <span className={styles.carKindButtonInner}>
                             <img
-                              src={selectedCarKind.imagePath}
+                              src={selectedCarKind.image.src}
                               alt={getVehicleLabel(selectedCarKind.id, locale === 'ar' ? 'ar' : 'en')}
                               className={styles.carKindThumb}
                               loading="lazy"
@@ -461,7 +461,7 @@ export default function RegistrationForm({ role }: Props) {
                               }}
                             >
                               <img
-                                src={opt.imagePath}
+                                src={opt.image.src}
                                 alt={getVehicleLabel(opt.id, locale === 'ar' ? 'ar' : 'en')}
                                 className={styles.carKindOptionThumb}
                                 loading="lazy"

@@ -580,7 +580,7 @@ export default function ProvidersPageClient() {
                     {vehicleTypeInfo && (
                       <div className={styles.vehicleBadge}>
                         <img 
-                          src={vehicleTypeInfo.imagePath} 
+                          src={vehicleTypeInfo.imageSrc} 
                           alt="" 
                           className={styles.vehicleBadgeImage}
                         />

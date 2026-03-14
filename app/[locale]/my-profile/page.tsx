@@ -9,22 +9,12 @@ import { normalizePhoneNumber } from '@/lib/phone';
 import { getLocationOptionGroups } from '@/lib/locations';
 import LocationSharing from '../dashboard/_components/LocationSharing';
 import { Camera, Bell, Loader2, Check, AlertCircle, MapPin, ArrowLeft } from 'lucide-react';
+import { VEHICLE_TYPE_CONFIG } from '@/lib/vehicleTypes';
 
-const CAR_KIND_OPTIONS: Array<{ value: string; imagePath: string }> = [
-  { value: 'شاحنة صندوقية (Van / Box Truck)', imagePath: '/images/van_box_truck.png' },
-  { value: 'شاحنة مسطحة (Flatbed Truck)', imagePath: '/images/flatbed_truck.png' },
-  { value: 'شاحنة مبردة (Reefer Truck)', imagePath: '/images/reefer_truck.png' },
-  { value: 'شاحنة قلابة (Dump Truck / Tipper)', imagePath: '/images/dump_truck_tipper.png' },
-  { value: 'شاحنة مغطاة (Curtainsider)', imagePath: '/images/curtainsider.png' },
-  { value: 'شاحنة صهريج (Tanker Truck)', imagePath: '/images/tanker_truck.png' },
-  { value: 'شاحنة برافعة خلفية (Tail-lift Truck)', imagePath: '/images/tail_lift_truck.png' },
-  { value: 'شاحنة رافعة (Crane Truck)', imagePath: '/images/crane_truck.png' },
-  { value: 'شاحنة صندوقية بجوانب قابلة للطي (Drop-side Truck)', imagePath: '/images/drop_side_truck.png' },
-  { value: 'شاحنة حاويات/شاسيه حامل حاويات (Container Truck)', imagePath: '/images/container_truck.png' },
-  { value: 'شاحنة صهريج أغذية (Food Grade Tanker)', imagePath: '/images/food_grade_tranker.png' },
-  { value: 'نصف مقطورة مجرورة(semi Trailer)', imagePath: '/images/semi_trailer.png' },
-  { value: 'أخرى (Other)', imagePath: '/images/other_truck.png' },
-];
+const CAR_KIND_OPTIONS = VEHICLE_TYPE_CONFIG.map(v => ({
+  value: v.id,
+  imageSrc: v.image.src,
+}));
 type User = {
   id: string;
   fullName: string;
@@ -805,7 +795,7 @@ return (
                     {selectedTrucksNeeded ? (
                       <span className={styles.carKindButtonInner}>
                         <img
-                          src={selectedTrucksNeeded.imagePath}
+                          src={selectedTrucksNeeded.imageSrc}
                           alt={selectedTrucksNeeded.value}
                           className={styles.carKindThumb}
                           loading="lazy"
@@ -834,7 +824,7 @@ return (
                           }}
                         >
                           <img
-                            src={opt.imagePath}
+                            src={opt.imageSrc}
                             alt={opt.value}
                             className={styles.carKindOptionThumb}
                             loading="lazy"

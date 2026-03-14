@@ -20,10 +20,25 @@ export async function POST(req: Request) {
     const decoded = await adminAuth.verifyIdToken(idToken);
 
     // Ensure a corresponding User row exists in our DB
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { firebaseUid: decoded.uid },
       select: { id: true, type: true },
     });
+
+    // Auto-link: if no user found by firebaseUid, try matching by email
+    if (!user && decoded.email) {
+      const emailUser = await prisma.user.findUnique({
+        where: { email: decoded.email.toLowerCase() },
+        select: { id: true, type: true, firebaseUid: true },
+      });
+      if (emailUser && !emailUser.firebaseUid) {
+        await prisma.user.update({
+          where: { id: emailUser.id },
+          data: { firebaseUid: decoded.uid },
+        });
+        user = { id: emailUser.id, type: emailUser.type };
+      }
+    }
 
     if (!user) {
       return NextResponse.json({ ok: false, error: 'USER_NOT_FOUND' }, { status: 404 });

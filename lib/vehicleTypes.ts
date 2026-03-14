@@ -1,24 +1,50 @@
 // Shared vehicle type configuration
 // Use short IDs as values for storage/API, separate display labels for each locale
 
-export const VEHICLE_TYPE_CONFIG = [
-  { id: 'van-box', labelAR: 'شاحنة صندوقية', labelEN: 'Van / Box Truck', imagePath: '/images/van_icon.svg' },
-  { id: 'flatbed', labelAR: 'شاحنة مسطحة', labelEN: 'Flatbed Truck', imagePath: '/images/flatbet_truck_icon.svg' },
-  { id: 'reefer', labelAR: 'شاحنة مبردة', labelEN: 'Reefer Truck', imagePath: '/images/reefer_truck_icon.svg' },
-  { id: 'dump', labelAR: 'شاحنة قلابة', labelEN: 'Dump Truck / Tipper', imagePath: '/images/dump_truck_icon.svg' },
-  { id: 'curtainsider', labelAR: 'شاحنة مغطاة', labelEN: 'Curtainsider', imagePath: '/images/curtainsider_icon.svg' },
-  { id: 'tanker', labelAR: 'شاحنة صهريج', labelEN: 'Tanker Truck', imagePath: '/images/tanker_truck_icon.svg' },
-  { id: 'tail-lift', labelAR: 'شاحنة برافعة خلفية', labelEN: 'Tail-lift Truck', imagePath: '/images/tail_lift_truck_icon.svg' },
-  { id: 'crane', labelAR: 'شاحنة رافعة', labelEN: 'Crane Truck', imagePath: '/images/crane_truck_icon.svg' },
-  { id: 'drop-side', labelAR: 'شاحنة صندوقية بجوانب قابلة للطي', labelEN: 'Drop-side Truck', imagePath: '/images/drop_side_truck_icon.svg' },
-  { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', imagePath: '/images/container_truck_icon.svg' },
-  { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', imagePath: '/images/food_grade_tanker.svg' },
-  { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', imagePath: '/images/semi_trailer_icon.svg' },
-  { id: 'towing', labelAR: 'شاحنة سحب', labelEN: 'Towing Truck', imagePath: '/images/towing_truck_icon.svg' },
-  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', imagePath: '/images/other_icon.svg' },
-] as const;
+import vanIcon from '@/public/images/van_icon.svg';
+import flatbedIcon from '@/public/images/flatbet_truck_icon.svg';
+import reeferIcon from '@/public/images/reefer_truck_icon.svg';
+import dumpIcon from '@/public/images/dump_truck_icon.svg';
+import curtainsiderIcon from '@/public/images/curtainsider_icon.svg';
+import tankerIcon from '@/public/images/tanker_truck_icon.svg';
+import tailLiftIcon from '@/public/images/tail_lift_truck_icon.svg';
+import craneIcon from '@/public/images/crane_truck_icon.svg';
+import dropSideIcon from '@/public/images/drop_side_truck_icon.svg';
+import containerIcon from '@/public/images/container_truck_icon.svg';
+import foodGradeTankerIcon from '@/public/images/food_grade_tanker.svg';
+import semiTrailerIcon from '@/public/images/semi_trailer_icon.svg';
+import towingIcon from '@/public/images/towing_truck_icon.svg';
+import otherIcon from '@/public/images/other_icon.svg';
+import type { StaticImageData } from 'next/image';
 
-export type VehicleTypeId = typeof VEHICLE_TYPE_CONFIG[number]['id'];
+export type VehicleTypeId =
+  | 'van-box' | 'flatbed' | 'reefer' | 'dump' | 'curtainsider'
+  | 'tanker' | 'tail-lift' | 'crane' | 'drop-side' | 'container'
+  | 'food-grade' | 'semi-trailer' | 'towing' | 'other';
+
+interface VehicleTypeConfigItem {
+  id: VehicleTypeId;
+  labelAR: string;
+  labelEN: string;
+  image: StaticImageData;
+}
+
+export const VEHICLE_TYPE_CONFIG: VehicleTypeConfigItem[] = [
+  { id: 'van-box', labelAR: 'شاحنة صندوقية', labelEN: 'Van / Box Truck', image: vanIcon },
+  { id: 'flatbed', labelAR: 'شاحنة مسطحة', labelEN: 'Flatbed Truck', image: flatbedIcon },
+  { id: 'reefer', labelAR: 'شاحنة مبردة', labelEN: 'Reefer Truck', image: reeferIcon },
+  { id: 'dump', labelAR: 'شاحنة قلابة', labelEN: 'Dump Truck / Tipper', image: dumpIcon },
+  { id: 'curtainsider', labelAR: 'شاحنة مغطاة', labelEN: 'Curtainsider', image: curtainsiderIcon },
+  { id: 'tanker', labelAR: 'شاحنة صهريج', labelEN: 'Tanker Truck', image: tankerIcon },
+  { id: 'tail-lift', labelAR: 'شاحنة برافعة خلفية', labelEN: 'Tail-lift Truck', image: tailLiftIcon },
+  { id: 'crane', labelAR: 'شاحنة رافعة', labelEN: 'Crane Truck', image: craneIcon },
+  { id: 'drop-side', labelAR: 'شاحنة صندوقية بجوانب قابلة للطي', labelEN: 'Drop-side Truck', image: dropSideIcon },
+  { id: 'container', labelAR: 'شاحنة حاويات/شاسيه حامل حاويات', labelEN: 'Container Truck', image: containerIcon },
+  { id: 'food-grade', labelAR: 'شاحنة صهريج أغذية', labelEN: 'Food Grade Tanker', image: foodGradeTankerIcon },
+  { id: 'semi-trailer', labelAR: 'نصف مقطورة مجرورة', labelEN: 'Semi Trailer', image: semiTrailerIcon },
+  { id: 'towing', labelAR: 'شاحنة سحب', labelEN: 'Towing Truck', image: towingIcon },
+  { id: 'other', labelAR: 'أخرى', labelEN: 'Other', image: otherIcon },
+];
 
 // For backward compatibility with existing data - map old combined labels to new IDs
 export const LEGACY_VEHICLE_TYPE_MAP: Record<string, VehicleTypeId> = {
@@ -44,14 +70,14 @@ export function getVehicleLabel(id: VehicleTypeId, locale: 'ar' | 'en'): string 
   return locale === 'ar' ? config.labelAR : config.labelEN;
 }
 
-// Helper to get image path
-export function getVehicleImagePath(id: VehicleTypeId): string {
+// Helper to get image
+export function getVehicleImage(id: VehicleTypeId): StaticImageData | null {
   const config = VEHICLE_TYPE_CONFIG.find(v => v.id === id);
-  return config?.imagePath ?? '';
+  return config?.image ?? null;
 }
 
 // All valid vehicle type IDs for validation
-export const VALID_VEHICLE_TYPE_IDS = new Set(VEHICLE_TYPE_CONFIG.map(v => v.id));
+export const VALID_VEHICLE_TYPE_IDS = new Set<VehicleTypeId>(VEHICLE_TYPE_CONFIG.map(v => v.id));
 
 // Check if a value is a valid vehicle type (supports both new IDs and legacy labels)
 export function isValidVehicleType(value: string): value is VehicleTypeId {
