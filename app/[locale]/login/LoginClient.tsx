@@ -112,7 +112,7 @@ export default function LoginClient() {
       }
 
       // Step 3: Exchange Firebase idToken for a server session cookie
-      const sessionRes = await fetch('/api/auth/session', {
+      const sessionRes = await fetch('/api/create-session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ idToken }),

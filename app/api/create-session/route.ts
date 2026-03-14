@@ -9,7 +9,7 @@ const SESSION_EXPIRES_IN_MS = 60 * 60 * 24 * 14 * 1000;
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 export function GET() {
-  return NextResponse.json({ ok: true, method: 'GET' });
+  return NextResponse.json({ ok: true, route: '/api/create-session' });
 }
 
 export async function POST(req: Request) {
