@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './WhyUseSection.module.css';
+import whyImg2 from '@/public/images/why-this-app2.jpg';
 
 type AuthMeResponse = {
   ok: boolean;
@@ -126,7 +127,7 @@ export default function WhyUseSection() {
                   className={`${styles.truckAnimate} ${styles.truck1}`}
                 /> */}
                 <Image
-                  src="/images/why-this-app2.jpg"
+                  src={whyImg2}
                   alt={isRTL ? 'شاحنة سواق 2' : 'Saweg truck 2'}
                   fill
                   className={`${styles.truckAnimate} ${styles.truck2}`}

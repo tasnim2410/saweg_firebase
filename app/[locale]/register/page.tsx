@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Truck, Package } from 'lucide-react';
 import styles from './register.module.css';
+import logoImg from '@/public/images/logo.png';
 
 export default function RegisterPage() {
   const t = useTranslations('register');
@@ -38,7 +39,7 @@ export default function RegisterPage() {
           <div className={styles.header}>
             <div className={styles.logoWrapper}>
               <Image
-                src="/images/logo.png"
+                src={logoImg}
                 alt="Saweg logo"
                 width={200}
                 height={80}

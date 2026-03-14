@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './ContactSection.module.css';
+import contactImg from '@/public/images/contact.jpg';
 
 export default function ContactSection() {
   const t = useTranslations('contact');
@@ -77,7 +78,7 @@ export default function ContactSection() {
             <div className={styles.imageSide}>
               <div className={styles.imageContainer}>
                 <Image
-                  src="/images/contact.jpg"
+                  src={contactImg}
                   alt={locale === 'ar' ? 'صورة شاحنات سواق' : 'Saweg contact trucks'}
                   fill
                   className={styles.image}

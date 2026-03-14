@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './HowToUseSection.module.css';
+import appPreviewImg from '@/public/images/app-preview.png';
 
 export default function HowToUseSection() {
   const t = useTranslations('howToUse');
@@ -79,7 +80,7 @@ export default function HowToUseSection() {
               <div className={styles.screen}>
                 <div className={styles.screenContent}>
                   <Image
-                    src="/images/app-preview.png"
+                    src={appPreviewImg}
                     alt={locale === 'ar' ? 'معاينة تطبيق سواق' : 'Saweg app preview'}
                     width={240}
                     height={480}

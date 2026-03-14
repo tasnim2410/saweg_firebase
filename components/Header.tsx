@@ -8,6 +8,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Header.module.css';
+import logoImg from '@/public/images/logo.png';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 
@@ -662,7 +663,7 @@ export default function Header() {
           <div className={styles.logoWrapper}>
             <Link href={`/${locale}`} className={styles.logoLink}>
               <Image
-                src="/images/logo.png"
+                src={logoImg}
                 alt="Saweg logo"
                 width={120}
                 height={48}

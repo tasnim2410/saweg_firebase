@@ -5,8 +5,9 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './HeroSection.module.css';
+import hero1Img from '@/public/images/hero1.jpg';
 
-const HERO_IMAGES = ['/images/hero1.jpg', '/images/hero2.png', '/images/hero3.jpg'];
+const HERO_IMAGES = [hero1Img];
 
 type AuthMeResponse = {
   ok: boolean;

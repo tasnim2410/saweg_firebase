@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import styles from './FeaturesSection.module.css';
+import truckImg from '@/public/images/truck.png';
 
 export default function FeaturesSection() {
   const t = useTranslations('features');
@@ -59,7 +60,7 @@ export default function FeaturesSection() {
               className={styles.truckContainer}
             >
               <Image
-                src="/images/truck.png"
+                src={truckImg}
                 alt={isRTL ? 'شاحنة سواق' : 'Saweg truck'}
                 width={600}
                 height={300}

@@ -5,6 +5,7 @@ import { Facebook, Twitter, Instagram, Linkedin, Youtube, Phone } from 'lucide-r
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Footer.module.css';
+import logoImg from '@/public/images/logo.png';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -18,7 +19,7 @@ export default function Footer() {
           <div>
             <div className={styles.logoWrapper}>
               <Image
-                src="/images/logo.png"
+                src={logoImg}
                 alt="Saweg logo"
                 width={240}
                 height={140}
