@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
 import { prisma } from '@/lib/prisma';
 import { AUTH_COOKIE_NAME } from '@/lib/session';
 
@@ -11,6 +10,8 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 export async function POST(req: Request) {
   try {
+    const { adminAuth } = await import('@/lib/firebase-admin');
+
     const { idToken } = await req.json();
     if (!idToken) {
       return NextResponse.json({ ok: false, error: 'ID_TOKEN_REQUIRED' }, { status: 400 });

@@ -6,7 +6,6 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
-  serverExternalPackages: ['firebase-admin'],
   productionBrowserSourceMaps: false,
   compress: true,
   images: {

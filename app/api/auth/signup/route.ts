@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { adminAuth } from '@/lib/firebase-admin';
 import { AUTH_COOKIE_NAME } from '@/lib/session';
 import { cloudinaryEnabled, uploadImageBuffer } from '@/lib/storage';
 import { normalizePhoneNumber } from '@/lib/phone';
@@ -89,6 +88,7 @@ export async function POST(req: Request) {
     if (!type) return NextResponse.json({ ok: false, error: 'USER_TYPE_REQUIRED' }, { status: 400 });
 
     // Verify the Firebase ID token
+    const { adminAuth } = await import('@/lib/firebase-admin');
     const decoded = await adminAuth.verifyIdToken(idToken);
     const firebaseUid = decoded.uid;
 
