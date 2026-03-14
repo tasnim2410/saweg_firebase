@@ -5,7 +5,6 @@ import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 import { locales } from './i18n/request';
 import { AUTH_COOKIE_NAME } from './lib/session';
-import { isAdminIdentifier } from './lib/admin';
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -48,25 +47,8 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    try {
-      const { adminAuth } = await import('./lib/firebase-admin');
-      const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
-
-      if (section === 'admin') {
-        const isAdmin = Boolean(
-          decoded.admin === true ||
-          (decoded.email && isAdminIdentifier(decoded.email)) ||
-          (decoded.phone_number && isAdminIdentifier(decoded.phone_number))
-        );
-        if (!isAdmin) {
-          return NextResponse.redirect(new URL(`/${locale}`, req.url));
-        }
-      }
-    } catch {
-      const loginUrl = new URL(`/${locale}/login`, req.url);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    // Full cookie verification happens server-side in each protected page/layout.
+    // Middleware runs on Edge runtime which cannot load firebase-admin (Node.js only).
   }
 
   return intlMiddleware(req);
