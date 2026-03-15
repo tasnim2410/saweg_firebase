@@ -184,11 +184,22 @@ export default function RegistrationForm({ role }: Props) {
       setPendingPhone(normalizedPhone.e164);
       setConfirmResult(result);
       setPhoneStep(true);
-    } catch {
-      pushToast({
-        title: titleFor('phone'),
-        message: locale === 'ar' ? 'فشل إرسال رمز التحقق. يرجى التحقق من رقم الهاتف.' : 'Failed to send verification code. Please check your phone number.',
-      });
+    } catch (err: any) {
+      console.error('signInWithPhoneNumber error:', err?.code, err?.message, err);
+      const firebaseCode: string = err?.code ?? 'unknown';
+      let msg = locale === 'ar'
+        ? `فشل إرسال رمز التحقق. (${firebaseCode})`
+        : `Failed to send verification code. (${firebaseCode})`;
+      if (firebaseCode === 'auth/quota-exceeded' || firebaseCode === 'auth/too-many-requests') {
+        msg = locale === 'ar' ? 'تم تجاوز الحد اليومي. حاول مرة أخرى لاحقاً.' : 'SMS quota exceeded. Please try again later.';
+      } else if (firebaseCode === 'auth/captcha-check-failed') {
+        msg = locale === 'ar' ? 'فشل التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.' : 'reCAPTCHA check failed. Please refresh and try again.';
+      } else if (firebaseCode === 'auth/invalid-phone-number') {
+        msg = locale === 'ar' ? 'رقم الهاتف غير صالح.' : 'Invalid phone number format.';
+      } else if (firebaseCode === 'auth/operation-not-allowed') {
+        msg = locale === 'ar' ? 'تسجيل الدخول بالهاتف غير مفعّل.' : 'Phone auth is not enabled in Firebase.';
+      }
+      pushToast({ title: titleFor('phone'), message: msg });
       // Reset recaptcha on failure so next attempt creates a fresh one
       recaptchaRef.current = null;
     } finally {
