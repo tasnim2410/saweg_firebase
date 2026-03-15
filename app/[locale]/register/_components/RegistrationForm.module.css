@@ -315,6 +315,30 @@
   transform: translateY(0);
 }
 
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancelOtpButton {
+  width: 100%;
+  padding: 12px 24px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1.5px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelOtpButton:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
 /* Success State */
 .container {
   min-height: 100vh;

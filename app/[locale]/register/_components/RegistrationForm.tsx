@@ -4,10 +4,17 @@ import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle, ArrowLeft, Camera, Upload } from 'lucide-react';
 import styles from './RegistrationForm.module.css';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  sendEmailVerification,
+  signOut,
+  type ConfirmationResult,
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 import { normalizePhoneNumber } from '@/lib/phone';
 import { VEHICLE_TYPE_CONFIG, getVehicleLabel, isValidVehicleType, type VehicleTypeId } from '@/lib/vehicleTypes';
@@ -34,6 +41,13 @@ export default function RegistrationForm({ role }: Props) {
   const [loading, setLoading] = useState(false);
   const [carKindOpen, setCarKindOpen] = useState(false);
   const [customCarKind, setCustomCarKind] = useState('');
+
+  // Phone OTP step
+  const [phoneStep, setPhoneStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [confirmResult, setConfirmResult] = useState<ConfirmationResult | null>(null);
+  const [pendingPhone, setPendingPhone] = useState('');
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
   const [toasts, setToasts] = useState<
     Array<{
@@ -127,8 +141,20 @@ export default function RegistrationForm({ role }: Props) {
       return;
     }
 
-    if (password.length < 6) {
-      pushToast({ title: titleFor('password'), message: t('errors.passwordTooShort') });
+    if (password.length < 8) {
+      pushToast({ title: titleFor('password'), message: locale === 'ar' ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters' });
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      pushToast({ title: titleFor('password'), message: locale === 'ar' ? 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل' : 'Password must contain at least one uppercase letter' });
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      pushToast({ title: titleFor('password'), message: locale === 'ar' ? 'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل' : 'Password must contain at least one lowercase letter' });
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      pushToast({ title: titleFor('password'), message: locale === 'ar' ? 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل' : 'Password must contain at least one number' });
       return;
     }
     if (password !== repeatPassword) {
@@ -148,55 +174,89 @@ export default function RegistrationForm({ role }: Props) {
       return;
     }
 
-    // Create Firebase user first, then get idToken for the server
-    let idToken: string;
+    // Send OTP to verify phone before creating the account
+    setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, formData.email, password);
-      idToken = await cred.user.getIdToken();
-    } catch (firebaseErr: any) {
-      const code = firebaseErr?.code;
-      if (code === 'auth/email-already-in-use') {
-        pushToast({
-          title: titleFor('server'),
-          message: locale === 'ar' ? 'البريد الإلكتروني مستخدم بالفعل' : 'Email is already in use',
-        });
-      } else {
-        pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.' });
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
       }
+      const result = await signInWithPhoneNumber(auth, normalizedPhone.e164, recaptchaRef.current);
+      setPendingPhone(normalizedPhone.e164);
+      setConfirmResult(result);
+      setPhoneStep(true);
+    } catch {
+      pushToast({
+        title: titleFor('phone'),
+        message: locale === 'ar' ? 'فشل إرسال رمز التحقق. يرجى التحقق من رقم الهاتف.' : 'Failed to send verification code. Please check your phone number.',
+      });
+      // Reset recaptcha on failure so next attempt creates a fresh one
+      recaptchaRef.current = null;
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!confirmResult) return;
+    if (!otp.trim()) {
+      pushToast({ title: titleFor('phone'), message: locale === 'ar' ? 'يرجى إدخال رمز التحقق' : 'Please enter the verification code' });
       return;
     }
 
-    const payload = new FormData();
-    payload.append('idToken', idToken);
-    payload.append('fullName', formData.fullName);
-    payload.append('email', formData.email);
-    payload.append('phone', normalizedPhone.e164);
-    payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
-
-    if (role === 'shipper') {
-      const finalCarKind = formData.carKind === 'other' && customCarKind.trim()
-        ? customCarKind.trim()
-        : formData.carKind;
-      payload.append('carKind', finalCarKind);
-      payload.append('maxCharge', formData.maxCharge);
-      payload.append('maxChargeUnit', formData.maxChargeUnit);
-      payload.append('shipperCity', formData.shipperCity);
-      if (truckImage) payload.append('truckImage', truckImage);
-    }
-
-    if (role === 'merchant') {
-      payload.append('placeOfBusiness', formData.placeOfBusiness);
-      payload.append('merchantCity', formData.merchantCity);
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        body: payload,
-      });
+      // Confirm OTP (signs in a phone-only Firebase user)
+      await confirmResult.confirm(otp.trim());
+      // Sign out the phone session — we only needed it for verification
+      await signOut(auth);
 
+      // Create the real email/password Firebase user
+      let idToken: string;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, formData.email, password);
+        idToken = await cred.user.getIdToken();
+        // Best-effort email verification
+        await sendEmailVerification(cred.user).catch(() => null);
+      } catch (firebaseErr: any) {
+        const code = firebaseErr?.code;
+        if (code === 'auth/email-already-in-use') {
+          pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'البريد الإلكتروني مستخدم بالفعل' : 'Email is already in use' });
+        } else {
+          pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.' });
+        }
+        return;
+      }
+
+      const normalizedPhone = normalizePhoneNumber(formData.phone);
+      if (!normalizedPhone.ok) {
+        pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
+        return;
+      }
+
+      const payload = new FormData();
+      payload.append('idToken', idToken);
+      payload.append('fullName', formData.fullName);
+      payload.append('email', formData.email);
+      payload.append('phone', normalizedPhone.e164);
+      payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
+
+      if (role === 'shipper') {
+        const finalCarKind = formData.carKind === 'other' && customCarKind.trim()
+          ? customCarKind.trim()
+          : formData.carKind;
+        payload.append('carKind', finalCarKind);
+        payload.append('maxCharge', formData.maxCharge);
+        payload.append('maxChargeUnit', formData.maxChargeUnit);
+        payload.append('shipperCity', formData.shipperCity);
+        if (truckImage) payload.append('truckImage', truckImage);
+      }
+
+      if (role === 'merchant') {
+        payload.append('placeOfBusiness', formData.placeOfBusiness);
+        payload.append('merchantCity', formData.merchantCity);
+      }
+
+      const res = await fetch('/api/auth/signup', { method: 'POST', body: payload });
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
@@ -204,10 +264,7 @@ export default function RegistrationForm({ role }: Props) {
         if (code === 'IMAGE_TOO_LARGE') {
           const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_TRUCK_IMAGE_BYTES;
           const maxMb = Math.floor(maxBytes / (1024 * 1024));
-          pushToast({
-            title: titleFor('image'),
-            message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.`,
-          });
+          pushToast({ title: titleFor('image'), message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.` });
         } else if (code === 'PHONE_REQUIRED') {
           pushToast({ title: titleFor('phone'), message: t('errors.phoneRequired') });
         } else if (code === 'PHONE_INVALID_CHARACTERS') {
@@ -232,8 +289,6 @@ export default function RegistrationForm({ role }: Props) {
           pushToast({ title: titleFor('image'), message: t('errors.imageUploadFailed') });
         } else if (code === 'FILE_SYSTEM_ERROR') {
           pushToast({ title: titleFor('server'), message: t('errors.fileSystemError') });
-        } else if (code === 'INTERNAL_ERROR') {
-          pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
         } else {
           pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
         }
@@ -243,9 +298,14 @@ export default function RegistrationForm({ role }: Props) {
       setSubmitted(true);
       router.push(`/${locale}`);
       router.refresh();
-    } catch (err) {
-      console.error(err);
-      pushToast({ title: titleFor('network'), message: t('errors.somethingWentWrong') });
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === 'auth/invalid-verification-code' || code === 'auth/code-expired') {
+        pushToast({ title: titleFor('phone'), message: locale === 'ar' ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired verification code' });
+      } else {
+        console.error(err);
+        pushToast({ title: titleFor('network'), message: t('errors.somethingWentWrong') });
+      }
     } finally {
       setLoading(false);
     }
@@ -281,6 +341,83 @@ export default function RegistrationForm({ role }: Props) {
           <Link href={`/${locale}`} className={styles.backButton}>
             {locale === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to Home'}
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (phoneStep) {
+    return (
+      <div className={styles.pageContainer}>
+        {toasts.length ? (
+          <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
+            {toasts.map((toast) => (
+              <div key={toast.id} className={`${styles.toast} ${styles.toastError}`} role="status">
+                <div>
+                  <div className={styles.toastTitle}>{toast.title}</div>
+                  <div className={styles.toastMessage}>{toast.message}</div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.toastClose}
+                  aria-label="Close"
+                  onClick={() => setToasts((prev) => prev.filter((tItem) => tItem.id !== toast.id))}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <div className={styles.contentWrapper}>
+          <div className={styles.formCard}>
+            <div className={styles.header}>
+              <h1 className={styles.title}>
+                {locale === 'ar' ? 'التحقق من رقم الهاتف' : 'Phone Verification'}
+              </h1>
+              <p className={styles.description}>
+                {locale === 'ar'
+                  ? `تم إرسال رمز مكون من 6 أرقام إلى ${pendingPhone}`
+                  : `A 6-digit code was sent to ${pendingPhone}`}
+              </p>
+            </div>
+            <div className={styles.form}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  {locale === 'ar' ? 'رمز التحقق' : 'Verification Code'}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  className={styles.input}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder={locale === 'ar' ? 'أدخل الرمز المكون من 6 أرقام' : 'Enter 6-digit code'}
+                  autoFocus
+                />
+              </div>
+              <button
+                type="button"
+                className={styles.submitButton}
+                onClick={handleVerifyOtp}
+                disabled={loading || otp.length < 4}
+              >
+                {loading
+                  ? (locale === 'ar' ? 'جاري التحقق...' : 'Verifying...')
+                  : (locale === 'ar' ? 'تحقق وأكمل التسجيل' : 'Verify & Complete Registration')}
+              </button>
+              <button
+                type="button"
+                className={styles.cancelOtpButton}
+                onClick={() => { setPhoneStep(false); setOtp(''); setConfirmResult(null); recaptchaRef.current = null; }}
+                disabled={loading}
+              >
+                {locale === 'ar' ? 'رجوع وتعديل' : 'Back & Edit'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -586,9 +723,10 @@ export default function RegistrationForm({ role }: Props) {
               </div>
             )}
 
-            <button type="submit" className={styles.submitButton}>
-              {loading ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...') : t('submit')}
+            <button type="submit" className={styles.submitButton} disabled={loading}>
+              {loading ? (locale === 'ar' ? 'جاري الإرسال...' : 'Sending code...') : t('submit')}
             </button>
+            <div id="recaptcha-container" />
           </form>
         </div>
       </div>
