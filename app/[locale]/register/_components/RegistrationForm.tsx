@@ -307,8 +307,7 @@ export default function RegistrationForm({ role }: Props) {
       }
 
       setSubmitted(true);
-      router.push(`/${locale}`);
-      router.refresh();
+      // Don't auto-redirect — let the user read the email verification notice first
     } catch (err: any) {
       const code = err?.code;
       if (code === 'auth/invalid-verification-code' || code === 'auth/code-expired') {
@@ -343,15 +342,28 @@ export default function RegistrationForm({ role }: Props) {
 
   if (submitted) {
     return (
-      <div className={styles.container}>
-        <div className={styles.successCard}>
-          <div className={styles.successIconWrapper}>
-            <CheckCircle className={styles.successIcon} />
+      <div className={styles.pageContainer}>
+        <div className={styles.contentWrapper}>
+          <div className={styles.formCard}>
+            <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+              <CheckCircle style={{ width: 56, height: 56, color: '#10b981', margin: '0 auto 1rem' }} />
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>{t('success')}</h2>
+              {formData.email ? (
+                <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                  {locale === 'ar'
+                    ? `تم إنشاء حسابك. تم إرسال رسالة تحقق إلى ${formData.email} — تحقق من صندوق الوارد (أو البريد المزعج) وانقر على الرابط لتفعيل بريدك الإلكتروني.`
+                    : `Account created! A verification email was sent to ${formData.email} — check your inbox (or spam folder) and click the link to verify your email.`}
+                </p>
+              ) : (
+                <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  {locale === 'ar' ? 'تم إنشاء حسابك بنجاح.' : 'Your account has been created successfully.'}
+                </p>
+              )}
+              <Link href={`/${locale}`} className={styles.submitButton} style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}>
+                {locale === 'ar' ? 'الذهاب للصفحة الرئيسية' : 'Go to Home'}
+              </Link>
+            </div>
           </div>
-          <h2 className={styles.successTitle}>{t('success')}</h2>
-          <Link href={`/${locale}`} className={styles.backButton}>
-            {locale === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to Home'}
-          </Link>
         </div>
       </div>
     );

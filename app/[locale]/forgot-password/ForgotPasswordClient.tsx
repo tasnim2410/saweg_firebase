@@ -8,6 +8,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { sendPasswordResetEmail, signInWithPhoneNumber, signOut, RecaptchaVerifier, type ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
+import { normalizePhoneNumber } from '@/lib/phone';
 import styles from '../login/auth.module.css';
 
 type Tab = 'email' | 'phone';
@@ -74,16 +75,26 @@ export default function ForgotPasswordClient() {
       return;
     }
 
+    const normalized = normalizePhoneNumber(phone.trim());
+    if (!normalized.ok) {
+      setPhoneError(isAr ? 'رقم الهاتف غير صالح. أدخله بالتنسيق الدولي مثل: +21629633247' : 'Invalid phone number. Use international format e.g. +21629633247');
+      return;
+    }
+
     setPhoneLoading(true);
     try {
       if (!recaptchaRef.current) {
         recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-phone-container', { size: 'invisible' });
       }
-      const result = await signInWithPhoneNumber(auth, phone.trim(), recaptchaRef.current);
+      const result = await signInWithPhoneNumber(auth, normalized.e164, recaptchaRef.current);
       setConfirmResult(result);
       setPhoneStep('otp');
-    } catch {
-      setPhoneError(isAr ? 'فشل إرسال رمز التحقق. تحقق من رقم الهاتف وحاول مرة أخرى.' : 'Failed to send verification code. Please check your number.');
+    } catch (err: any) {
+      console.error('signInWithPhoneNumber (forgot-password) error:', err?.code, err?.message);
+      const code: string = err?.code ?? 'unknown';
+      setPhoneError(isAr
+        ? `فشل إرسال رمز التحقق. (${code})`
+        : `Failed to send verification code. (${code})`);
       recaptchaRef.current = null;
     } finally {
       setPhoneLoading(false);
