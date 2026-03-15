@@ -49,6 +49,16 @@ export default function RegistrationForm({ role }: Props) {
   const [pendingPhone, setPendingPhone] = useState('');
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
+  // Clean up reCAPTCHA on unmount to prevent stale state
+  useEffect(() => {
+    return () => {
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+    };
+  }, []);
+
   const [toasts, setToasts] = useState<
     Array<{
       id: string;
@@ -177,9 +187,17 @@ export default function RegistrationForm({ role }: Props) {
     // Send OTP to verify phone before creating the account
     setLoading(true);
     try {
-      // Always create a fresh RecaptchaVerifier — reusing a spent/expired one causes error -39
-      recaptchaRef.current?.clear?.();
+      // Fully destroy previous RecaptchaVerifier and purge all injected DOM elements.
+      // Reusing a spent/expired verifier or leftover iframes causes error -39.
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+      const rcContainer = document.getElementById('recaptcha-container');
+      if (rcContainer) rcContainer.innerHTML = '';
+
       recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+
       const result = await signInWithPhoneNumber(auth, normalizedPhone.e164, recaptchaRef.current);
       setPendingPhone(normalizedPhone.e164);
       setConfirmResult(result);
@@ -192,16 +210,23 @@ export default function RegistrationForm({ role }: Props) {
         : `Failed to send verification code. (${firebaseCode})`;
       if (firebaseCode === 'auth/quota-exceeded' || firebaseCode === 'auth/too-many-requests') {
         msg = locale === 'ar' ? 'تم تجاوز الحد اليومي. حاول مرة أخرى لاحقاً.' : 'SMS quota exceeded. Please try again later.';
-      } else if (firebaseCode === 'auth/captcha-check-failed') {
-        msg = locale === 'ar' ? 'فشل التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.' : 'reCAPTCHA check failed. Please refresh and try again.';
+      } else if (firebaseCode === 'auth/captcha-check-failed' || firebaseCode.includes('-39')) {
+        msg = locale === 'ar'
+          ? 'فشل التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.'
+          : 'reCAPTCHA verification failed. Please refresh the page and try again.';
       } else if (firebaseCode === 'auth/invalid-phone-number') {
         msg = locale === 'ar' ? 'رقم الهاتف غير صالح.' : 'Invalid phone number format.';
       } else if (firebaseCode === 'auth/operation-not-allowed') {
         msg = locale === 'ar' ? 'تسجيل الدخول بالهاتف غير مفعّل.' : 'Phone auth is not enabled in Firebase.';
       }
       pushToast({ title: titleFor('phone'), message: msg });
-      // Reset recaptcha on failure so next attempt creates a fresh one
-      recaptchaRef.current = null;
+      // Fully clean up on failure so next attempt starts completely fresh
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+      const rcContainer = document.getElementById('recaptcha-container');
+      if (rcContainer) rcContainer.innerHTML = '';
     } finally {
       setLoading(false);
     }
@@ -440,7 +465,11 @@ export default function RegistrationForm({ role }: Props) {
               <button
                 type="button"
                 className={styles.cancelOtpButton}
-                onClick={() => { setPhoneStep(false); setOtp(''); setConfirmResult(null); recaptchaRef.current = null; }}
+                onClick={() => {
+                  setPhoneStep(false); setOtp(''); setConfirmResult(null);
+                  if (recaptchaRef.current) { try { recaptchaRef.current.clear(); } catch (_) {} recaptchaRef.current = null; }
+                  const rc = document.getElementById('recaptcha-container'); if (rc) rc.innerHTML = '';
+                }}
                 disabled={loading}
               >
                 {locale === 'ar' ? 'رجوع وتعديل' : 'Back & Edit'}

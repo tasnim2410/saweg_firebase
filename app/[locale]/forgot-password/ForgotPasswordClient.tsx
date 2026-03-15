@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // Note: after password reset, Firebase redirects to saweg-f8c50.firebaseapp.com (default handler)
 // To redirect back to your app instead, add your domain to Firebase Console →
 // Authentication → Settings → Authorized domains, then restore the `url` parameter.
@@ -38,6 +38,16 @@ export default function ForgotPasswordClient() {
   const [confirmResult, setConfirmResult] = useState<ConfirmationResult | null>(null);
   const [phoneIdToken, setPhoneIdToken] = useState('');
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Clean up reCAPTCHA on unmount to prevent stale state
+  useEffect(() => {
+    return () => {
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+    };
+  }, []);
 
   // — Email tab handlers —
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -83,7 +93,14 @@ export default function ForgotPasswordClient() {
 
     setPhoneLoading(true);
     try {
-      recaptchaRef.current?.clear?.();
+      // Fully destroy previous RecaptchaVerifier and purge injected DOM elements
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+      const rcContainer = document.getElementById('recaptcha-phone-container');
+      if (rcContainer) rcContainer.innerHTML = '';
+
       recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-phone-container', { size: 'invisible' });
       const result = await signInWithPhoneNumber(auth, normalized.e164, recaptchaRef.current);
       setConfirmResult(result);
@@ -91,10 +108,22 @@ export default function ForgotPasswordClient() {
     } catch (err: any) {
       console.error('signInWithPhoneNumber (forgot-password) error:', err?.code, err?.message);
       const code: string = err?.code ?? 'unknown';
-      setPhoneError(isAr
-        ? `فشل إرسال رمز التحقق. (${code})`
-        : `Failed to send verification code. (${code})`);
-      recaptchaRef.current = null;
+      if (code === 'auth/captcha-check-failed' || code.includes('-39')) {
+        setPhoneError(isAr
+          ? 'فشل التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.'
+          : 'reCAPTCHA verification failed. Please refresh the page and try again.');
+      } else {
+        setPhoneError(isAr
+          ? `فشل إرسال رمز التحقق. (${code})`
+          : `Failed to send verification code. (${code})`);
+      }
+      // Fully clean up on failure
+      if (recaptchaRef.current) {
+        try { recaptchaRef.current.clear(); } catch (_) {}
+        recaptchaRef.current = null;
+      }
+      const rcCleanup = document.getElementById('recaptcha-phone-container');
+      if (rcCleanup) rcCleanup.innerHTML = '';
     } finally {
       setPhoneLoading(false);
     }
@@ -339,7 +368,11 @@ export default function ForgotPasswordClient() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setPhoneStep('input'); setOtp(''); setConfirmResult(null); setPhoneError(''); recaptchaRef.current = null; }}
+                  onClick={() => {
+                    setPhoneStep('input'); setOtp(''); setConfirmResult(null); setPhoneError('');
+                    if (recaptchaRef.current) { try { recaptchaRef.current.clear(); } catch (_) {} recaptchaRef.current = null; }
+                    const rc = document.getElementById('recaptcha-phone-container'); if (rc) rc.innerHTML = '';
+                  }}
                   style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.875rem', textDecoration: 'underline' }}
                 >
                   {isAr ? 'رجوع' : 'Back'}
