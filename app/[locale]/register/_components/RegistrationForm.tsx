@@ -177,9 +177,9 @@ export default function RegistrationForm({ role }: Props) {
     // Send OTP to verify phone before creating the account
     setLoading(true);
     try {
-      if (!recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-      }
+      // Always create a fresh RecaptchaVerifier — reusing a spent/expired one causes error -39
+      recaptchaRef.current?.clear?.();
+      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
       const result = await signInWithPhoneNumber(auth, normalizedPhone.e164, recaptchaRef.current);
       setPendingPhone(normalizedPhone.e164);
       setConfirmResult(result);
@@ -222,9 +222,15 @@ export default function RegistrationForm({ role }: Props) {
       await signOut(auth);
 
       // Create the real email/password Firebase user
+      // If user didn't provide an email, generate a placeholder so Firebase Auth accepts it.
+      // The real phone is stored in Prisma; this placeholder is never shown to the user.
+      const normalizedForEmail = normalizePhoneNumber(formData.phone);
+      const firebaseEmail = formData.email.trim() ||
+        `${(normalizedForEmail.ok ? normalizedForEmail.e164 : formData.phone).replace(/\+/g, '')}@noemail.saweg.internal`;
+
       let idToken: string;
       try {
-        const cred = await createUserWithEmailAndPassword(auth, formData.email, password);
+        const cred = await createUserWithEmailAndPassword(auth, firebaseEmail, password);
         idToken = await cred.user.getIdToken();
         // Best-effort email verification
         await sendEmailVerification(cred.user).catch(() => null);

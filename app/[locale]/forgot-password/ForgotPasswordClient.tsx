@@ -83,9 +83,8 @@ export default function ForgotPasswordClient() {
 
     setPhoneLoading(true);
     try {
-      if (!recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-phone-container', { size: 'invisible' });
-      }
+      recaptchaRef.current?.clear?.();
+      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-phone-container', { size: 'invisible' });
       const result = await signInWithPhoneNumber(auth, normalized.e164, recaptchaRef.current);
       setConfirmResult(result);
       setPhoneStep('otp');
