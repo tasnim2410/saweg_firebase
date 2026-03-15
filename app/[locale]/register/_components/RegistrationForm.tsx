@@ -184,49 +184,101 @@ export default function RegistrationForm({ role }: Props) {
       return;
     }
 
-    // Send OTP to verify phone before creating the account
+    // TEMPORARY: Skip phone verification due to Firebase SMS quota limits
+    // Create account directly without OTP verification
     setLoading(true);
     try {
-      // Fully destroy previous RecaptchaVerifier and purge all injected DOM elements.
-      // Reusing a spent/expired verifier or leftover iframes causes error -39.
-      if (recaptchaRef.current) {
-        try { recaptchaRef.current.clear(); } catch (_) {}
-        recaptchaRef.current = null;
+      // Create Firebase user with email/password (use placeholder email if not provided)
+      const normalizedForEmail = normalizePhoneNumber(formData.phone);
+      const firebaseEmail = formData.email.trim() ||
+        `${(normalizedForEmail.ok ? normalizedForEmail.e164 : formData.phone).replace(/\+/g, '')}@noemail.saweg.internal`;
+
+      let idToken: string;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, firebaseEmail, password);
+        idToken = await cred.user.getIdToken();
+        // Best-effort email verification
+        if (formData.email.trim()) {
+          await sendEmailVerification(cred.user).catch(() => null);
+        }
+      } catch (firebaseErr: any) {
+        const code = firebaseErr?.code;
+        if (code === 'auth/email-already-in-use') {
+          pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'البريد الإلكتروني مستخدم بالفعل' : 'Email is already in use' });
+        } else {
+          pushToast({ title: titleFor('server'), message: locale === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.' });
+        }
+        setLoading(false);
+        return;
       }
-      const rcContainer = document.getElementById('recaptcha-container');
-      if (rcContainer) rcContainer.innerHTML = '';
 
-      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      const payload = new FormData();
+      payload.append('idToken', idToken);
+      payload.append('fullName', formData.fullName);
+      payload.append('email', formData.email);
+      payload.append('phone', normalizedPhone.e164);
+      payload.append('type', role === 'shipper' ? 'SHIPPER' : 'MERCHANT');
 
-      const result = await signInWithPhoneNumber(auth, normalizedPhone.e164, recaptchaRef.current);
-      setPendingPhone(normalizedPhone.e164);
-      setConfirmResult(result);
-      setPhoneStep(true);
+      if (role === 'shipper') {
+        const finalCarKind = formData.carKind === 'other' && customCarKind.trim()
+          ? customCarKind.trim()
+          : formData.carKind;
+        payload.append('carKind', finalCarKind);
+        payload.append('maxCharge', formData.maxCharge);
+        payload.append('maxChargeUnit', formData.maxChargeUnit);
+        payload.append('shipperCity', formData.shipperCity);
+        if (truckImage) payload.append('truckImage', truckImage);
+      }
+
+      if (role === 'merchant') {
+        payload.append('placeOfBusiness', formData.placeOfBusiness);
+        payload.append('merchantCity', formData.merchantCity);
+      }
+
+      const res = await fetch('/api/auth/signup', { method: 'POST', body: payload });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const code = data?.error;
+        if (code === 'IMAGE_TOO_LARGE') {
+          const maxBytes = typeof data?.maxBytes === 'number' ? data.maxBytes : MAX_TRUCK_IMAGE_BYTES;
+          const maxMb = Math.floor(maxBytes / (1024 * 1024));
+          pushToast({ title: titleFor('image'), message: locale === 'ar' ? `حجم الصورة كبير جداً. الحد الأقصى ${maxMb}MB.` : `Image is too large. Max is ${maxMb}MB.` });
+        } else if (code === 'PHONE_REQUIRED') {
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneRequired') });
+        } else if (code === 'PHONE_INVALID_CHARACTERS') {
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidCharacters') });
+        } else if (code === 'PHONE_INVALID_LENGTH' || code === 'PHONE_INVALID') {
+          pushToast({ title: titleFor('phone'), message: t('errors.phoneInvalidLength') });
+        } else if (code === 'PASSWORD_TOO_SHORT') {
+          pushToast({ title: titleFor('password'), message: t('errors.passwordTooShort') });
+        } else if (code === 'FULL_NAME_REQUIRED') {
+          pushToast({ title: titleFor('form'), message: locale === 'ar' ? 'الاسم الكامل مطلوب' : 'Full name is required' });
+        } else if (code === 'EMAIL_OR_PHONE_REQUIRED') {
+          pushToast({ title: titleFor('form'), message: locale === 'ar' ? 'يجب إدخال البريد الإلكتروني أو رقم الهاتف' : 'Email or phone is required' });
+        } else if (code === 'USER_TYPE_REQUIRED') {
+          pushToast({ title: titleFor('form'), message: locale === 'ar' ? 'نوع المستخدم مطلوب' : 'User type is required' });
+        } else if (code === 'INVALID_CAR_KIND') {
+          pushToast({ title: titleFor('form'), message: locale === 'ar' ? 'نوع المركبة غير صالح' : 'Invalid vehicle type' });
+        } else if (code === 'USER_ALREADY_EXISTS') {
+          pushToast({ title: titleFor('server'), message: t('errors.userAlreadyExists') });
+        } else if (code === 'DATABASE_ERROR') {
+          pushToast({ title: titleFor('server'), message: t('errors.databaseError') });
+        } else if (code === 'IMAGE_UPLOAD_FAILED') {
+          pushToast({ title: titleFor('image'), message: t('errors.imageUploadFailed') });
+        } else if (code === 'FILE_SYSTEM_ERROR') {
+          pushToast({ title: titleFor('server'), message: t('errors.fileSystemError') });
+        } else {
+          pushToast({ title: titleFor('server'), message: t('errors.signupFailed') });
+        }
+        setLoading(false);
+        return;
+      }
+
+      setSubmitted(true);
     } catch (err: any) {
-      console.error('signInWithPhoneNumber error:', err?.code, err?.message, err);
-      const firebaseCode: string = err?.code ?? 'unknown';
-      let msg = locale === 'ar'
-        ? `فشل إرسال رمز التحقق. (${firebaseCode})`
-        : `Failed to send verification code. (${firebaseCode})`;
-      if (firebaseCode === 'auth/quota-exceeded' || firebaseCode === 'auth/too-many-requests') {
-        msg = locale === 'ar' ? 'تم تجاوز الحد اليومي. حاول مرة أخرى لاحقاً.' : 'SMS quota exceeded. Please try again later.';
-      } else if (firebaseCode === 'auth/captcha-check-failed' || firebaseCode.includes('-39')) {
-        msg = locale === 'ar'
-          ? 'فشل التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.'
-          : 'reCAPTCHA verification failed. Please refresh the page and try again.';
-      } else if (firebaseCode === 'auth/invalid-phone-number') {
-        msg = locale === 'ar' ? 'رقم الهاتف غير صالح.' : 'Invalid phone number format.';
-      } else if (firebaseCode === 'auth/operation-not-allowed') {
-        msg = locale === 'ar' ? 'تسجيل الدخول بالهاتف غير مفعّل.' : 'Phone auth is not enabled in Firebase.';
-      }
-      pushToast({ title: titleFor('phone'), message: msg });
-      // Fully clean up on failure so next attempt starts completely fresh
-      if (recaptchaRef.current) {
-        try { recaptchaRef.current.clear(); } catch (_) {}
-        recaptchaRef.current = null;
-      }
-      const rcContainer = document.getElementById('recaptcha-container');
-      if (rcContainer) rcContainer.innerHTML = '';
+      console.error('Registration error:', err);
+      pushToast({ title: titleFor('network'), message: t('errors.somethingWentWrong') });
     } finally {
       setLoading(false);
     }
