@@ -618,104 +618,6 @@ export async function POST(req: NextRequest) {
 
       });
 
-
-
-      try {
-
-        const subs = await (prisma as any).pushSubscription.findMany({
-
-          where: {
-
-            user: {
-
-              type: 'SHIPPER',
-
-            },
-
-          },
-
-          select: { endpoint: true, p256dh: true, auth: true, expirationTime: true },
-
-        });
-
-
-
-        const title = 'Saweg';
-
-        const startingPointAr = post.startingPoint ? getLocationLabel(post.startingPoint, 'ar') : '';
-
-        const destinationAr = post.destination ? getLocationLabel(post.destination, 'ar') : '';
-
-        // Build route line
-        const routeLine = startingPointAr && destinationAr 
-          ? `من ${startingPointAr} → ${destinationAr}`
-          : startingPointAr 
-            ? `من ${startingPointAr}`
-            : destinationAr 
-              ? `إلى ${destinationAr}`
-              : '';
-
-        // Truncate description to 80 chars
-        const descriptionTruncated = post.description 
-          ? (post.description.length > 80 ? post.description.slice(0, 77) + '...' : post.description)
-          : '';
-
-        // Build notification body with route and description
-        let body: string;
-        if (routeLine && descriptionTruncated) {
-          body = `${routeLine}\n${descriptionTruncated}`;
-        } else if (routeLine) {
-          body = routeLine;
-        } else if (descriptionTruncated) {
-          body = `طلب جديد من تاجر\n${descriptionTruncated}`;
-        } else {
-          body = 'طلب جديد من تاجر';
-        }
-
-        const url = `/ar/merchant-goods-posts/${post.id}`;
-
-
-
-        for (const sub of subs) {
-
-          const r = await sendPushToSubscription(
-
-            {
-
-              endpoint: sub.endpoint,
-
-              expirationTime: sub.expirationTime,
-
-              keys: { p256dh: sub.p256dh, auth: sub.auth },
-
-            },
-
-            { title, body, url }
-
-          );
-
-
-
-          if (!r.ok && r.gone) {
-
-            await (prisma as any).pushSubscription
-
-              .delete({ where: { endpoint: sub.endpoint } })
-
-              .catch(() => null);
-
-          }
-
-        }
-
-      } catch (error) {
-
-        console.error('POST /api/merchant-goods-posts push notify error:', error);
-
-      }
-
-
-
       return post;
 
     })();
@@ -733,6 +635,47 @@ export async function POST(req: NextRequest) {
 
 
     const created = await createPromise;
+
+    // Fire push notifications after responding — don't block the user
+    (async () => {
+      try {
+        const subs = await (prisma as any).pushSubscription.findMany({
+          where: { user: { type: 'SHIPPER' } },
+          select: { endpoint: true, p256dh: true, auth: true, expirationTime: true },
+        });
+
+        const title = 'Saweg';
+        const startingPointAr = created.startingPoint ? getLocationLabel(created.startingPoint, 'ar') : '';
+        const destinationAr = created.destination ? getLocationLabel(created.destination, 'ar') : '';
+        const routeLine = startingPointAr && destinationAr
+          ? `من ${startingPointAr} → ${destinationAr}`
+          : startingPointAr ? `من ${startingPointAr}` : destinationAr ? `إلى ${destinationAr}` : '';
+        const descriptionTruncated = created.description
+          ? (created.description.length > 80 ? created.description.slice(0, 77) + '...' : created.description)
+          : '';
+        let body: string;
+        if (routeLine && descriptionTruncated) body = `${routeLine}\n${descriptionTruncated}`;
+        else if (routeLine) body = routeLine;
+        else if (descriptionTruncated) body = `طلب جديد من تاجر\n${descriptionTruncated}`;
+        else body = 'طلب جديد من تاجر';
+
+        const url = `/ar/merchant-goods-posts/${created.id}`;
+
+        await Promise.allSettled(
+          subs.map(async (sub: any) => {
+            const r = await sendPushToSubscription(
+              { endpoint: sub.endpoint, expirationTime: sub.expirationTime, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              { title, body, url }
+            );
+            if (!r.ok && r.gone) {
+              await (prisma as any).pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => null);
+            }
+          })
+        );
+      } catch (error) {
+        console.error('POST /api/merchant-goods-posts push notify error:', error);
+      }
+    })();
 
     return NextResponse.json(created, { status: 201 });
 

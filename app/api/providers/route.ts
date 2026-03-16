@@ -445,102 +445,6 @@ export async function POST(req: NextRequest) {
 
       const provider = await prisma.provider.create({ data: createData });
 
-
-
-      try {
-
-        const resendApiKey = process.env.RESEND_API_KEY;
-
-        const resendFrom = process.env.RESEND_FROM_EMAIL;
-
-        const to = process.env.CONTACT_TO_EMAIL;
-
-        if (!resendApiKey || !resendFrom || !to) throw new Error('Missing RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_TO_EMAIL');
-
-
-
-        const resend = new Resend(resendApiKey);
-
-
-
-        const detailsText = [
-
-          `Name: ${provider.name}`,
-
-          `Phone: ${provider.phone}`,
-
-          `Location: ${provider.location}`,
-
-          `Destination: ${(provider as any).destination ?? (provider as any).placeOfBusiness ?? '-'}`,
-
-          `Description: ${provider.description ?? '-'}`,
-
-          `Active: ${provider.active ? 'true' : 'false'}`,
-
-          `CreatedAt: ${(provider as any).createdAt ? new Date((provider as any).createdAt).toISOString() : '-'}`,
-
-          `Id: ${provider.id}`,
-
-        ].join('\n');
-
-
-
-        const safeDetailsHtml = detailsText
-
-          .replace(/&/g, '&amp;')
-
-          .replace(/</g, '&lt;')
-
-          .replace(/>/g, '&gt;');
-
-
-
-        await resend.emails.send({
-
-          from: resendFrom,
-
-          to,
-
-          subject: `New carousel post added: ${provider.name}`,
-
-          text: `A new provider post was added to the carousel.\n\n${detailsText}`,
-
-          html: `
-
-<p>A new provider post was added to the carousel.</p>
-
-<pre style="white-space:pre-wrap">${safeDetailsHtml}</pre>
-
-${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
-
-        `,
-
-          attachments: imageAttachment
-
-            ? [
-
-                {
-
-                  filename: imageAttachment.filename,
-
-                  content: imageAttachment.contentBase64,
-
-                },
-
-              ]
-
-            : undefined,
-
-        });
-
-      } catch (error) {
-
-        console.error('POST /api/providers notify email error:', error);
-
-      }
-
-
-
       return {
 
         ...provider,
@@ -565,7 +469,39 @@ ${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}
 
     const created = await createPromise;
 
+    // Fire email notification after responding — don't block the user
+    (async () => {
+      try {
+        const resendApiKey = process.env.RESEND_API_KEY;
+        const resendFrom = process.env.RESEND_FROM_EMAIL;
+        const to = process.env.CONTACT_TO_EMAIL;
+        if (!resendApiKey || !resendFrom || !to) return;
 
+        const resend = new Resend(resendApiKey);
+        const detailsText = [
+          `Name: ${created.name}`,
+          `Phone: ${created.phone}`,
+          `Location: ${created.location}`,
+          `Destination: ${created.destination ?? '-'}`,
+          `Description: ${created.description ?? '-'}`,
+          `Active: ${created.active ? 'true' : 'false'}`,
+          `CreatedAt: ${(created as any).createdAt ? new Date((created as any).createdAt).toISOString() : '-'}`,
+          `Id: ${created.id}`,
+        ].join('\n');
+        const safeDetailsHtml = detailsText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        await resend.emails.send({
+          from: resendFrom,
+          to,
+          subject: `New carousel post added: ${created.name}`,
+          text: `A new provider post was added to the carousel.\n\n${detailsText}`,
+          html: `<p>A new provider post was added to the carousel.</p><pre style="white-space:pre-wrap">${safeDetailsHtml}</pre>${imageAttachment ? '<p><strong>Image attached.</strong></p>' : ''}`,
+          attachments: imageAttachment ? [{ filename: imageAttachment.filename, content: imageAttachment.contentBase64 }] : undefined,
+        });
+      } catch (error) {
+        console.error('POST /api/providers notify email error:', error);
+      }
+    })();
 
     return NextResponse.json(created, { status: 201 });
 
